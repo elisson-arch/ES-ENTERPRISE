@@ -1,0 +1,10 @@
+{
+  "name": "ES ENTERPRISE",
+  "description": "Sistema de gestão para empresas de climatização e manutenção (PWA). Funciona nativamente em Celular (para técnicos em campo), Tablet e Computador (para gestão), com sincronização em tempo real via Google Firestore e automação por IA (Gemini).",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "clipboard-read"
+  ]
+}
