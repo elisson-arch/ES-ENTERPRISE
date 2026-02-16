@@ -18,7 +18,7 @@ const distPath = path.resolve(__dirname, 'dist');
  * Iniciamos o listen no topo do arquivo para evitar timeouts da sonda de saúde.
  */
 const server = app.listen(PORT, HOST, () => {
-  console.log(`[BOOT] ES Enterprise Engine em execução em ${HOST}:${PORT}`);
+  console.log(`[BOOT] ES Enterprise Engine online em ${HOST}:${PORT}`);
 });
 
 /**
@@ -33,7 +33,7 @@ app.use(express.static(distPath));
 
 /**
  * 4. ROTEAMENTO SPA (Single Page Application)
- * Resolve o problema de 404 ao recarregar rotas internas no celular/tablet.
+ * Resolve o problema de 404 ao recarregar rotas internas como /clientes ou /whatsapp.
  */
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
@@ -48,7 +48,7 @@ app.get('*', (req, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>ES Enterprise - Inicializando</title>
+        <title>ES Enterprise - Sincronizando</title>
         <style>
           body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #020617; color: white; margin: 0; text-align: center; }
           .spinner { width: 40px; height: 40px; border: 4px solid rgba(59,130,246,0.2); border-top-color: #3b82f6; border-radius: 50%; animation: s 1s infinite linear; margin-bottom: 20px; }
@@ -59,8 +59,8 @@ app.get('*', (req, res) => {
       <body>
         <div>
           <div class="spinner"></div>
-          <h1>SGC PRO • ENTERPRISE</h1>
-          <p style="opacity:0.5; font-size:10px; text-transform:uppercase; letter-spacing:0.2em;">Conectando ao Motor de Nuvem...</p>
+          <h1>ES ENTERPRISE • CLOUD</h1>
+          <p style="opacity:0.5; font-size:10px; text-transform:uppercase; letter-spacing:0.2em;">Conectando Motor de Nuvem...</p>
         </div>
         <script>setTimeout(() => window.location.reload(), 2000);</script>
       </body>
@@ -73,6 +73,6 @@ app.get('*', (req, res) => {
  * 5. DESLIGAMENTO SEGURO
  */
 process.on('SIGTERM', () => {
-  console.log('[SHUTDOWN] Encerrando servidor...');
+  console.log('[SHUTDOWN] Recebido SIGTERM. Encerrando servidor...');
   server.close(() => process.exit(0));
 });

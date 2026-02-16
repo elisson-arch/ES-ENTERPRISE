@@ -129,12 +129,12 @@ const App: React.FC = () => {
                   <Routes>
                     <Route path="/" element={<div className="p-4 lg:p-8"><DashboardView /></div>} />
                     <Route path="/whatsapp" element={<WhatsAppView />} />
+                    <Route path="/clientes" element={<div className="p-4 lg:p-8"><ClientsView /></div>} />
                     <Route path="/funnel" element={<div className="p-4 lg:p-8 h-full"><FunnelView /></div>} />
                     <Route path="/reports" element={<div className="p-4 lg:p-8 h-full"><ReportsView /></div>} />
                     <Route path="/integrations" element={<div className="p-4 lg:p-8 h-full"><IntegrationsView /></div>} />
                     <Route path="/security" element={<div className="p-4 lg:p-8 h-full"><SecurityView /></div>} />
                     <Route path="/automations" element={<div className="p-4 lg:p-8 h-full"><AutomationView /></div>} />
-                    <Route path="/clientes" element={<div className="p-4 lg:p-8"><ClientsView /></div>} />
                     <Route path="/ativos" element={<div className="p-4 lg:p-8"><InventoryView /></div>} />
                     <Route path="/documentos" element={<div className="p-4 lg:p-8"><DocumentsView /></div>} />
                     <Route path="/drive" element={<div className="p-4 lg:p-8"><DriveView /></div>} />
