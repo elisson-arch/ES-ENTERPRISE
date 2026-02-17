@@ -2,7 +2,7 @@ import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
 /**
  * ES Maintenance Intelligence Service
- * Utiliza exclusivamente process.env.API_KEY injetada pelo Vite
+ * Utiliza exclusivamente process.env.API_KEY injetada pelo Vite (via VITE_GEMINI_API_KEY ou GEMINI_API_KEY)
  */
 export const geminiService = {
   // Vision Analysis - Gemini 3 Pro

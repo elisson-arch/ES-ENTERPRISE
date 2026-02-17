@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
+  // Carrega variáveis de .env e do ambiente do sistema
   const env = loadEnv(mode, process.cwd(), '');
   
   return {
@@ -19,6 +20,8 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 8080,
       host: true,
+      // CORREÇÃO: Permite que o Google Cloud Run acesse o servidor de preview
+      allowedHosts: true, 
     },
     plugins: [
       react(),
@@ -50,7 +53,8 @@ export default defineConfig(({ mode }) => {
       })
     ],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY),
+      // Prioriza VITE_GEMINI_API_KEY para compatibilidade com .env padrão do Vite
+      'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || env.API_KEY),
     },
     resolve: {
       alias: {
