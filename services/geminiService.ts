@@ -1,12 +1,17 @@
+
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
-/**
- * ES Maintenance Intelligence Service
- * Utiliza exclusivamente process.env.API_KEY injetada pelo Vite (via VITE_GEMINI_API_KEY ou GEMINI_API_KEY)
- */
+const HVAC_SYSTEM_INSTRUCTION = `Você é o Ricardo IA, o Engenheiro Chefe da ES Enterprise. 
+Sua especialidade absoluta é Climatização, Refrigeração (HVAC) e Gestão de Manutenção Industrial/Residencial.
+Ao responder:
+1. Use terminologia técnica precisa (BTUs, Compressor, Inverter, PMOC, Válvula de Expansão).
+2. Priorize diagnósticos baseados em eficiência energética e durabilidade do equipamento.
+3. Seja proativo sugerindo manutenções preventivas baseadas nos sintomas relatados.
+4. Mantenha um tom profissional, ágil e focado em soluções práticas de campo.`;
+
 export const geminiService = {
   // Vision Analysis - Gemini 3 Pro
-  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este anexo técnico.") {
+  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const parts = [
       { inlineData: { data: fileData.split(',')[1], mimeType } },
@@ -15,39 +20,37 @@ export const geminiService = {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: { parts },
-      config: {
-        systemInstruction: "Você é um perito em manutenção técnica industrial da ES Enterprise."
-      }
+      config: { systemInstruction: HVAC_SYSTEM_INSTRUCTION }
     });
     return response.text;
   },
 
-  // Deep Reasoning - Gemini 3 Pro (32k Budget)
-  async getDeepResponse(prompt: string, context: string) {
+  // Deep Technical Reasoning - Gemini 3 Pro (32k Budget)
+  async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
         thinkingConfig: { thinkingBudget: 32768 },
-        systemInstruction: `Especialista ES Enterprise em ${context}. Use raciocínio profundo.`
+        systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto atual: ${context}.`
       }
     });
     return response.text;
   },
 
-  // Fast Response - Gemini Flash Lite
-  async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-pro-preview') {
+  // Chat Ágil - Gemini 3 Flash
+  async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: modelId,
       contents: prompt,
-      config: { systemInstruction: `Assistente SGC Pro: ${context}.` }
+      config: { systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto do Atendimento: ${context}.` }
     });
     return response.text;
   },
 
-  // Web Search - Gemini 3 Flash
+  // Pesquisa Técnica em Tempo Real
   async searchWeb(prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
@@ -56,21 +59,19 @@ export const geminiService = {
       config: { tools: [{ googleSearch: {} }] },
     });
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
-      title: chunk.web?.title || 'Referência',
+      title: chunk.web?.title || 'Referência Técnica',
       uri: chunk.web?.uri || ''
     })) || [];
     return { text: response.text, sources };
   },
 
-  // Image Generation - Gemini 3 Pro Image
-  async generateImage(prompt: string, aspectRatio: string = "1:1") {
+  // Geração de Imagens de Projetos (3 Pro Image)
+  async generateImage(prompt: string, aspectRatio: string = "16:9") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
-      contents: { parts: [{ text: prompt }] },
-      config: {
-        imageConfig: { aspectRatio, imageSize: "1K" }
-      }
+      contents: { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] },
+      config: { imageConfig: { aspectRatio, imageSize: "1K" } }
     });
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
@@ -80,55 +81,37 @@ export const geminiService = {
     return null;
   },
 
-  // Edit Image - Gemini 2.5 Flash Image
+  // Editor de Imagens via Nano Banana
   async editImage(base64ImageData: string, mimeType: string, prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
         parts: [
-          {
-            inlineData: {
-              data: base64ImageData.split(',')[1] || base64ImageData,
-              mimeType: mimeType,
-            },
-          },
-          {
-            text: prompt,
-          },
+          { inlineData: { data: base64ImageData.split(',')[1] || base64ImageData, mimeType } },
+          { text: prompt }
         ],
       },
     });
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          return `data:image/png;base64,${part.inlineData.data}`;
-        }
+        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
       }
     }
     return null;
   },
 
-  // Site Section Generator (JSON)
-  async generateSectionJSON(userPrompt: string): Promise<string> {
+  // Fix: Added missing generateSectionJSON method for website builder
+  async generateSectionJSON(prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: userPrompt,
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
       config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            type: { type: Type.STRING },
-            content: { type: Type.OBJECT },
-            styles: { type: Type.OBJECT }
-          },
-          required: ["type", "content", "styles"]
-        },
-        systemInstruction: "Gerador de componentes JSON para ES Architect Pro."
+        systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. O objeto deve ter as propriedades: 'type' (NAVBAR, HERO, FEATURES, FOOTER, CONTACT, PRICING), 'content' (objeto com dados da seção) e 'styles' (objeto com estilos). Responda apenas com o JSON bruto.",
+        responseMimeType: "application/json"
       }
     });
-    return response.text || "";
+    return response.text;
   }
 };

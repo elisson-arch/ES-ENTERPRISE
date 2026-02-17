@@ -8,19 +8,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
-  // Carrega variáveis de .env e do ambiente do sistema
   const env = loadEnv(mode, process.cwd(), '');
   
   return {
     base: '/',
     server: {
       port: 8080,
-      host: true,
+      host: '0.0.0.0',
     },
     preview: {
       port: 8080,
-      host: true,
-      // CORREÇÃO: Permite que o Google Cloud Run acesse o servidor de preview
+      host: '0.0.0.0',
       allowedHosts: true, 
     },
     plugins: [
@@ -31,11 +29,11 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'ES ENTERPRISE',
           short_name: 'ES CRM',
-          description: 'Gestão e IA para Manutenção',
+          description: 'Inteligência e Gestão para Climatização',
           theme_color: '#0f172a',
           background_color: '#f8fafc',
           display: 'standalone',
-          orientation: 'portrait',
+          orientation: 'any',
           icons: [
             {
               src: 'https://cdn-icons-png.flaticon.com/512/3064/3064155.png',
@@ -49,11 +47,23 @@ export default defineConfig(({ mode }) => {
               purpose: 'any maskable'
             }
           ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
+              }
+            }
+          ]
         }
       })
     ],
     define: {
-      // Prioriza VITE_GEMINI_API_KEY para compatibilidade com .env padrão do Vite
       'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || env.API_KEY),
     },
     resolve: {
@@ -65,11 +75,12 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       emptyOutDir: true,
       sourcemap: false,
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom', 'recharts'],
-            ui: ['lucide-react']
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-ui': ['lucide-react', 'framer-motion', 'recharts'],
           }
         }
       }
