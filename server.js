@@ -10,57 +10,47 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0';
 
-// DIRETÓRIO DE BUILD
 const distPath = path.resolve(__dirname, 'dist');
 
 /**
- * 1. PRONTO PARA O GOOGLE CLOUD
- * Iniciamos o listen no topo do arquivo para evitar timeouts da sonda de saúde.
+ * 1. BINDING IMEDIATO
+ * Crucial para evitar 'Container failed to start' no Cloud Run.
  */
 const server = app.listen(PORT, HOST, () => {
-  console.log(`[BOOT] ES Enterprise Engine online em ${HOST}:${PORT}`);
+  console.log(`[BOOT] ES ENTERPRISE online na porta ${PORT}`);
 });
 
-/**
- * 2. ENDPOINT DE SAÚDE (HEALTH CHECK)
- */
+// Endpoint rápido para Load Balancer
 app.get('/healthz', (req, res) => res.status(200).send('OK'));
 
-/**
- * 3. SERVIR ARQUIVOS ESTÁTICOS DO VITE
- */
 app.use(express.static(distPath));
 
 /**
- * 4. ROTEAMENTO SPA (Single Page Application)
- * Resolve o problema de 404 ao recarregar rotas internas como /clientes ou /whatsapp.
+ * 2. ROTEAMENTO SPA (Single Page Application)
+ * Garante que rotas como /clientes funcionem ao recarregar a página.
  */
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
-  
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    // Fallback de carregamento caso o processo de build ainda esteja finalizando no container
     res.status(200).send(`
       <!DOCTYPE html>
-      <html lang="pt-BR">
+      <html>
       <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>ES Enterprise - Sincronizando</title>
+        <title>Sincronizando SGC...</title>
         <style>
-          body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #020617; color: white; margin: 0; text-align: center; }
-          .spinner { width: 40px; height: 40px; border: 4px solid rgba(59,130,246,0.2); border-top-color: #3b82f6; border-radius: 50%; animation: s 1s infinite linear; margin-bottom: 20px; }
-          @keyframes s { to { transform: rotate(360deg); } }
-          h1 { font-style: italic; font-weight: 900; letter-spacing: -0.05em; background: linear-gradient(to right, #fff, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; }
+          body { background: #020617; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+          .loader { border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+          @keyframes spin { to { transform: rotate(360deg); } }
         </style>
       </head>
       <body>
-        <div>
-          <div class="spinner"></div>
-          <h1>ES ENTERPRISE • CLOUD</h1>
-          <p style="opacity:0.5; font-size:10px; text-transform:uppercase; letter-spacing:0.2em;">Conectando Motor de Nuvem...</p>
+        <div style="text-align: center;">
+          <div class="loader" style="margin: 0 auto 20px;"></div>
+          <h2 style="font-style: italic; letter-spacing: -1px; margin: 0;">ES ENTERPRISE</h2>
+          <p style="opacity: 0.5; font-size: 10px; text-transform: uppercase;">Conectando ao Motor Cloud...</p>
         </div>
         <script>setTimeout(() => window.location.reload(), 2000);</script>
       </body>
@@ -69,10 +59,6 @@ app.get('*', (req, res) => {
   }
 });
 
-/**
- * 5. DESLIGAMENTO SEGURO
- */
 process.on('SIGTERM', () => {
-  console.log('[SHUTDOWN] Recebido SIGTERM. Encerrando servidor...');
   server.close(() => process.exit(0));
 });

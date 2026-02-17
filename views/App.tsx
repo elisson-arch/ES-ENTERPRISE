@@ -80,7 +80,7 @@ const App: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Configuração de IA</h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Para utilizar os motores de IA Gemini 3 e Veo, você deve selecionar uma chave de API vinculada a um projeto com faturamento ativo.
+              Para utilizar os motores de IA Gemini e Veo, você deve selecionar uma chave de API válida de um projeto com faturamento.
             </p>
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
