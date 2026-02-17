@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Plus, 
   Search, 
@@ -14,7 +14,8 @@ import {
   Snowflake,
   MonitorSmartphone,
   ChevronRight,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import type { Asset } from '../types';
 
@@ -69,8 +70,30 @@ const getAssetUI = (type: string) => {
   return { icon: Snowflake, color: 'bg-slate-500/10 text-slate-400', border: 'border-slate-500/20', label: 'Equipamento' };
 };
 
+const CATEGORIES = [
+  { id: 'Todos', label: 'Todos', icon: CheckCircle2, color: 'bg-slate-900', activeColor: 'bg-slate-900' },
+  { id: 'Split', label: 'Split Hi-Wall', icon: Wind, color: 'bg-blue-500', activeColor: 'bg-blue-600' },
+  { id: 'Cassete', label: 'Cassete', icon: Layers, color: 'bg-purple-500', activeColor: 'bg-purple-600' },
+  { id: 'Industrial', label: 'Industrial', icon: Factory, color: 'bg-indigo-500', activeColor: 'bg-indigo-600' }
+];
+
 const InventoryView = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
+
+  const filteredAssets = useMemo(() => {
+    return mockAssets.filter(a => {
+      const matchesSearch = a.brand.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           a.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           a.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = selectedCategory === 'Todos' || 
+                             a.type.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+                             (selectedCategory === 'Industrial' && a.type.toLowerCase().includes('chiller'));
+                             
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchTerm, selectedCategory]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -79,7 +102,7 @@ const InventoryView = () => {
           <h2 className="text-4xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Ativos & Equipamentos</h2>
           <div className="flex items-center gap-2 text-slate-500 text-sm font-bold mt-2">
             <MonitorSmartphone size={16} className="text-blue-500" />
-            <span className="uppercase tracking-widest text-[10px]">Gestão de Inventário Enterprise v5.0</span>
+            <span className="uppercase tracking-widest text-[10px]">Gestão de Inventário Enterprise v5.1</span>
           </div>
         </div>
         <button className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
@@ -88,21 +111,34 @@ const InventoryView = () => {
         </button>
       </header>
 
-      <div className="bg-white p-4 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+        <div className="relative w-full">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
           <input 
             type="text" 
-            placeholder="Filtrar por marca, modelo, serial ou tipo..."
+            placeholder="Pesquisar por marca, modelo, serial..."
             className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-400 transition-all text-sm font-bold text-slate-700 shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="flex items-center justify-center gap-3 px-8 py-4 bg-white border border-slate-200 rounded-[1.5rem] text-slate-500 hover:bg-slate-50 transition-all font-black text-[10px] uppercase tracking-widest">
-          <Filter size={18} />
-          Filtros de Categoria
-        </button>
+
+        <div className="flex flex-wrap gap-2 overflow-x-auto no-scrollbar pb-1">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                selectedCategory === cat.id 
+                ? `${cat.activeColor} text-white border-transparent shadow-lg scale-105` 
+                : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50'
+              }`}
+            >
+              <cat.icon size={14} className={selectedCategory === cat.id ? 'animate-pulse' : ''} />
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
@@ -117,11 +153,7 @@ const InventoryView = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {mockAssets.filter(a => 
-              a.brand.toLowerCase().includes(searchTerm.toLowerCase()) || 
-              a.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              a.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map(asset => {
+            {filteredAssets.length > 0 ? filteredAssets.map(asset => {
               const ui = getAssetUI(asset.type);
               const AssetIcon = ui.icon;
 
@@ -172,7 +204,16 @@ const InventoryView = () => {
                   </td>
                 </tr>
               );
-            })}
+            }) : (
+              <tr>
+                <td colSpan={5} className="px-8 py-20 text-center">
+                  <div className="max-w-xs mx-auto space-y-4 opacity-30">
+                    <Search size={48} className="mx-auto text-slate-300" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nenhum ativo encontrado para esta categoria ou busca.</p>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
