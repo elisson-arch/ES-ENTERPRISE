@@ -128,6 +128,7 @@ export interface ChatTemplate {
   category: 'Saudação' | 'Orçamento' | 'Manutenção' | 'Follow-up';
   content: string;
   isApproved: boolean;
+  isFavorite?: boolean;
   usageCount: number;
 }
 
@@ -184,7 +185,6 @@ export interface WhatsAppState {
   filters: { search: string; status: string; onlyUnread: boolean };
 }
 
-// --- WEBSITE BUILDER ENGINE TYPES ---
 export type ComponentType = 'NAVBAR' | 'HERO' | 'FEATURES' | 'FOOTER' | 'CONTACT' | 'PRICING';
 
 export interface SiteElement {
