@@ -1,13 +1,13 @@
-
-// @google/genai guidelines followed: Using Type for schema and Correct response properties
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
-import { ChatSession } from "../types";
 
+/**
+ * ES Maintenance Intelligence Service
+ * Utiliza exclusivamente process.env.API_KEY injetada pelo Vite
+ */
 export const geminiService = {
-  // VISION - gemini-3-pro-preview
-  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este anexo e extraia informações técnicas relevantes.") {
-    // Guidelines: Create instance right before call
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Vision Analysis - Gemini 3 Pro
+  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este anexo técnico.") {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const parts = [
       { inlineData: { data: fileData.split(',')[1], mimeType } },
       { text: prompt }
@@ -16,77 +16,55 @@ export const geminiService = {
       model: 'gemini-3-pro-preview',
       contents: { parts },
       config: {
-        systemInstruction: "Você é um especialista em manutenção predial e industrial de alto nível. Forneça laudos técnicos precisos baseados na imagem fornecida."
+        systemInstruction: "Você é um perito em manutenção técnica industrial da ES Enterprise."
       }
     });
-    // Guidelines: response.text is a property
     return response.text;
   },
 
-  // FAST RESPONSES (Low Latency) - gemini-flash-lite-latest
-  async getFastResponse(prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-flash-lite-latest',
-      contents: prompt,
-    });
-    return response.text;
-  },
-
-  // DEEP THINKING - gemini-3-pro-preview (32k budget)
+  // Deep Reasoning - Gemini 3 Pro (32k Budget)
   async getDeepResponse(prompt: string, context: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
         thinkingConfig: { thinkingBudget: 32768 },
-        systemInstruction: `Você é o SGC Pro Master Brain especializado em ${context}. Use raciocínio profundo para resolver problemas complexos.`
+        systemInstruction: `Especialista ES Enterprise em ${context}. Use raciocínio profundo.`
       }
     });
     return response.text;
   },
 
-  // SEARCH GROUNDING - gemini-3-flash-preview
+  // Fast Response - Gemini Flash Lite
+  async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-pro-preview') {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    const response = await ai.models.generateContent({
+      model: modelId,
+      contents: prompt,
+      config: { systemInstruction: `Assistente SGC Pro: ${context}.` }
+    });
+    return response.text;
+  },
+
+  // Web Search - Gemini 3 Flash
   async searchWeb(prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: { tools: [{ googleSearch: {} }] },
     });
-    // Guidelines: Extract website URLs from groundingChunks
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
-      title: chunk.web?.title || 'Fonte',
+      title: chunk.web?.title || 'Referência',
       uri: chunk.web?.uri || ''
     })) || [];
     return { text: response.text, sources };
   },
 
-  // NANO BANANA (IMAGE EDITING) - gemini-2.5-flash-image
-  async editImage(base64Image: string, mimeType: string, prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          { inlineData: { data: base64Image.split(',')[1], mimeType } },
-          { text: prompt }
-        ]
-      }
-    });
-    // Guidelines: Iterate through parts to find the image part
-    if (response.candidates?.[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return null;
-  },
-
-  // GENERATE IMAGES - gemini-3-pro-image-preview
+  // Image Generation - Gemini 3 Pro Image
   async generateImage(prompt: string, aspectRatio: string = "1:1") {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: { parts: [{ text: prompt }] },
@@ -94,7 +72,6 @@ export const geminiService = {
         imageConfig: { aspectRatio, imageSize: "1K" }
       }
     });
-    // Guidelines: Iterate through parts to find the image part
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
@@ -103,78 +80,53 @@ export const geminiService = {
     return null;
   },
 
-  async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-pro-preview') {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Edit Image - Gemini 2.5 Flash Image
+  async editImage(base64ImageData: string, mimeType: string, prompt: string) {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
-      model: modelId,
-      contents: prompt,
-      config: { systemInstruction: `Você é o SGC Pro Assistant especializado em ${context}.` }
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: base64ImageData.split(',')[1] || base64ImageData,
+              mimeType: mimeType,
+            },
+          },
+          {
+            text: prompt,
+          },
+        ],
+      },
     });
-    return response.text;
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          return `data:image/png;base64,${part.inlineData.data}`;
+        }
+      }
+    }
+    return null;
   },
 
+  // Site Section Generator (JSON)
   async generateSectionJSON(userPrompt: string): Promise<string> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: userPrompt,
       config: {
         responseMimeType: "application/json",
-        // Guidelines: Using Type enum for schema definition
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             type: { type: Type.STRING },
-            content: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                subtitle: { type: Type.STRING },
-                brandName: { type: Type.STRING },
-                links: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      label: { type: Type.STRING },
-                      href: { type: Type.STRING }
-                    }
-                  }
-                },
-                columns: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING },
-                      links: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    }
-                  }
-                },
-                items: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING },
-                      desc: { type: Type.STRING }
-                    }
-                  }
-                }
-              }
-            },
-            styles: {
-              type: Type.OBJECT,
-              properties: {
-                columns: { type: Type.NUMBER },
-                backgroundColor: { type: Type.STRING },
-                backgroundGradient: { type: Type.BOOLEAN }
-              }
-            }
+            content: { type: Type.OBJECT },
+            styles: { type: Type.OBJECT }
           },
           required: ["type", "content", "styles"]
         },
-        systemInstruction: "Você é um gerador de JSON para um construtor de sites SaaS. Retorne apenas o JSON no esquema solicitado."
+        systemInstruction: "Gerador de componentes JSON para ES Architect Pro."
       }
     });
     return response.text || "";
