@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
 const HVAC_SYSTEM_INSTRUCTION = `Você é o Ricardo IA, o Engenheiro Chefe da ES Enterprise. 
@@ -12,7 +11,8 @@ Ao responder:
 export const geminiService = {
   // Vision Analysis - Gemini 3 Pro
   async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const parts = [
       { inlineData: { data: fileData.split(',')[1], mimeType } },
       { text: prompt }
@@ -27,7 +27,8 @@ export const geminiService = {
 
   // Deep Technical Reasoning - Gemini 3 Pro (32k Budget)
   async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
@@ -41,7 +42,8 @@ export const geminiService = {
 
   // Chat Ágil - Gemini 3 Flash
   async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: modelId,
       contents: prompt,
@@ -52,7 +54,8 @@ export const geminiService = {
 
   // Pesquisa Técnica em Tempo Real
   async searchWeb(prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -67,12 +70,14 @@ export const geminiService = {
 
   // Geração de Imagens de Projetos (3 Pro Image)
   async generateImage(prompt: string, aspectRatio: string = "16:9") {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] },
       config: { imageConfig: { aspectRatio, imageSize: "1K" } }
     });
+    // Iterate through all parts to find the image part as per guidelines
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
@@ -83,7 +88,8 @@ export const geminiService = {
 
   // Editor de Imagens via Nano Banana
   async editImage(base64ImageData: string, mimeType: string, prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -93,6 +99,7 @@ export const geminiService = {
         ],
       },
     });
+    // Iterate through all parts to find the image part as per guidelines
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
@@ -103,7 +110,8 @@ export const geminiService = {
 
   // Fix: Added missing generateSectionJSON method for website builder
   async generateSectionJSON(prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization strictly from process.env.API_KEY
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
