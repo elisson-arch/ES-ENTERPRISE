@@ -8,7 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  // Use __dirname instead of process.cwd() to resolve the environment path reliably and avoid TS error
+  const env = loadEnv(mode, __dirname, '');
   
   return {
     base: '/',

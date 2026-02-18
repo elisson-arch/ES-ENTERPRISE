@@ -18,12 +18,12 @@ app.use(express.static(distPath, {
   }
 }));
 
-// Endpoint de Health Check para o Google Cloud Load Balancer
+// Endpoint de Health Check crucial para o Google Cloud Run validar o container
 app.get('/healthz', (req, res) => res.status(200).send('OK'));
 
 /**
  * Fallback para SPA (Single Page Application)
- * Essencial para que rotas como /clientes funcionem no PWA
+ * Garante que rotas como /clientes funcionem corretamente ao recarregar a página
  */
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
@@ -34,6 +34,7 @@ app.get('*', (req, res) => {
   }
 });
 
+// Vinculação obrigatória ao host 0.0.0.0 para exposição externa no Cloud Run
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`[PROD] ES Enterprise Engine online na porta ${PORT}`);
 });

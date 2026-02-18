@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Settings2, Trash2, AlignLeft, AlignCenter, AlignRight, Layout, Palette, 
@@ -14,7 +13,8 @@ interface EditorPanelProps {
   onDelete: (id: string) => void;
 }
 
-const ASPECT_RATIOS = ["1:1", "4:3", "3:4", "16:9", "9:16", "21:9", "2:3", "3:2"];
+// Fixed: Correct supported aspect ratios for nano banana series models (gemini-3-pro-image-preview)
+const ASPECT_RATIOS = ["1:1", "4:3", "3:4", "16:9", "9:16"];
 
 export const EditorPanel: React.FC<EditorPanelProps> = ({ 
   selectedElement, 
@@ -71,7 +71,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
              
              <div className="space-y-2">
                 <label className="text-[8px] font-black uppercase text-slate-500 ml-1">Proporção (Aspect Ratio)</label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-5 gap-1.5">
                    {ASPECT_RATIOS.map(ratio => (
                      <button 
                        key={ratio} 
