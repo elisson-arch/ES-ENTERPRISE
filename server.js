@@ -7,10 +7,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+// O Cloud Run injeta a porta dinamicamente nesta variável de ambiente
 const PORT = process.env.PORT || 8080;
 const distPath = path.resolve(__dirname, 'dist');
 
-// Middleware para servir arquivos estáticos com cache agressivo para PWA
+// Middleware para servir os arquivos estáticos gerados pelo build do Vite
 app.use(express.static(distPath, {
   maxAge: '1d',
   setHeaders: (res, path) => {
@@ -18,27 +19,28 @@ app.use(express.static(distPath, {
   }
 }));
 
-// Endpoint de Health Check crucial para o Google Cloud Run validar o container
+// Endpoint vital para o Google Cloud Run validar que o container está saudável
 app.get('/healthz', (req, res) => res.status(200).send('OK'));
 
 /**
- * Fallback para SPA (Single Page Application)
- * Garante que rotas como /clientes funcionem corretamente ao recarregar a página
+ * Fallback para SPA: Garante que rotas como /whatsapp ou /clientes
+ * carreguem corretamente mesmo após um refresh (F5).
  */
 app.get('*', (req, res) => {
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(503).send('Aplicação em fase de build. Recarregue em instantes.');
+    res.status(503).send('A aplicação está em fase de build. Por favor, tente novamente em instantes.');
   }
 });
 
-// Vinculação obrigatória ao host 0.0.0.0 para exposição externa no Cloud Run
+// É mandatório escutar em 0.0.0.0 para que o tráfego externo alcance o container
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[PROD] ES Enterprise Engine online na porta ${PORT}`);
+  console.log(`[PROD] ES Enterprise Online | Porta: ${PORT} | Host: 0.0.0.0`);
 });
 
+// Graceful shutdown
 process.on('SIGTERM', () => {
   server.close(() => process.exit(0));
 });
