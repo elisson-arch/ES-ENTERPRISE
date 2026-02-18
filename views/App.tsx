@@ -35,7 +35,12 @@ const App: React.FC = () => {
     window.addEventListener('google_auth_change', handler);
     
     const checkApiKey = async () => {
-      const selected = await window.aistudio.hasSelectedApiKey();
+      // Fallback de segurança para deploy profissional no Cloud Run
+      if (!(window as any).aistudio) {
+        setHasApiKey(true);
+        return;
+      }
+      const selected = await (window as any).aistudio.hasSelectedApiKey();
       setHasApiKey(selected);
     };
     checkApiKey();
@@ -62,7 +67,9 @@ const App: React.FC = () => {
   const [toasts, setToasts] = useState<AppNotification[]>([]);
 
   const handleSelectApiKey = async () => {
-    await window.aistudio.openSelectKey();
+    if ((window as any).aistudio) {
+      await (window as any).aistudio.openSelectKey();
+    }
     setHasApiKey(true);
   };
 
