@@ -1,4 +1,4 @@
-import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 const HVAC_SYSTEM_INSTRUCTION = `Você é o Ricardo IA, o Engenheiro Chefe da ES Enterprise. 
 Sua especialidade absoluta é Climatização, Refrigeração (HVAC) e Gestão de Manutenção Industrial/Residencial.
@@ -11,10 +11,9 @@ Ao responder:
 export const geminiService = {
   // Vision Analysis - Gemini 3 Pro
   async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const parts = [
-      { inlineData: { data: fileData.split(',')[1], mimeType } },
+      { inlineData: { data: fileData.split(',')[1] || fileData, mimeType } },
       { text: prompt }
     ];
     const response = await ai.models.generateContent({
@@ -27,7 +26,6 @@ export const geminiService = {
 
   // Deep Technical Reasoning - Gemini 3 Pro (32k Budget)
   async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -42,7 +40,6 @@ export const geminiService = {
 
   // Chat Ágil - Gemini 3 Flash
   async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: modelId,
@@ -54,7 +51,6 @@ export const geminiService = {
 
   // Pesquisa Técnica em Tempo Real
   async searchWeb(prompt: string) {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -70,14 +66,13 @@ export const geminiService = {
 
   // Geração de Imagens de Projetos (3 Pro Image)
   async generateImage(prompt: string, aspectRatio: string = "16:9") {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-image-preview',
       contents: { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] },
       config: { imageConfig: { aspectRatio, imageSize: "1K" } }
     });
-    // Iterate through all parts to find the image part as per guidelines
+    
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
@@ -88,7 +83,6 @@ export const geminiService = {
 
   // Editor de Imagens via Nano Banana
   async editImage(base64ImageData: string, mimeType: string, prompt: string) {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -99,7 +93,7 @@ export const geminiService = {
         ],
       },
     });
-    // Iterate through all parts to find the image part as per guidelines
+
     if (response.candidates?.[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
@@ -108,15 +102,14 @@ export const geminiService = {
     return null;
   },
 
-  // Fix: Added missing generateSectionJSON method for website builder
+  // Geração de JSON para Website Builder
   async generateSectionJSON(prompt: string) {
-    // Correct initialization strictly from process.env.API_KEY
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. O objeto deve ter as propriedades: 'type' (NAVBAR, HERO, FEATURES, FOOTER, CONTACT, PRICING), 'content' (objeto com dados da seção) e 'styles' (objeto com estilos). Responda apenas com o JSON bruto.",
+        systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. Responda apenas com o JSON bruto.",
         responseMimeType: "application/json"
       }
     });

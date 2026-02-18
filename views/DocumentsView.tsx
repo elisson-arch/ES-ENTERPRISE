@@ -14,7 +14,6 @@ import {
   X,
   ShieldCheck,
   Zap,
-  // Added Plus import to fix "Cannot find name 'Plus'" error
   Plus
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
