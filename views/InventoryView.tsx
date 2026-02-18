@@ -66,9 +66,9 @@ const mockAssets: Asset[] = [
 const getAssetUI = (type: string) => {
   const t = type.toLowerCase();
   
-  // Lógica de ícones baseada em palavras-chave industriais
   if (t.includes('split') || t.includes('wall') || t.includes('piso-teto')) {
     return { 
+      id: 'Split',
       icon: Wind, 
       color: 'bg-blue-600', 
       bgLight: 'bg-blue-50',
@@ -80,6 +80,7 @@ const getAssetUI = (type: string) => {
   
   if (t.includes('cassete') || t.includes('cassette') || t.includes('k7')) {
     return { 
+      id: 'Cassete',
       icon: Layers, 
       color: 'bg-purple-600', 
       bgLight: 'bg-purple-50',
@@ -91,6 +92,7 @@ const getAssetUI = (type: string) => {
   
   if (t.includes('industrial') || t.includes('chiller') || t.includes('fancoil') || t.includes('self')) {
     return { 
+      id: 'Industrial',
       icon: Factory, 
       color: 'bg-indigo-600', 
       bgLight: 'bg-indigo-50',
@@ -100,8 +102,8 @@ const getAssetUI = (type: string) => {
     };
   }
   
-  // Padrão (Snowflake) para outros tipos de climatização
   return { 
+    id: 'Outros',
     icon: Snowflake, 
     color: 'bg-slate-700', 
     bgLight: 'bg-slate-50',
@@ -113,9 +115,10 @@ const getAssetUI = (type: string) => {
 
 const CATEGORIES = [
   { id: 'Todos', label: 'Todos', icon: CheckCircle2, color: 'bg-slate-900', activeColor: 'bg-slate-900' },
-  { id: 'Split', label: 'Split/Wall', icon: Wind, color: 'bg-blue-500', activeColor: 'bg-blue-600' },
-  { id: 'Cassete', label: 'Cassete/K7', icon: Layers, color: 'bg-purple-500', activeColor: 'bg-purple-600' },
-  { id: 'Industrial', label: 'Industrial/HVAC', icon: Factory, color: 'bg-indigo-500', activeColor: 'bg-indigo-600' }
+  { id: 'Split', label: 'Split/Wall', icon: Wind, color: 'bg-blue-600', activeColor: 'bg-blue-600' },
+  { id: 'Cassete', label: 'Cassete/K7', icon: Layers, color: 'bg-purple-600', activeColor: 'bg-purple-600' },
+  { id: 'Industrial', label: 'Industrial/HVAC', icon: Factory, color: 'bg-indigo-600', activeColor: 'bg-indigo-600' },
+  { id: 'Outros', label: 'Outros', icon: Snowflake, color: 'bg-slate-600', activeColor: 'bg-slate-600' }
 ];
 
 const InventoryView = () => {
@@ -124,13 +127,12 @@ const InventoryView = () => {
 
   const filteredAssets = useMemo(() => {
     return mockAssets.filter(a => {
+      const ui = getAssetUI(a.type);
       const matchesSearch = a.brand.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            a.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            a.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesCategory = selectedCategory === 'Todos' || 
-                             a.type.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-                             (selectedCategory === 'Industrial' && (a.type.toLowerCase().includes('chiller') || a.type.toLowerCase().includes('hvac')));
+      const matchesCategory = selectedCategory === 'Todos' || ui.id === selectedCategory;
                              
       return matchesSearch && matchesCategory;
     });
@@ -202,7 +204,6 @@ const InventoryView = () => {
                 <tr key={asset.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-6">
-                      {/* Ícone Proeminente e Colorido */}
                       <div className={`w-16 h-16 rounded-[1.5rem] ${ui.color} shadow-xl shadow-indigo-100/20 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform duration-500`}>
                         <AssetIcon size={32} />
                       </div>
