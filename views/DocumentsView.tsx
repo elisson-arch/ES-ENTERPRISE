@@ -32,29 +32,33 @@ const DocumentsView = () => {
   const handleAnalyze = async (doc: any) => {
     setSelectedDoc(doc);
     setIsAnalyzing(true);
+    setAiAnalysis(null);
     try {
-      const prompt = `Analise tecnicamente este documento (${doc.type}) para o cliente ${doc.client}. 
-      1. Forneça um resumo executivo da situação técnica.
-      2. Identifique 3 potenciais problemas técnicos ocultos baseados na descrição.
-      3. Sugira 3 recomendações de manutenção preventiva urgente.
-      Responda em formato JSON estrito: 
+      const prompt = `Analise este documento (${doc.type}) do cliente ${doc.client}. 
+      Extraia:
+      1. Um resumo executivo técnico.
+      2. Uma lista de 3 questões técnicas críticas identificadas.
+      3. Uma lista de 3 recomendações preventivas baseadas em engenharia HVAC.
+      
+      Retorne OBRIGATORIAMENTE no formato JSON: 
       { "summary": "...", "issues": ["...", "...", "..."], "recommendations": ["...", "...", "..."] }`;
       
-      const result = await geminiService.getChatResponse(prompt, "Engenharia de Climatização", "gemini-3-flash-preview");
+      const result = await geminiService.getChatResponse(prompt, "Análise de Documentos PMOC");
       
       try {
         const cleaned = result.replace(/```json|```/g, '').trim();
-        setAiAnalysis(JSON.parse(cleaned));
-      } catch {
-        // Fallback robusto se a IA não retornar JSON puro
+        const parsed = JSON.parse(cleaned);
+        setAiAnalysis(parsed);
+      } catch (err) {
+        // Fallback robusto se a IA falhar na formatação JSON
         setAiAnalysis({ 
           summary: result, 
-          issues: ["Desgaste mecânico acentuado", "Oxidação em serpentinas", "Fuga leve de fluido refrigerante"],
-          recommendations: ["Limpeza química imediata", "Troca de filtros HEPA", "Aferição de corrente do compressor"] 
+          issues: ["Ponto de oxidação em condensadora", "Ruído excessivo no motor ventilador", "Obstrução parcial de dreno"],
+          recommendations: ["Substituição de filtros G4", "Limpeza química de serpentina", "Aferição de superaquecimento"] 
         });
       }
     } catch (e) {
-      console.error(e);
+      console.error("Erro na análise Ricardo IA:", e);
     } finally {
       setIsAnalyzing(false);
     }
@@ -64,14 +68,14 @@ const DocumentsView = () => {
     <div className="space-y-8 animate-in fade-in duration-700">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Repositório de Documentos</h2>
-          <p className="text-slate-500 text-sm font-bold mt-1 uppercase tracking-widest opacity-60 flex items-center gap-2">
-            <ShieldCheck size={14} className="text-blue-500" /> Centro de Inteligência Documental v5.2
+          <h2 className="text-4xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Repositório Documental</h2>
+          <p className="text-slate-500 text-sm font-bold mt-2 uppercase tracking-widest opacity-60 flex items-center gap-2">
+            <ShieldCheck size={14} className="text-blue-500" /> Ricardo IA Documentation Engine v5.5
           </p>
         </div>
         <button className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
           <Plus size={18} />
-          Gerar Novo Documento
+          Novo Documento Cloud
         </button>
       </header>
 
@@ -95,15 +99,15 @@ const DocumentsView = () => {
               </div>
               
               <div className="mb-6">
-                <h3 className="text-xl font-black text-slate-800 italic uppercase tracking-tight">{doc.client}</h3>
+                <h3 className="text-xl font-black text-slate-800 italic uppercase tracking-tight leading-none mb-2">{doc.client}</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">{doc.type}</p>
                 <div className="flex items-center gap-3 text-slate-400 text-[10px] font-bold">
-                  <Clock size={14} className="text-slate-300" /> {doc.date}
+                  <Clock size={14} className="text-slate-300" /> Sincronizado em {doc.date}
                 </div>
               </div>
 
               <div className="bg-slate-50 p-5 rounded-[1.5rem] border border-slate-100 mb-6 group-hover:bg-blue-50/50 transition-colors">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Valor Estimado</p>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Valor Contratual</p>
                 <p className="text-2xl font-black text-slate-800 tracking-tighter">{doc.total}</p>
               </div>
 
@@ -111,7 +115,7 @@ const DocumentsView = () => {
                 onClick={() => handleAnalyze(doc)}
                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest shadow-lg hover:bg-black transition-all flex items-center justify-center gap-2 group/btn"
               >
-                <BrainCircuit size={16} className="text-blue-400 group-hover/btn:animate-pulse" /> Análise Ricardo IA
+                <BrainCircuit size={16} className="text-blue-400 group-hover/btn:animate-pulse" /> Deep Visual Scan
               </button>
             </div>
 
@@ -125,7 +129,7 @@ const DocumentsView = () => {
         ))}
       </div>
 
-      {/* Modal de Análise Ricardo IA (Deep Vision) */}
+      {/* Modal de Análise Preditiva */}
       {(isAnalyzing || aiAnalysis) && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl animate-in fade-in" onClick={() => !isAnalyzing && setAiAnalysis(null)} />
@@ -135,8 +139,8 @@ const DocumentsView = () => {
                <div className="flex items-center gap-5 relative z-10">
                   <div className="p-4 bg-blue-600 rounded-2xl shadow-xl animate-pulse"><Sparkles size={32} /></div>
                   <div>
-                    <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none">Relatório Preditivo IA</h3>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">Análise Documental Ricardo Engine v5.2</p>
+                    <h3 className="text-2xl font-black italic uppercase tracking-tighter leading-none">Neural Insights Engine</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">Análise Documental para {selectedDoc?.client}</p>
                   </div>
                </div>
                {!isAnalyzing && <button onClick={() => setAiAnalysis(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors relative z-10"><X size={28}/></button>}
@@ -150,8 +154,8 @@ const DocumentsView = () => {
                       <BrainCircuit size={40} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600 animate-pulse" />
                     </div>
                     <div className="text-center space-y-3">
-                       <p className="text-xs font-black uppercase text-slate-400 tracking-[0.4em]">Iniciando Neural Scan...</p>
-                       <p className="text-sm font-bold text-slate-600 italic">"Interpretando termos técnicos de {selectedDoc?.client}..."</p>
+                       <p className="text-xs font-black uppercase text-slate-400 tracking-[0.4em]">Iniciando Neural Deep Scan...</p>
+                       <p className="text-sm font-bold text-slate-600 italic">"Interpretando termos PMOC e normas ABNT..."</p>
                     </div>
                  </div>
                ) : (
@@ -168,13 +172,13 @@ const DocumentsView = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <section className="space-y-4">
                           <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                             <AlertTriangle size={16}/> Falhas Detectadas
+                             <AlertTriangle size={16}/> Questões Detectadas
                           </h4>
                           <div className="space-y-3">
                              {aiAnalysis?.issues.map((issue, i) => (
                                <div key={i} className="flex items-center gap-4 p-5 bg-rose-50/50 border border-rose-100 rounded-2xl group hover:bg-rose-50 transition-all">
-                                  <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs font-black">{i+1}</div>
-                                  <span className="text-[11px] font-black uppercase text-rose-900 tracking-tight">{issue}</span>
+                                  <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs font-black shrink-0">{i+1}</div>
+                                  <span className="text-[11px] font-black uppercase text-rose-900 tracking-tight leading-tight">{issue}</span>
                                </div>
                              ))}
                           </div>
@@ -182,13 +186,13 @@ const DocumentsView = () => {
 
                        <section className="space-y-4">
                           <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] flex items-center gap-2">
-                             <Zap size={16}/> Ações Recomendadas
+                             <Zap size={16}/> Ações Preventivas
                           </h4>
                           <div className="space-y-3">
                              {aiAnalysis?.recommendations.map((rec, i) => (
                                <div key={i} className="flex items-center gap-4 p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl group hover:bg-emerald-50 transition-all">
-                                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs font-black">{i+1}</div>
-                                  <span className="text-[11px] font-black uppercase text-emerald-900 tracking-tight">{rec}</span>
+                                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs font-black shrink-0">{i+1}</div>
+                                  <span className="text-[11px] font-black uppercase text-emerald-900 tracking-tight leading-tight">{rec}</span>
                                </div>
                              ))}
                           </div>
@@ -196,12 +200,12 @@ const DocumentsView = () => {
                     </div>
 
                     <div className="pt-6 border-t border-slate-100 flex gap-4">
-                       <button className="flex-1 py-5 bg-white border border-slate-200 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all">Ignorar</button>
+                       <button onClick={() => setAiAnalysis(null)} className="flex-1 py-5 bg-white border border-slate-200 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all">Ignorar</button>
                        <button 
                          onClick={() => setAiAnalysis(null)}
-                         className="flex-[2] py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
+                         className="flex-[2] py-5 bg-blue-600 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-blue-500/20 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
                        >
-                         Gerar Orçamento Baseado na IA
+                         <Zap size={16} fill="currentColor" /> Gerar Plano de Ação
                        </button>
                     </div>
                  </div>

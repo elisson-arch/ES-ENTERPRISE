@@ -9,7 +9,9 @@ Ao responder:
 4. Mantenha um tom profissional, ágil e focado em soluções práticas de campo.`;
 
 export const geminiService = {
-  // Vision Analysis - Gemini 3 Pro
+  /**
+   * Vision Analysis - Utiliza Gemini 3 Pro para identificar falhas em fotos
+   */
   async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const parts = [
@@ -24,7 +26,9 @@ export const geminiService = {
     return response.text;
   },
 
-  // Deep Technical Reasoning - Gemini 3 Pro (32k Budget)
+  /**
+   * Deep Technical Reasoning - Raciocínio profundo para diagnósticos complexos
+   */
   async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -38,7 +42,9 @@ export const geminiService = {
     return response.text;
   },
 
-  // Chat Ágil - Gemini 3 Flash
+  /**
+   * Chat Ágil - Respostas rápidas para suporte ao cliente
+   */
   async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -49,7 +55,9 @@ export const geminiService = {
     return response.text;
   },
 
-  // Pesquisa Técnica em Tempo Real
+  /**
+   * Pesquisa Técnica Grounded - Busca informações técnicas na web
+   */
   async searchWeb(prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -64,7 +72,9 @@ export const geminiService = {
     return { text: response.text, sources };
   },
 
-  // Geração de Imagens de Projetos (3 Pro Image)
+  /**
+   * Geração de Imagens Técnicas
+   */
   async generateImage(prompt: string, aspectRatio: string = "16:9") {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -81,7 +91,9 @@ export const geminiService = {
     return null;
   },
 
-  // Editor de Imagens via Nano Banana
+  /**
+   * Edição de Imagem Preditiva
+   */
   async editImage(base64ImageData: string, mimeType: string, prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
@@ -102,7 +114,9 @@ export const geminiService = {
     return null;
   },
 
-  // Geração de JSON para Website Builder
+  /**
+   * Geração de JSON estruturado para seções de site
+   */
   async generateSectionJSON(prompt: string) {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
