@@ -15,7 +15,8 @@ import {
   MonitorSmartphone,
   ChevronRight,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Fan
 } from 'lucide-react';
 import type { Asset } from '../types';
 
@@ -23,7 +24,7 @@ const mockAssets: Asset[] = [
   {
     id: 'a1',
     clientId: '1',
-    type: 'Split Hi-Wall Inverter',
+    type: 'Split Hi-Wall Inverter 12k BTU',
     brand: 'Daikin',
     model: 'FTKC12',
     serialNumber: 'DKN-2024-X102',
@@ -33,7 +34,7 @@ const mockAssets: Asset[] = [
   {
     id: 'a2',
     clientId: '1',
-    type: 'Cassette 360',
+    type: 'Cassette 360 Inverter',
     brand: 'LG',
     model: 'Multi V S',
     serialNumber: 'LG-MX-5541',
@@ -43,7 +44,7 @@ const mockAssets: Asset[] = [
   {
     id: 'a3',
     clientId: '2',
-    type: 'Refrigeração Industrial Chiller',
+    type: 'Chiller Central Parafuso',
     brand: 'Carrier',
     model: '30XW',
     serialNumber: 'CRR-9981-P',
@@ -53,7 +54,7 @@ const mockAssets: Asset[] = [
   {
     id: 'a4',
     clientId: '3',
-    type: 'Equipamento Geral',
+    type: 'Multi Split 3 ambientes',
     brand: 'Midea',
     model: 'X-Power',
     serialNumber: 'MID-1122',
@@ -64,17 +65,57 @@ const mockAssets: Asset[] = [
 
 const getAssetUI = (type: string) => {
   const t = type.toLowerCase();
-  if (t.includes('split')) return { icon: Wind, color: 'bg-blue-500/10 text-blue-500', border: 'border-blue-500/20', label: 'Split/Ar' };
-  if (t.includes('cassete') || t.includes('cassette')) return { icon: Layers, color: 'bg-purple-500/10 text-purple-500', border: 'border-purple-500/20', label: 'Cassete' };
-  if (t.includes('industrial') || t.includes('chiller')) return { icon: Factory, color: 'bg-indigo-500/10 text-indigo-500', border: 'border-indigo-500/20', label: 'Industrial' };
-  return { icon: Snowflake, color: 'bg-slate-500/10 text-slate-400', border: 'border-slate-500/20', label: 'Equipamento' };
+  
+  // Lógica de ícones baseada em palavras-chave industriais
+  if (t.includes('split') || t.includes('wall') || t.includes('piso-teto')) {
+    return { 
+      icon: Wind, 
+      color: 'bg-blue-600', 
+      bgLight: 'bg-blue-50',
+      text: 'text-blue-600',
+      border: 'border-blue-100', 
+      label: 'Split System' 
+    };
+  }
+  
+  if (t.includes('cassete') || t.includes('cassette') || t.includes('k7')) {
+    return { 
+      icon: Layers, 
+      color: 'bg-purple-600', 
+      bgLight: 'bg-purple-50',
+      text: 'text-purple-600',
+      border: 'border-purple-100', 
+      label: 'Cassete' 
+    };
+  }
+  
+  if (t.includes('industrial') || t.includes('chiller') || t.includes('fancoil') || t.includes('self')) {
+    return { 
+      icon: Factory, 
+      color: 'bg-indigo-600', 
+      bgLight: 'bg-indigo-50',
+      text: 'text-indigo-600',
+      border: 'border-indigo-100', 
+      label: 'Industrial/HVAC' 
+    };
+  }
+  
+  // Padrão (Snowflake) para outros tipos de climatização
+  return { 
+    icon: Snowflake, 
+    color: 'bg-slate-700', 
+    bgLight: 'bg-slate-50',
+    text: 'text-slate-600',
+    border: 'border-slate-100', 
+    label: 'Equipamento' 
+  };
 };
 
 const CATEGORIES = [
   { id: 'Todos', label: 'Todos', icon: CheckCircle2, color: 'bg-slate-900', activeColor: 'bg-slate-900' },
-  { id: 'Split', label: 'Split Hi-Wall', icon: Wind, color: 'bg-blue-500', activeColor: 'bg-blue-600' },
-  { id: 'Cassete', label: 'Cassete', icon: Layers, color: 'bg-purple-500', activeColor: 'bg-purple-600' },
-  { id: 'Industrial', label: 'Industrial', icon: Factory, color: 'bg-indigo-500', activeColor: 'bg-indigo-600' }
+  { id: 'Split', label: 'Split/Wall', icon: Wind, color: 'bg-blue-500', activeColor: 'bg-blue-600' },
+  { id: 'Cassete', label: 'Cassete/K7', icon: Layers, color: 'bg-purple-500', activeColor: 'bg-purple-600' },
+  { id: 'Industrial', label: 'Industrial/HVAC', icon: Factory, color: 'bg-indigo-500', activeColor: 'bg-indigo-600' }
 ];
 
 const InventoryView = () => {
@@ -89,25 +130,25 @@ const InventoryView = () => {
       
       const matchesCategory = selectedCategory === 'Todos' || 
                              a.type.toLowerCase().includes(selectedCategory.toLowerCase()) ||
-                             (selectedCategory === 'Industrial' && a.type.toLowerCase().includes('chiller'));
+                             (selectedCategory === 'Industrial' && (a.type.toLowerCase().includes('chiller') || a.type.toLowerCase().includes('hvac')));
                              
       return matchesSearch && matchesCategory;
     });
   }, [searchTerm, selectedCategory]);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-4xl font-black text-slate-800 italic tracking-tighter uppercase leading-none">Ativos & Equipamentos</h2>
           <div className="flex items-center gap-2 text-slate-500 text-sm font-bold mt-2">
             <MonitorSmartphone size={16} className="text-blue-500" />
-            <span className="uppercase tracking-widest text-[10px]">Gestão de Inventário Enterprise v5.1</span>
+            <span className="uppercase tracking-widest text-[10px]">Gestão Técnica Enterprise v5.2</span>
           </div>
         </div>
         <button className="bg-blue-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95">
           <Plus size={18} />
-          Cadastrar Ativo
+          Cadastrar Novo Ativo
         </button>
       </header>
 
@@ -116,7 +157,7 @@ const InventoryView = () => {
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
           <input 
             type="text" 
-            placeholder="Pesquisar por marca, modelo, serial..."
+            placeholder="Pesquisar por marca, modelo, serial ou tipo..."
             className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-400 transition-all text-sm font-bold text-slate-700 shadow-inner"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -142,14 +183,14 @@ const InventoryView = () => {
       </div>
 
       <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
-        <table className="w-full text-left min-w-[900px]">
+        <table className="w-full text-left min-w-[950px]">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">
-              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ativo / Tipo</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identificação</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Vital</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Manutenção</th>
-              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ações</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identificação do Ativo</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Série / Modelo</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado Vital</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cronograma</th>
+              <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Controles</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -160,46 +201,61 @@ const InventoryView = () => {
               return (
                 <tr key={asset.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
                   <td className="px-8 py-5">
-                    <div className="flex items-center gap-5">
-                      <div className={`p-4 rounded-2xl ${ui.color} border ${ui.border} shadow-sm group-hover:scale-110 transition-transform flex items-center justify-center`}>
-                        <AssetIcon size={24} />
+                    <div className="flex items-center gap-6">
+                      {/* Ícone Proeminente e Colorido */}
+                      <div className={`w-16 h-16 rounded-[1.5rem] ${ui.color} shadow-xl shadow-indigo-100/20 flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform duration-500`}>
+                        <AssetIcon size={32} />
                       </div>
-                      <div>
-                        <p className="text-sm font-black text-slate-800 uppercase tracking-tighter italic">{asset.brand}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{ui.label}</p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                           <p className="text-base font-black text-slate-800 uppercase tracking-tighter italic leading-none">{asset.brand}</p>
+                           <span className={`px-2 py-0.5 ${ui.bgLight} ${ui.text} border ${ui.border} rounded-lg text-[8px] font-black uppercase tracking-widest`}>
+                             {ui.label}
+                           </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{asset.type}</p>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="space-y-1">
-                      <p className="text-xs font-black text-slate-700 font-mono bg-slate-100 px-2 py-1 rounded-lg w-fit border border-slate-200">{asset.serialNumber}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{asset.model}</p>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                       <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                       <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase rounded-full border border-emerald-100">
-                         Operacional
-                       </span>
                     </div>
                   </td>
                   <td className="px-8 py-5">
                     <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-xl w-fit border border-slate-200">
+                         <span className="text-[9px] font-black text-slate-400 uppercase">SN</span>
+                         <p className="text-xs font-black text-slate-700 font-mono tracking-tight">{asset.serialNumber}</p>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight ml-1">{asset.model}</p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="flex flex-col gap-2">
+                       <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]"></span>
+                          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                            Em Operação
+                          </span>
+                       </div>
+                       <div className="flex items-center gap-1 opacity-40">
+                          <Fan size={10} className="animate-spin duration-3000" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">Eficiência 98%</span>
+                       </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-5">
+                    <div className="space-y-2">
                       <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold">
-                        <Calendar size={12} className="text-blue-500" />
-                        <span className="text-slate-400">Inst:</span> {asset.installationDate}
+                        <div className="p-1 bg-blue-50 text-blue-500 rounded-md"><Calendar size={12} /></div>
+                        <span className="text-slate-400 uppercase tracking-tighter">Instalado:</span> <span className="text-slate-700 italic">{asset.installationDate}</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold">
-                        <History size={12} className="text-indigo-500" />
-                        <span className="text-slate-400">Prox:</span> {asset.lastMaintenance}
+                        <div className="p-1 bg-amber-50 text-amber-500 rounded-md"><History size={12} /></div>
+                        <span className="text-slate-400 uppercase tracking-tighter">Prox. Maint:</span> <span className="text-slate-700 italic">{asset.lastMaintenance}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button className="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Configurações"><Settings2 size={18} /></button>
-                      <button className="p-3 bg-white border border-slate-200 text-indigo-600 rounded-xl hover:bg-indigo-50 shadow-sm transition-all" title="Ver Histórico"><ChevronRight size={18} /></button>
+                      <button className="p-3 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Configurar Ativo"><Settings2 size={20} /></button>
+                      <button className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-black shadow-lg transition-all" title="Ver Histórico Técnico"><ChevronRight size={20} /></button>
                     </div>
                   </td>
                 </tr>
@@ -209,7 +265,7 @@ const InventoryView = () => {
                 <td colSpan={5} className="px-8 py-20 text-center">
                   <div className="max-w-xs mx-auto space-y-4 opacity-30">
                     <Search size={48} className="mx-auto text-slate-300" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nenhum ativo encontrado para esta categoria ou busca.</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nenhum equipamento localizado na base de dados.</p>
                   </div>
                 </td>
               </tr>
@@ -218,19 +274,23 @@ const InventoryView = () => {
         </table>
       </div>
       
-      <div className="bg-slate-900 p-8 rounded-[3rem] text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl relative overflow-hidden group border border-white/5">
-         <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:rotate-12 transition-transform duration-1000">
-            <Zap size={150} fill="currentColor" />
+      <div className="bg-slate-900 p-10 rounded-[3rem] text-white flex flex-col md:flex-row items-center justify-between gap-10 shadow-2xl relative overflow-hidden group border border-white/5">
+         <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:rotate-12 group-hover:scale-150 transition-transform duration-1000">
+            <Zap size={200} fill="currentColor" />
          </div>
-         <div className="space-y-2 relative z-10">
-            <h3 className="text-xl font-black italic uppercase tracking-tight flex items-center gap-3">
-              <Zap size={20} className="text-amber-400" fill="currentColor" />
-              Diagnóstico Preditivo Ricardo IA
+         <div className="space-y-3 relative z-10">
+            <h3 className="text-2xl font-black italic uppercase tracking-tight flex items-center gap-4">
+              <div className="p-3 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/20">
+                <Zap size={24} className="text-amber-400" fill="currentColor" />
+              </div>
+              Ricardo IA: Insights Preditivos
             </h3>
-            <p className="text-slate-400 text-sm font-medium max-w-md">Detectamos que 2 ativos do tipo Cassete estão operando com 15% acima da carga térmica nominal. Deseja abrir uma preventiva?</p>
+            <p className="text-slate-400 text-sm font-medium max-w-xl leading-relaxed uppercase tracking-wide">
+              Análise Neural indica que equipamentos industriais de carga contínua estão com desgaste 12% acima da média sazonal. Deseja antecipar as preventivas de Q3?
+            </p>
          </div>
-         <button className="px-10 py-5 bg-blue-600 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-500 transition-all whitespace-nowrap relative z-10">
-            Abrir Ordem de Serviço
+         <button className="px-12 py-6 bg-blue-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-blue-500 active:scale-95 transition-all whitespace-nowrap relative z-10">
+            Gerar Ordens de Serviço
          </button>
       </div>
     </div>
