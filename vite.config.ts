@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
     preview: {
       port: 8080,
       host: '0.0.0.0',
-      allowedHosts: true, 
+      allowedHosts: true, // Vital para o Cloud Run aceitar o domínio do Google 
     },
     plugins: [
       react(),
