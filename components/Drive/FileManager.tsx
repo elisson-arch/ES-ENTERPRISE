@@ -58,146 +58,120 @@ export const FileManager: React.FC<FileManagerProps> = ({
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 h-full animate-in fade-in duration-500">
-      {/* Sidebar de Navegação Lateral */}
-      <aside className="w-full lg:w-72 space-y-3">
-        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4">Pastas Mestres</h4>
+      {/* Sidebar de Navegação Lateral - Agora Flexível */}
+      <aside className="w-full lg:max-w-xs lg:min-w-[240px] space-y-3">
+        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4">Cloud Masters us-central1</h4>
         
-        <button 
-          onClick={() => onViewChange('all')}
-          className={`w-full flex items-center justify-between px-5 py-4 rounded-[1.5rem] transition-all group ${
-            currentView === 'all' 
-              ? 'bg-blue-600 text-white shadow-xl shadow-blue-100' 
-              : 'text-slate-600 hover:bg-white hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <Database size={20} className={currentView === 'all' ? 'text-white' : 'text-blue-500'} />
-            <span className="text-xs font-black uppercase tracking-widest">Tudo</span>
-          </div>
-          <ChevronRight size={16} className={currentView === 'all' ? 'opacity-50' : 'text-slate-300'} />
-        </button>
-
-        <button 
-          onClick={() => onViewChange('clients')}
-          className={`w-full flex items-center justify-between px-5 py-4 rounded-[1.5rem] transition-all group ${
-            currentView === 'clients' 
-              ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' 
-              : 'text-slate-600 hover:bg-white hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <Users size={20} className={currentView === 'clients' ? 'text-white' : 'text-indigo-500'} />
-            <span className="text-xs font-black uppercase tracking-widest">Clientes</span>
-          </div>
-          <ChevronRight size={16} className={currentView === 'clients' ? 'opacity-50' : 'text-slate-300'} />
-        </button>
-
-        <button 
-          onClick={() => onViewChange('company')}
-          className={`w-full flex items-center justify-between px-5 py-4 rounded-[1.5rem] transition-all group ${
-            currentView === 'company' 
-              ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' 
-              : 'text-slate-600 hover:bg-white hover:shadow-md'
-          }`}
-        >
-          <div className="flex items-center gap-4">
-            <Briefcase size={20} className={currentView === 'company' ? 'text-white' : 'text-slate-400'} />
-            <span className="text-xs font-black uppercase tracking-widest">Empresa</span>
-          </div>
-          <ChevronRight size={16} className={currentView === 'company' ? 'opacity-50' : 'text-slate-300'} />
-        </button>
+        {[
+          { id: 'all', label: 'Tudo', icon: Database, color: 'bg-blue-600', activeColor: 'text-blue-500' },
+          { id: 'clients', label: 'Clientes', icon: Users, color: 'bg-indigo-600', activeColor: 'text-indigo-500' },
+          { id: 'company', label: 'Empresa', icon: Briefcase, color: 'bg-slate-900', activeColor: 'text-slate-400' }
+        ].map(item => (
+          <button 
+            key={item.id}
+            onClick={() => onViewChange(item.id as any)}
+            className={`w-full flex items-center justify-between px-6 py-5 rounded-[1.5rem] transition-all group min-h-[56px] ${
+              currentView === item.id 
+                ? `${item.color} text-white shadow-2xl` 
+                : 'text-slate-600 bg-white hover:shadow-lg border border-transparent hover:border-slate-100'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <item.icon size={22} className={currentView === item.id ? 'text-white' : item.activeColor} />
+              <span className="text-xs font-black uppercase tracking-widest">{item.label}</span>
+            </div>
+            <ChevronRight size={18} className={currentView === item.id ? 'opacity-40' : 'text-slate-200 group-hover:text-slate-400'} />
+          </button>
+        ))}
 
         <div className="pt-8 px-4">
-          <div className="bg-slate-100/50 p-6 rounded-[2rem] border border-slate-200/50 text-center">
-             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4 shadow-sm">
-                <Database size={24} />
+          <div className="bg-slate-100/50 p-6 rounded-[2rem] border border-slate-200/50 text-center shadow-inner">
+             <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4 shadow-sm border border-slate-100">
+                <Database size={28} />
              </div>
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Armazenamento</p>
-             <p className="text-sm font-black text-slate-800 tracking-tighter">42.5 GB / 100 GB</p>
-             <div className="mt-4 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full w-[42.5%] rounded-full"></div>
+             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Cota Regional Cloud</p>
+             <p className="text-sm font-black text-slate-800 tracking-tighter italic">42.5 GB / 100 GB</p>
+             <div className="mt-5 w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div className="bg-blue-600 h-full w-[42.5%] rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]"></div>
              </div>
           </div>
         </div>
       </aside>
 
       {/* Área Principal de Arquivos */}
-      <div className="flex-1 space-y-6">
-        {/* Barra de Ferramentas */}
-        <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4">
+      <div className="flex-1 space-y-6 min-w-0">
+        <div className="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
             <input 
               type="text" 
-              placeholder="Pesquisar arquivos e pastas..."
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-300 focus:bg-white transition-all text-sm font-medium"
+              placeholder="Pesquisar documentos técnicos..."
+              className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-400 transition-all text-sm font-bold text-slate-700 shadow-inner"
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Navegação/Breadcrumbs */}
-        <div className="flex items-center gap-3 px-2">
-           <button onClick={() => onViewChange('all')} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
-              <ArrowLeft size={18} />
+        <div className="flex items-center gap-4 px-2">
+           <button onClick={() => onViewChange('all')} className="w-10 h-10 flex items-center justify-center bg-white rounded-xl text-slate-400 hover:text-blue-600 transition-all border border-slate-100 shadow-sm">
+              <ArrowLeft size={20} />
            </button>
            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              <span className="hover:text-blue-600 cursor-pointer">Root</span>
-              <ChevronRight size={12} />
+              <span className="hover:text-blue-600 cursor-pointer transition-colors">SGC Cloud Root</span>
+              <ChevronRight size={14} />
               <span className="text-slate-800 italic">{getBreadcrumbLabel()}</span>
            </div>
         </div>
 
-        {/* Tabela de Arquivos */}
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Item</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden md:table-cell">Tamanho</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden md:table-cell">Data Modificação</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Ações</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Item / Descrição</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hidden md:table-cell">Peso</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hidden md:table-cell text-center">Sync Date</th>
+                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {files.length > 0 ? files.map((file, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
-                  <td className="px-8 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-slate-100 rounded-xl group-hover:bg-white group-hover:shadow-sm transition-all">
+                <tr key={idx} className="hover:bg-slate-50/50 transition-all group cursor-pointer">
+                  <td className="px-8 py-5">
+                    <div className="flex items-center gap-5">
+                      <div className="p-4 bg-slate-100 rounded-2xl group-hover:bg-white group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 border border-transparent group-hover:border-slate-100">
                         {getIcon(file.type)}
                       </div>
                       <div className="min-w-0">
-                        <span className="text-sm font-bold text-slate-800 block truncate group-hover:text-blue-600 transition-colors">
+                        <span className="text-[13px] font-black text-slate-800 block truncate group-hover:text-blue-600 transition-colors uppercase tracking-tight italic">
                           {file.name}
                         </span>
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{file.category}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-8 py-4 text-xs font-mono text-slate-500 hidden md:table-cell">{file.size}</td>
-                  <td className="px-8 py-4 text-xs font-bold text-slate-400 hidden md:table-cell uppercase">{file.date}</td>
-                  <td className="px-8 py-4 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Download">
-                        <Download size={16} />
+                  <td className="px-8 py-5 text-xs font-black text-slate-500 hidden md:table-cell">{file.size}</td>
+                  <td className="px-8 py-5 text-xs font-black text-slate-400 hidden md:table-cell text-center uppercase italic">{file.date}</td>
+                  <td className="px-8 py-5 text-right">
+                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Download">
+                        <Download size={18} />
                       </button>
-                      <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-all" title="Compartilhar">
-                        <Share2 size={16} />
+                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-all" title="Compartilhar">
+                        <Share2 size={18} />
                       </button>
-                      <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-800 shadow-sm transition-all">
-                        <MoreVertical size={16} />
+                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-300 hover:text-slate-800 shadow-sm transition-all">
+                        <MoreVertical size={18} />
                       </button>
                     </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={4} className="px-8 py-20 text-center">
-                    <div className="max-w-xs mx-auto space-y-4 opacity-30">
-                       <Search size={48} className="mx-auto text-slate-300" />
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Nenhum arquivo encontrado para esta busca</p>
+                  <td colSpan={4} className="px-8 py-24 text-center">
+                    <div className="max-w-xs mx-auto space-y-6 opacity-30">
+                       <Search size={64} className="mx-auto text-slate-200" />
+                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 leading-relaxed">Ricardo IA não localizou arquivos para os termos selecionados na região us-central1.</p>
                     </div>
                   </td>
                 </tr>

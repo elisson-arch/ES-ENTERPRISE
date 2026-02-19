@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Gavel, ArrowLeft, FileCheck, Scale, ShieldAlert, Globe, Mail, BookOpen, UserCircle, Zap, Copyright, Ban, Home } from 'lucide-react';
-// Correct standard v6 import
-import { useNavigate } from 'react-router-dom';
+// Fix: Import useNavigate from react-router to resolve export error
+import { useNavigate } from 'react-router';
 
 const TermsOfServiceView = () => {
   const navigate = useNavigate();

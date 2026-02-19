@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
+import { Routes, Route } from 'react-router';
 import DashboardView from './DashboardView';
 import ClientsView from './ClientsView';
 import InventoryView from './InventoryView';
@@ -35,17 +36,29 @@ const App: React.FC = () => {
     window.addEventListener('google_auth_change', handler);
     
     const checkApiKey = async () => {
-      // Fallback de segurança para deploy profissional no Cloud Run
       if (!(window as any).aistudio) {
         setHasApiKey(true);
         return;
       }
-      const selected = await (window as any).aistudio.hasSelectedApiKey();
-      setHasApiKey(selected);
+      try {
+        const selected = await (window as any).aistudio.hasSelectedApiKey();
+        setHasApiKey(selected);
+      } catch (err) {
+        setHasApiKey(true);
+      }
     };
     checkApiKey();
 
-    return () => window.removeEventListener('google_auth_change', handler);
+    const handleKeyReset = () => {
+      setHasApiKey(false);
+      handleSelectApiKey();
+    };
+    window.addEventListener('aistudio_key_reset', handleKeyReset);
+
+    return () => {
+      window.removeEventListener('google_auth_change', handler);
+      window.removeEventListener('aistudio_key_reset', handleKeyReset);
+    };
   }, []);
 
   const [notifications, setNotifications] = useState<AppNotification[]>([
@@ -80,27 +93,19 @@ const App: React.FC = () => {
   if (hasApiKey === false) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full bg-white rounded-[3rem] p-10 shadow-2xl space-y-8">
+        <div className="max-w-[28rem] w-full bg-white rounded-[3rem] p-10 shadow-2xl space-y-8">
           <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
             <Key size={40} />
           </div>
           <div className="space-y-4">
             <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Configuração de IA</h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Para utilizar os motores de IA Gemini e Veo, você deve selecionar uma chave de API válida de um projeto com faturamento.
+              Ambiente de desenvolvimento detectado. Selecione sua chave para habilitar os motores Ricardo IA.
             </p>
-            <a 
-              href="https://ai.google.dev/gemini-api/docs/billing" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs font-black text-blue-600 hover:underline block uppercase tracking-widest"
-            >
-              Documentação de Faturamento →
-            </a>
           </div>
           <button 
             onClick={handleSelectApiKey}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all"
+            className="w-full h-[3.5rem] bg-blue-600 text-white rounded-2xl font-black text-[0.625rem] uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all"
           >
             Selecionar Chave de API
           </button>
@@ -115,7 +120,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <div className={`flex min-h-screen ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-800'}`}>
+      <div className={`flex flex-col lg:flex-row min-h-screen overflow-hidden ${isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-800'}`}>
         <Routes>
           <Route path="/privacy" element={<PrivacyPolicyView />} />
           <Route path="/terms" element={<TermsOfServiceView />} />
@@ -131,22 +136,22 @@ const App: React.FC = () => {
                 toggleTheme={() => setIsDarkMode(!isDarkMode)}
               />
               
-              <main className="flex-1 lg:ml-64 p-0 transition-all pb-20 lg:pb-0 pt-16 lg:pt-0">
-                <div className="h-full flex flex-col">
+              <main className="flex-1 lg:ml-64 relative overflow-hidden flex flex-col pt-16 lg:pt-0 pb-24 lg:pb-0">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                   <Routes>
-                    <Route path="/" element={<div className="p-4 lg:p-8"><DashboardView /></div>} />
+                    <Route path="/" element={<div className="p-4 md:p-6 lg:p-10"><DashboardView /></div>} />
                     <Route path="/whatsapp" element={<WhatsAppView />} />
-                    <Route path="/clientes" element={<div className="p-4 lg:p-8"><ClientsView /></div>} />
-                    <Route path="/funnel" element={<div className="p-4 lg:p-8 h-full"><FunnelView /></div>} />
-                    <Route path="/reports" element={<div className="p-4 lg:p-8 h-full"><ReportsView /></div>} />
-                    <Route path="/integrations" element={<div className="p-4 lg:p-8 h-full"><IntegrationsView /></div>} />
-                    <Route path="/security" element={<div className="p-4 lg:p-8 h-full"><SecurityView /></div>} />
-                    <Route path="/automations" element={<div className="p-4 lg:p-8 h-full"><AutomationView /></div>} />
-                    <Route path="/ativos" element={<div className="p-4 lg:p-8"><InventoryView /></div>} />
-                    <Route path="/documentos" element={<div className="p-4 lg:p-8"><DocumentsView /></div>} />
-                    <Route path="/drive" element={<div className="p-4 lg:p-8"><DriveView /></div>} />
-                    <Route path="/ia" element={<div className="p-4 lg:p-8"><AIView /></div>} />
-                    <Route path="/site" element={<div className="p-4 lg:p-8"><WebsiteBuilderView /></div>} />
+                    <Route path="/clientes" element={<div className="p-4 md:p-6 lg:p-10"><ClientsView /></div>} />
+                    <Route path="/funnel" element={<div className="p-4 md:p-6 lg:p-10 h-full"><FunnelView /></div>} />
+                    <Route path="/reports" element={<div className="p-4 md:p-6 lg:p-10 h-full"><ReportsView /></div>} />
+                    <Route path="/integrations" element={<div className="p-4 md:p-6 lg:p-10 h-full"><IntegrationsView /></div>} />
+                    <Route path="/security" element={<div className="p-4 md:p-6 lg:p-10 h-full"><SecurityView /></div>} />
+                    <Route path="/automations" element={<div className="p-4 md:p-6 lg:p-10 h-full"><AutomationView /></div>} />
+                    <Route path="/ativos" element={<div className="p-4 md:p-6 lg:p-10"><InventoryView /></div>} />
+                    <Route path="/documentos" element={<div className="p-4 md:p-6 lg:p-10"><DocumentsView /></div>} />
+                    <Route path="/drive" element={<div className="p-4 md:p-6 lg:p-10"><DriveView /></div>} />
+                    <Route path="/ia" element={<div className="p-4 md:p-6 lg:p-10"><AIView /></div>} />
+                    <Route path="/site" element={<div className="p-4 md:p-6 lg:p-10"><WebsiteBuilderView /></div>} />
                   </Routes>
                 </div>
               </main>
@@ -161,11 +166,17 @@ const App: React.FC = () => {
 
               <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
               <HelpGuide isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-              <div className="fixed bottom-20 lg:bottom-8 left-8 z-[500]">
-                 <button onClick={() => setIsHelpOpen(true)} className="w-12 h-12 bg-white border border-slate-200 rounded-full shadow-2xl flex items-center justify-center text-blue-600 hover:scale-110 transition-transform">
-                   <HelpCircle size={24} />
+              
+              <div className="fixed bottom-28 lg:bottom-10 left-8 z-40">
+                 <button 
+                  onClick={() => setIsHelpOpen(true)} 
+                  className="w-14 h-14 bg-white border border-slate-200 rounded-full shadow-2xl flex items-center justify-center text-blue-600 hover:scale-110 active:scale-90 transition-all focus:outline-none focus:ring-4 focus:ring-blue-100"
+                  aria-label="Ajuda"
+                 >
+                   <HelpCircle size={28} />
                  </button>
               </div>
+              
               <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
             </>
           } />

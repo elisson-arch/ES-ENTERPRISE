@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, Bell, MessageSquare, Trello, AlertCircle, CheckCircle, Trash2, Clock, Upload, Zap } from 'lucide-react';
 import { AppNotification, NotificationType } from '../../types';
@@ -28,9 +27,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 }) => {
   return (
     <>
-      <div className={`fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
+      <div className={`fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[1000] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} />
       
-      <aside className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-[101] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <aside className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl z-[1001] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex flex-col h-full">
           <div className="p-6 border-b flex justify-between items-center bg-slate-50">
             <div className="flex items-center gap-3">
@@ -39,7 +38,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
               <div>
                 <h3 className="font-black uppercase text-xs text-slate-800 tracking-widest">Notificações</h3>
-                <p className="text-[10px] text-slate-400 font-bold">{notifications.filter(n => !n.isRead).length} pendentes</p>
+                <p className="text-[0.625rem] text-slate-400 font-bold">{notifications.filter(n => !n.isRead).length} pendentes</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -52,7 +51,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
             {notifications.length > 0 ? (
               notifications.map((n) => (
                 <div 
@@ -75,10 +74,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         </h4>
                         {!n.isRead && <span className="w-2 h-2 bg-blue-600 rounded-full shrink-0" />}
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 mb-2 font-medium">
+                      <p className="text-[0.6875rem] text-slate-500 leading-relaxed line-clamp-2 mb-2 font-medium">
                         {n.description}
                       </p>
-                      <div className="flex items-center gap-2 text-[9px] font-bold text-slate-400">
+                      <div className="flex items-center gap-2 text-[0.5625rem] font-bold text-slate-400">
                         <Clock size={12} />
                         {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
@@ -95,7 +94,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           </div>
 
           <div className="p-6 border-t bg-slate-50">
-            <button className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
+            <button className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-[0.625rem] font-black uppercase tracking-widest text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
               Configurações de Alerta
             </button>
           </div>

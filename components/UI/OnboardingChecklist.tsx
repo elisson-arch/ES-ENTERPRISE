@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { CheckCircle2, Circle, ArrowRight, Zap, Gift } from 'lucide-react';
 import { OnboardingTask } from '../../types';
-// Correct standard v6 import
+// Fix: Import Link from react-router-dom to resolve export error
 import { Link } from 'react-router-dom';
 
 interface OnboardingChecklistProps {

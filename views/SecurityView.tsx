@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { 
   Shield, 
@@ -25,7 +24,8 @@ import {
   Calendar,
   X
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+// Fix: Import useNavigate from react-router to resolve export error
+import { useNavigate } from 'react-router';
 import { AuditLog } from '../types';
 
 const mockLogs: AuditLog[] = [

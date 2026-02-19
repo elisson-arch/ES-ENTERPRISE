@@ -18,20 +18,22 @@
       height: 100%; 
       margin: 0; 
       padding: 0; 
-      overflow: hidden; 
+      /* Alterado para overflow-y-auto conforme Regras de Workspace para estabilidade de zoom */
+      overflow-y: auto; 
       background-color: #f8fafc;
     }
     body {
       font-family: 'Inter', sans-serif;
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none;
+      /* Suporte a áreas seguras (notches) */
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    #root { height: 100%; display: flex; flex-direction: column; }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    #root { min-height: 100%; display: flex; flex-direction: column; }
+    ::-webkit-scrollbar { width: 0.25rem; height: 0.25rem; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0.625rem; }
+    .custom-scrollbar::-webkit-scrollbar { width: 0.25rem; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 0.625rem; }
   </style>
 <script type="importmap">
 {
@@ -49,7 +51,8 @@
     "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
     "recharts": "https://esm.sh/recharts@^3.7.0",
     "express": "https://esm.sh/express@^5.2.1",
-    "fs": "https://esm.sh/fs@^0.0.1-security"
+    "fs": "https://esm.sh/fs@^0.0.1-security",
+    "react-router": "https://esm.sh/react-router@^7.13.0"
   }
 }
 </script>

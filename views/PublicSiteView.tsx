@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
-// Correct standard v6 imports
-import { useParams, useNavigate } from 'react-router-dom';
+// Fix: Import hooks from react-router to resolve export errors
+import { useParams, useNavigate } from 'react-router';
 import { siteService } from '../services/siteService';
 import { Canvas } from '../components/WebBuilder/Canvas';
 import { SiteDNA } from '../types';

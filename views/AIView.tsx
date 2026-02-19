@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Bot, User, Sparkles, AlertTriangle, Lightbulb, 
@@ -12,7 +11,8 @@ import { Message } from '../types';
 const AI_MODELS = [
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', desc: 'Raciocínio Técnico Profundo', icon: <Brain size={14} className="text-indigo-500" /> },
   { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', desc: 'Respostas Rápidas com Search', icon: <Zap size={14} className="text-amber-500" /> },
-  { id: 'gemini-2.5-flash-lite-latest', name: 'Flash Lite', desc: 'Performance e Economia', icon: <Cpu size={14} className="text-emerald-500" /> }
+  // Fix: Use correct standardized model name for flash lite
+  { id: 'gemini-flash-lite-latest', name: 'Flash Lite', desc: 'Performance e Economia', icon: <Cpu size={14} className="text-emerald-500" /> }
 ];
 
 const AIView = () => {

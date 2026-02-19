@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, MessageSquare, Trello, AlertCircle, CheckCircle, Upload } from 'lucide-react';
 import { AppNotification, NotificationType } from '../../types';
@@ -21,20 +20,20 @@ const getToastStyles = (type: NotificationType) => {
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) => {
   return (
-    <div className="fixed bottom-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[2000] flex flex-col gap-3 pointer-events-none">
       {toasts.map((toast) => {
         const styles = getToastStyles(toast.type);
         return (
           <div 
             key={toast.id}
-            className={`${styles.bg} p-4 rounded-2xl shadow-2xl text-white flex items-center gap-4 min-w-[320px] max-w-sm pointer-events-auto animate-in slide-in-from-right-10 duration-500`}
+            className={`${styles.bg} p-4 rounded-2xl shadow-2xl text-white flex items-center gap-4 min-w-[20rem] max-w-sm pointer-events-auto animate-in slide-in-from-right-10 duration-500`}
           >
             <div className="p-2 bg-white/20 rounded-xl shrink-0">
               {styles.icon}
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-xs font-black uppercase tracking-widest mb-0.5">{toast.title}</h4>
-              <p className="text-[11px] font-bold opacity-90 line-clamp-1">{toast.description}</p>
+              <p className="text-[0.6875rem] font-bold opacity-90 line-clamp-1">{toast.description}</p>
             </div>
             <button 
               onClick={() => onDismiss(toast.id)}

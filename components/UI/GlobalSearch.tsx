@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
@@ -12,7 +11,7 @@ import {
   Cloud,
   FileSearch,
   Sparkles,
-  // Added Loader2 to fix missing name error on line 133
+  // Fix: Correctly import Loader2 to fix name error
   Loader2
 } from 'lucide-react';
 
@@ -132,7 +131,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                     <h4 className="text-[10px] font-black uppercase text-blue-500 tracking-[0.2em] flex items-center gap-2">
                        <Cloud size={14}/> Arquivos Google Cloud Drive
                     </h4>
-                    {/* Loader2 is used here and now correctly imported above */}
                     {isScanning && <Loader2 size={14} className="animate-spin text-blue-400" />}
                  </div>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

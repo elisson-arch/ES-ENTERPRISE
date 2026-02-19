@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Shield, ArrowLeft, Lock, Eye, FileText, Globe, Mail, Users, Home } from 'lucide-react';
-// Correct standard v6 import
-import { useNavigate } from 'react-router-dom';
+// Fix: Import useNavigate from react-router to resolve export error
+import { useNavigate } from 'react-router';
 
 const PrivacyPolicyView = () => {
   const navigate = useNavigate();
