@@ -13,6 +13,9 @@
     "types": [
       "node"
     ],
+    "types": [
+      "node"
+    ],
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
