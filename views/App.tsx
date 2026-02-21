@@ -23,29 +23,32 @@ import { ToastContainer } from '../components/Notifications/ToastContainer';
 import { GlobalSearch } from '../components/UI/GlobalSearch';
 import { HelpGuide } from '../components/UI/HelpGuide';
 import { Navigation } from '../components/UI/Navigation';
-import { AppNotification } from '../types';
 import { googleApiService } from '../services/googleApiService';
+import { useAppContext } from '../hooks/useAppContext';
 import { HelpCircle, Key } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(googleApiService.isAuthenticated());
+  const {
+    isAuthenticated, setIsAuthenticated,
+    notifications, unreadCount, markAsRead, clearAllNotifications,
+    isDarkMode, toggleTheme
+  } = useAppContext();
+
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-  
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [toasts, setToasts] = useState<any[]>([]);
+
   useEffect(() => {
+    setIsAuthenticated(googleApiService.isAuthenticated());
+
     const handler = () => setIsAuthenticated(googleApiService.isAuthenticated());
     window.addEventListener('google_auth_change', handler);
-    
+
     const checkApiKey = async () => {
-      if (!(window as any).aistudio) {
-        setHasApiKey(true);
-        return;
-      }
-      try {
-        const selected = await (window as any).aistudio.hasSelectedApiKey();
-        setHasApiKey(selected);
-      } catch (err) {
-        setHasApiKey(true);
-      }
+      // No modo Cloud Run/Proxy, não precisamos verificar chaves no window
+      setHasApiKey(true);
     };
     checkApiKey();
 
@@ -61,28 +64,8 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const [notifications, setNotifications] = useState<AppNotification[]>([
-    {
-      id: '1',
-      type: 'sla',
-      title: 'Alerta de SLA',
-      description: 'Condomínio Aurora aguarda resposta há 20 min.',
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      priority: 'high'
-    }
-  ]);
-
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [toasts, setToasts] = useState<AppNotification[]>([]);
-
   const handleSelectApiKey = async () => {
-    if ((window as any).aistudio) {
-      await (window as any).aistudio.openSelectKey();
-    }
+    // Agora o servidor gerencia a chave, mas mantemos o placeholder se o usuário quiser trocar via UI futuramente
     setHasApiKey(true);
   };
 
@@ -100,23 +83,19 @@ const App: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Configuração de IA</h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Ambiente de desenvolvimento detectado. Selecione sua chave para habilitar os motores Ricardo IA.
+              Problema de autenticação detectado com os motores Ricardo IA.
             </p>
           </div>
-          <button 
+          <button
             onClick={handleSelectApiKey}
             className="w-full h-[3.5rem] bg-blue-600 text-white rounded-2xl font-black text-[0.625rem] uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            Selecionar Chave de API
+            Reconectar Ricardo IA
           </button>
         </div>
       </div>
     );
   }
-
-  if (hasApiKey === null) return null;
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <HashRouter>
@@ -128,14 +107,14 @@ const App: React.FC = () => {
 
           <Route path="*" element={
             <>
-              <Navigation 
-                unreadNotifications={unreadCount} 
+              <Navigation
+                unreadNotifications={unreadCount}
                 onToggleNotifications={() => setIsNotifOpen(true)}
                 onOpenSearch={() => setIsSearchOpen(true)}
                 isDarkMode={isDarkMode}
-                toggleTheme={() => setIsDarkMode(!isDarkMode)}
+                toggleTheme={toggleTheme}
               />
-              
+
               <main className="flex-1 lg:ml-64 relative overflow-hidden flex flex-col pt-16 lg:pt-0 pb-24 lg:pb-0">
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                   <Routes>
@@ -156,27 +135,27 @@ const App: React.FC = () => {
                 </div>
               </main>
 
-              <NotificationCenter 
-                isOpen={isNotifOpen} 
+              <NotificationCenter
+                isOpen={isNotifOpen}
                 onClose={() => setIsNotifOpen(false)}
                 notifications={notifications}
-                onMarkRead={(id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))}
-                onClearAll={() => setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))}
+                onMarkRead={markAsRead}
+                onClearAll={clearAllNotifications}
               />
 
               <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
               <HelpGuide isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-              
+
               <div className="fixed bottom-28 lg:bottom-10 left-8 z-40">
-                 <button 
-                  onClick={() => setIsHelpOpen(true)} 
+                <button
+                  onClick={() => setIsHelpOpen(true)}
                   className="w-14 h-14 bg-white border border-slate-200 rounded-full shadow-2xl flex items-center justify-center text-blue-600 hover:scale-110 active:scale-90 transition-all focus:outline-none focus:ring-4 focus:ring-blue-100"
                   aria-label="Ajuda"
-                 >
-                   <HelpCircle size={28} />
-                 </button>
+                >
+                  <HelpCircle size={28} />
+                </button>
               </div>
-              
+
               <ToastContainer toasts={toasts} onDismiss={(id) => setToasts(prev => prev.filter(t => t.id !== id))} />
             </>
           } />

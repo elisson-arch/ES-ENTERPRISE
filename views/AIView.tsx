@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Send, Bot, User, Sparkles, AlertTriangle, Lightbulb, 
-  Cpu, Zap, Brain, ChevronDown, Mic, MicOff, Loader2, 
+import {
+  Send, Bot, User, Sparkles, AlertTriangle, Lightbulb,
+  Cpu, Zap, Brain, ChevronDown, Mic, MicOff, Loader2,
   Camera, Globe, Search, Link as LinkIcon, Image as ImageIcon,
-  CheckCircle2, AlertCircle, Wand2, Filter
+  CheckCircle2, AlertCircle, Wand2, Filter, Languages
 } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
 import { Message } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 
 const AI_MODELS = [
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', desc: 'Raciocínio Técnico Profundo', icon: <Brain size={14} className="text-indigo-500" /> },
@@ -30,6 +31,21 @@ const AIView = () => {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isAutoTranslateEnabled, translateMessage } = useTranslation();
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isAutoTranslateEnabled) {
+      messages.forEach(async (msg) => {
+        if (!translatedMessages[msg.id]) {
+          const translated = await translateMessage(msg);
+          if (translated !== msg.text) {
+            setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
+          }
+        }
+      });
+    }
+  }, [messages, isAutoTranslateEnabled]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -39,7 +55,7 @@ const AIView = () => {
     if (!input.trim()) return;
     const userMsg = input;
     setInput('');
-    
+
     if (isEditingImage && currentImageForEdit) {
       handleEditImage(userMsg);
       return;
@@ -62,9 +78,9 @@ const AIView = () => {
         responseText = await geminiService.getChatResponse(userMsg, "Consultoria Técnica", selectedModel.id);
       }
 
-      setMessages(prev => [...prev, { 
-        id: (Date.now() + 1).toString(), 
-        sender: 'ai', 
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
         text: responseText || "Tive um problema ao processar. Tente novamente.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         groundingSources
@@ -80,11 +96,11 @@ const AIView = () => {
     if (!currentImageForEdit) return;
     setIsTyping(true);
     setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'agent', text: `Aplicando edição: ${prompt}`, timestamp: 'Agora' }]);
-    
+
     try {
       const editedUrl = await geminiService.editImage(currentImageForEdit, "image/png", prompt);
       if (editedUrl) {
-        setMessages(prev => [...prev, { id: (Date.now()+1).toString(), sender: 'ai', text: "Edição via Nano Banana concluída com sucesso.", imageUrl: editedUrl, timestamp: 'Agora' }]);
+        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: "Edição via Nano Banana concluída com sucesso.", imageUrl: editedUrl, timestamp: 'Agora' }]);
         setCurrentImageForEdit(editedUrl);
       }
     } catch (e) {
@@ -101,17 +117,17 @@ const AIView = () => {
     reader.onload = async () => {
       const base64 = reader.result as string;
       setCurrentImageForEdit(base64);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        sender: 'agent', 
-        text: `[Foto de campo enviada: ${file.name}]`, 
-        timestamp: 'Agora', 
-        imageUrl: base64 
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        sender: 'agent',
+        text: `[Foto de campo enviada: ${file.name}]`,
+        timestamp: 'Agora',
+        imageUrl: base64
       }]);
-      
+
       setIsTyping(true);
       const analysis = await geminiService.analyzeFile(base64, file.type, "Identifique possíveis falhas nesta imagem técnica e sugira uma solução.");
-      setMessages(prev => [...prev, { id: (Date.now()+1).toString(), sender: 'ai', text: analysis || "Erro na análise vision.", timestamp: 'Agora' }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: analysis || "Erro na análise vision.", timestamp: 'Agora' }]);
       setIsTyping(false);
     };
     reader.readAsDataURL(file);
@@ -131,14 +147,14 @@ const AIView = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button 
+          <button
             onClick={() => setThinkingMode(!thinkingMode)}
             className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${thinkingMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
           >
             <Brain size={16} className={thinkingMode ? 'animate-pulse' : ''} /> Deep Thinking
           </button>
 
-          <button 
+          <button
             onClick={() => setUseSearch(!useSearch)}
             disabled={selectedModel.id !== 'gemini-3-flash-preview'}
             className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border disabled:opacity-20 ${useSearch ? 'bg-amber-500 text-white border-amber-400 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
@@ -160,8 +176,8 @@ const AIView = () => {
                       {m.icon}
                     </div>
                     <div>
-                       <p className="text-[11px] font-black text-slate-800 uppercase">{m.name}</p>
-                       <p className="text-[9px] text-slate-400 font-bold uppercase leading-tight">{m.desc}</p>
+                      <p className="text-[11px] font-black text-slate-800 uppercase">{m.name}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase leading-tight">{m.desc}</p>
                     </div>
                   </button>
                 ))}
@@ -190,9 +206,14 @@ const AIView = () => {
                       </div>
                     </div>
                   )}
-                  <p className="text-sm font-semibold whitespace-pre-wrap">{msg.text}</p>
+                  <p className="text-sm font-semibold whitespace-pre-wrap">{translatedMessages[msg.id] || msg.text}</p>
+                  {translatedMessages[msg.id] && translatedMessages[msg.id] !== msg.text && (
+                    <div className="flex items-center gap-1 opacity-40 text-[9px] font-black uppercase tracking-tighter mt-2 border-t border-current/10 pt-1">
+                      <Languages size={10} /> Traduzido
+                    </div>
+                  )}
                 </div>
-                
+
                 {msg.groundingSources && msg.groundingSources.length > 0 && (
                   <div className="flex flex-wrap gap-2 px-2">
                     {msg.groundingSources.map((s, i) => (
@@ -207,30 +228,30 @@ const AIView = () => {
           ))}
           {isTyping && (
             <div className="flex gap-5 animate-pulse">
-               <div className="w-12 h-12 rounded-[1.25rem] bg-slate-100 flex items-center justify-center border border-slate-200">
-                 <Bot size={24} className="text-slate-300" />
-               </div>
-               <div className="bg-slate-50 p-8 rounded-[2.5rem] rounded-tl-none border border-slate-100 flex items-center gap-6">
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                    <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
-                    {thinkingMode ? 'Executando raciocínio profundo...' : 'Processando...'}
-                  </span>
-               </div>
+              <div className="w-12 h-12 rounded-[1.25rem] bg-slate-100 flex items-center justify-center border border-slate-200">
+                <Bot size={24} className="text-slate-300" />
+              </div>
+              <div className="bg-slate-50 p-8 rounded-[2.5rem] rounded-tl-none border border-slate-100 flex items-center gap-6">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
+                  {thinkingMode ? 'Executando raciocínio profundo...' : 'Processando...'}
+                </span>
+              </div>
             </div>
           )}
         </div>
 
         {isEditingImage && (
           <div className="px-10 py-4 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between animate-in slide-in-from-bottom-2">
-             <div className="flex items-center gap-4">
-                <div className="p-2 bg-indigo-600 text-white rounded-xl"><Wand2 size={16}/></div>
-                <p className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">Nano Banana: Modo Edição de Imagem Ativo</p>
-             </div>
-             <button onClick={() => { setIsEditingImage(false); setCurrentImageForEdit(null); }} className="text-[10px] font-black uppercase text-indigo-400 hover:text-indigo-600">Cancelar</button>
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-indigo-600 text-white rounded-xl"><Wand2 size={16} /></div>
+              <p className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">Nano Banana: Modo Edição de Imagem Ativo</p>
+            </div>
+            <button onClick={() => { setIsEditingImage(false); setCurrentImageForEdit(null); }} className="text-[10px] font-black uppercase text-indigo-400 hover:text-indigo-600">Cancelar</button>
           </div>
         )}
 
@@ -238,17 +259,17 @@ const AIView = () => {
           <div className="max-w-5xl mx-auto flex gap-6 bg-slate-50 p-4 rounded-[3rem] border border-slate-200 focus-within:ring-8 focus-within:ring-indigo-500/5 focus-within:border-indigo-500 transition-all shadow-inner">
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
             <button onClick={() => fileInputRef.current?.click()} className="p-5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-[1.5rem] transition-all shadow-sm">
-               <Camera size={24} />
+              <Camera size={24} />
             </button>
-            <input 
-              type="text" 
-              placeholder={isEditingImage ? "Ex: 'Adicione um filtro retrô' ou 'Remova o fundo'..." : "Descreva uma falha técnica ou peça uma consultoria..."} 
+            <input
+              type="text"
+              placeholder={isEditingImage ? "Ex: 'Adicione um filtro retrô' ou 'Remova o fundo'..." : "Descreva uma falha técnica ou peça uma consultoria..."}
               className="flex-1 bg-transparent px-4 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
             />
-            <button 
+            <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
               className="p-5 bg-slate-950 text-white rounded-[1.5rem] shadow-2xl hover:bg-black active:scale-95 transition-all disabled:opacity-30"

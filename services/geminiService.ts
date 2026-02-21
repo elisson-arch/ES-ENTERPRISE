@@ -21,153 +21,117 @@ const handleApiError = (err: any) => {
 
 export const geminiService = {
   /**
-   * Vision Analysis - Utiliza Gemini 3 Pro para identificar falhas em fotos
+   * Helper unificado para chamadas ao Proxy do Backend
    */
-  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
+  async callProxy(model: string, contents: any, config: any = {}) {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const parts = [
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, contents, config })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        if (err.error?.includes("not found")) {
+          window.dispatchEvent(new CustomEvent('aistudio_key_reset'));
+        }
+        throw new Error(err.error || 'Erro na resposta do proxy');
+      }
+
+      const data = await response.json();
+
+      // Mapeamento simples para manter compatibilidade com o retorno do SDK original (.text)
+      return {
+        text: data.candidates?.[0]?.content?.parts?.[0]?.text || '',
+        candidates: data.candidates,
+        data // Retorno completo se necessário
+      };
+    } catch (err) {
+      console.error('[FRONTEND] Erro GeminiService:', err);
+      throw err;
+    }
+  },
+
+  async analyzeFile(fileData: string, mimeType: string, prompt: string = "Analise este componente técnico.") {
+    const contents = {
+      parts: [
         { inlineData: { data: fileData.split(',')[1] || fileData, mimeType } },
         { text: prompt }
-      ];
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: { parts },
-        config: { systemInstruction: HVAC_SYSTEM_INSTRUCTION }
-      });
-      return response.text;
-    } catch (err) {
-      return handleApiError(err);
-    }
+      ]
+    };
+    const res = await this.callProxy('gemini-3-pro-preview', contents, { systemInstruction: HVAC_SYSTEM_INSTRUCTION });
+    return res.text;
   },
 
-  /**
-   * Deep Technical Reasoning - Raciocínio profundo para diagnósticos complexos
-   */
   async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: prompt,
-        config: {
-          thinkingConfig: { thinkingBudget: 32768 },
-          systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto atual: ${context}.`
-        }
-      });
-      return response.text;
-    } catch (err) {
-      return handleApiError(err);
-    }
+    const contents = { parts: [{ text: prompt }] };
+    const res = await this.callProxy('gemini-3-pro-preview', contents, {
+      thinkingConfig: { thinkingBudget: 32768 },
+      systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto atual: ${context}.`
+    });
+    return res.text;
   },
 
-  /**
-   * Chat Ágil - Respostas rápidas para suporte ao cliente
-   */
   async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: modelId,
-        contents: prompt,
-        config: { systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto do Atendimento: ${context}.` }
-      });
-      return response.text;
-    } catch (err) {
-      return handleApiError(err);
-    }
+    const contents = { parts: [{ text: prompt }] };
+    const res = await this.callProxy(modelId, contents, {
+      systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto do Atendimento: ${context}.`
+    });
+    return res.text;
   },
 
-  /**
-   * Pesquisa Técnica Grounded - Busca informações técnicas na web
-   */
   async searchWeb(prompt: string) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt,
-        config: { tools: [{ googleSearch: {} }] },
-      });
-      const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
-        title: chunk.web?.title || 'Referência Técnica',
-        uri: chunk.web?.uri || ''
-      })) || [];
-      return { text: response.text, sources };
-    } catch (err) {
-      return handleApiError(err);
-    }
+    const contents = { parts: [{ text: prompt }] };
+    const res = await this.callProxy('gemini-3-flash-preview', contents, {
+      tools: [{ googleSearch: {} }]
+    });
+
+    const sources = res.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.web?.title || 'Referência Técnica',
+      uri: chunk.web?.uri || ''
+    })) || [];
+
+    return { text: res.text, sources };
   },
 
-  /**
-   * Geração de Imagens Técnicas
-   */
   async generateImage(prompt: string, aspectRatio: string = "16:9") {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-image-preview',
-        contents: { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] },
-        config: { imageConfig: { aspectRatio, imageSize: "1K" } }
-      });
-      
-      if (response.candidates?.[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-          // Find the image part as per iteration rule
-          if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
-        }
+    const contents = { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] };
+    const res = await this.callProxy('gemini-3-pro-image-preview', contents, {
+      imageConfig: { aspectRatio, imageSize: "1K" }
+    });
+
+    if (res.candidates?.[0]?.content?.parts) {
+      for (const part of res.candidates[0].content.parts) {
+        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
       }
-      return null;
-    } catch (err) {
-      return handleApiError(err);
     }
+    return null;
   },
 
-  /**
-   * Edição de Imagem Preditiva
-   */
   async editImage(base64ImageData: string, mimeType: string, prompt: string) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [
-            { inlineData: { data: base64ImageData.split(',')[1] || base64ImageData, mimeType } },
-            { text: prompt }
-          ],
-        },
-      });
+    const contents = {
+      parts: [
+        { inlineData: { data: base64ImageData.split(',')[1] || base64ImageData, mimeType } },
+        { text: prompt }
+      ],
+    };
+    const res = await this.callProxy('gemini-2.5-flash-image', contents);
 
-      if (response.candidates?.[0]?.content?.parts) {
-        for (const part of response.candidates[0].content.parts) {
-          // Find the image part as per iteration rule
-          if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
-        }
+    if (res.candidates?.[0]?.content?.parts) {
+      for (const part of res.candidates[0].content.parts) {
+        if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
       }
-      return null;
-    } catch (err) {
-      return handleApiError(err);
     }
+    return null;
   },
 
-  /**
-   * Geração de JSON estruturado para seções de site
-   */
   async generateSectionJSON(prompt: string) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: prompt,
-        config: {
-          systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. Responda apenas com o JSON bruto.",
-          responseMimeType: "application/json"
-        }
-      });
-      return response.text;
-    } catch (err) {
-      return handleApiError(err);
-    }
+    const contents = { parts: [{ text: prompt }] };
+    const res = await this.callProxy('gemini-3-pro-preview', contents, {
+      systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. Responda apenas com o JSON bruto.",
+      responseMimeType: "application/json"
+    });
+    return res.text;
   }
 };

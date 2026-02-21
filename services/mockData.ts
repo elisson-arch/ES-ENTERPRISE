@@ -19,6 +19,7 @@ export const INITIAL_WHATSAPP_CHATS: ChatSession[] = [
     createdAt: new Date().toISOString(),
     messages: [
       { id: 'm1', sender: 'client', text: 'Boa tarde, qual o valor da limpeza?', timestamp: '14:20' },
+      { id: 'm2', sender: 'client', text: 'Hello! Can you help me with a maintenance issue?', timestamp: '14:25' },
     ],
     tasks: [],
     billingData: { lastInvoice: "20/04/2024", totalSpent: 4500, pendingAmount: 0 }

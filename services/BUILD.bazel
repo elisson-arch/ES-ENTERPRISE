@@ -1,0 +1,15 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "services",
+    srcs = glob(["*.ts"]),
+    declaration = True,
+    tsconfig = "//:tsconfig.json",
+    deps = [
+        "//:node_modules/@google/genai",
+        "//:node_modules/express",
+        "//:types",
+    ],
+)

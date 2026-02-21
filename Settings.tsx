@@ -1,10 +1,13 @@
 
 import React, { useState } from 'react';
+import { useTranslation } from './hooks/useTranslation';
+import { Languages } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const { isAutoTranslateEnabled, toggleAutoTranslate } = useTranslation();
 
   const handleConnect = () => {
     setIsConnecting(true);
@@ -48,15 +51,14 @@ const Settings: React.FC = () => {
               )}
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={isConnected ? () => setIsConnected(false) : handleConnect}
             disabled={isConnecting}
-            className={`px-8 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95 ${
-              isConnected 
-              ? 'bg-white text-red-600 border border-red-100 hover:bg-red-50' 
-              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
-            }`}
+            className={`px-8 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95 ${isConnected
+                ? 'bg-white text-red-600 border border-red-100 hover:bg-red-50'
+                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
+              }`}
           >
             {isConnecting ? 'Autenticando...' : isConnected ? 'Desconectar Conta' : 'Sincronizar com Google'}
           </button>
@@ -109,6 +111,36 @@ const Settings: React.FC = () => {
             </ol>
             <button className="mt-4 text-xs font-bold text-blue-600 hover:underline">Ver tutorial completo na documentação oficial →</button>
           </div>
+
+          {/* Tradução Automática */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mt-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+              <Languages className="w-5 h-5 mr-2 text-indigo-600" />
+              Idioma e Tradução
+            </h3>
+            <div className="p-4 rounded-2xl border border-gray-100 bg-white hover:border-indigo-100 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <Languages size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800 text-sm">Tradução Automática (PT-BR)</p>
+                    <p className="text-xs text-gray-500">Traduzir todas as conversas e respostas da IA para o Português Brasil.</p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAutoTranslateEnabled}
+                    onChange={(e) => toggleAutoTranslate(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Status e Logs */}
@@ -130,7 +162,7 @@ const Settings: React.FC = () => {
                   <p className="text-sm font-bold text-gray-800">12ms</p>
                 </div>
               </div>
-              <button 
+              <button
                 disabled={!isConnected}
                 className="w-full py-3 bg-gray-900 text-white rounded-2xl font-bold text-xs hover:bg-black transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
