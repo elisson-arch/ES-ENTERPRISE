@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2
+import {
+  Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search
 } from 'lucide-react';
 import { OnboardingChecklist } from '../components/UI/OnboardingChecklist';
 import { OnboardingTask, CalendarEvent } from '../types';
 import { googleApiService } from '../services/googleApiService';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
-  <button 
+  <button
     onClick={onClick}
     className="flex flex-col items-start p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left w-full min-h-[10rem]"
   >
@@ -22,9 +22,8 @@ const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
 const PriorityMission = ({ title, status, time, type }: any) => (
   <div className="flex items-center justify-between p-6 bg-slate-50/50 hover:bg-white rounded-[2rem] border border-transparent hover:border-slate-100 transition-all group cursor-pointer min-h-[5.5rem]">
     <div className="flex items-center gap-4">
-      <div className={`w-2 h-12 rounded-full ${
-        type === 'urgent' ? 'bg-rose-500' : type === 'lead' ? 'bg-blue-500' : 'bg-emerald-500'
-      }`} />
+      <div className={`w-2 h-12 rounded-full ${type === 'urgent' ? 'bg-rose-500' : type === 'lead' ? 'bg-blue-500' : 'bg-emerald-500'
+        }`} />
       <div>
         <h4 className="text-[0.875rem] font-black text-slate-800 line-clamp-1 italic uppercase tracking-tighter">{title}</h4>
         <div className="flex items-center gap-3 mt-0.5">
@@ -61,44 +60,44 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
     <div className="space-y-10 animate-in fade-in duration-700">
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div className="flex items-center gap-6">
-           <div className="relative">
-             {userProfile?.picture ? (
-               <img src={userProfile.picture} alt="Perfil" className="w-16 h-16 lg:w-24 lg:h-24 rounded-[2.5rem] shadow-xl border-4 border-white" />
-             ) : (
-               <div className="w-16 h-16 lg:w-24 lg:h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center text-white text-3xl font-black shadow-xl">
-                 {userProfile?.name?.charAt(0) || 'U'}
-               </div>
-             )}
-             <div className="absolute -bottom-2 -right-2 w-11 h-11 bg-emerald-500 text-white rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center">
-                <ShieldCheck size={18} />
-             </div>
-           </div>
-           <div className="space-y-1">
-              <h2 className="text-[2rem] lg:text-[2.5rem] font-black text-slate-800 tracking-tighter italic leading-none uppercase">
-                 Olá, {userProfile?.name?.split(' ')[0] || 'Gestor'}!
-              </h2>
-              <div className="flex items-center gap-2">
-                 <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 rounded-full text-white text-[0.5rem] font-black uppercase tracking-widest">
-                    <Server size={10} className="text-blue-400" /> us-central1
-                 </div>
-                 <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                 <div className="flex items-center gap-1 text-blue-600 text-[0.625rem] font-black uppercase tracking-tight italic">
-                    Agilizado via {window.innerWidth < 1024 ? 'Mobile' : 'Desktop'}
-                 </div>
+          <div className="relative">
+            {userProfile?.picture ? (
+              <img src={userProfile.picture} alt="Perfil" className="w-16 h-16 lg:w-24 lg:h-24 rounded-[2.5rem] shadow-xl border-4 border-white" />
+            ) : (
+              <div className="w-16 h-16 lg:w-24 lg:h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center text-white text-3xl font-black shadow-xl">
+                {userProfile?.name?.charAt(0) || 'U'}
               </div>
-           </div>
+            )}
+            <div className="absolute -bottom-2 -right-2 w-11 h-11 bg-emerald-500 text-white rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center">
+              <ShieldCheck size={18} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-[2rem] lg:text-[2.5rem] font-black text-slate-800 tracking-tighter italic leading-none uppercase">
+              Olá, {userProfile?.name?.split(' ')[0] || 'Gestor'}!
+            </h2>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 rounded-full text-white text-[0.5rem] font-black uppercase tracking-widest">
+                <Server size={10} className="text-blue-400" /> us-central1
+              </div>
+              <div className="w-1 h-1 bg-slate-300 rounded-full" />
+              <div className="flex items-center gap-1 text-blue-600 text-[0.625rem] font-black uppercase tracking-tight italic">
+                Agilizado via {window.innerWidth < 1024 ? 'Mobile' : 'Desktop'}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="hidden lg:flex items-center gap-6 bg-white p-3 rounded-[2rem] border border-slate-100 shadow-sm">
-           <div className="flex gap-2 px-3 border-r border-slate-100">
-             <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl"><Globe size={18}/></div>
-             <div className="w-11 h-11 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl"><Calendar size={18}/></div>
-             <div className="w-11 h-11 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl"><Database size={18}/></div>
-           </div>
-           <div className="pr-6">
-              <p className="text-[0.5rem] font-black text-slate-400 uppercase tracking-widest mb-0.5">SGC Engine Status</p>
-              <p className="text-[0.75rem] font-black text-emerald-600 uppercase italic tracking-tighter">100% Operacional Cloud</p>
-           </div>
+          <div className="flex gap-2 px-3 border-r border-slate-100">
+            <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl"><Globe size={18} /></div>
+            <div className="w-11 h-11 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl"><Calendar size={18} /></div>
+            <div className="w-11 h-11 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl"><Database size={18} /></div>
+          </div>
+          <div className="pr-6">
+            <p className="text-[0.5rem] font-black text-slate-400 uppercase tracking-widest mb-0.5">SGC Engine Status</p>
+            <p className="text-[0.75rem] font-black text-emerald-600 uppercase italic tracking-tighter">100% Operacional Cloud</p>
+          </div>
         </div>
       </header>
 
@@ -106,16 +105,16 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
         <div className="xl:col-span-2 space-y-8">
           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
             <div className="flex justify-between items-center mb-10">
-               <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-xl flex items-center justify-center"><Zap size={24} fill="currentColor" /></div>
-                  <div>
-                    <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">Daily Agile Mission</h3>
-                    <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Ricardo IA Prioritized Stream</p>
-                  </div>
-               </div>
-               <button className="h-11 px-5 bg-slate-50 rounded-xl text-[0.5625rem] font-black text-blue-600 uppercase tracking-widest hover:bg-slate-100 transition-all">Otimizar Fila</button>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-xl flex items-center justify-center"><Zap size={24} fill="currentColor" /></div>
+                <div>
+                  <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">Daily Agile Mission</h3>
+                  <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Ricardo IA Prioritized Stream</p>
+                </div>
+              </div>
+              <button className="h-11 px-5 bg-slate-50 rounded-xl text-[0.5625rem] font-black text-blue-600 uppercase tracking-widest hover:bg-slate-100 transition-all">Otimizar Fila</button>
             </div>
-            
+
             <div className="space-y-4">
               <PriorityMission title="Responder Condomínio Aurora" time="há 15 min" status="Aguardando Orçamento" type="urgent" />
               <PriorityMission title="Visita Técnica: Hospital São Luiz" time="Hoje, 14:00" status="Confirmar Rota GPS" type="event" />
@@ -123,16 +122,16 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             </div>
 
             <div className="mt-10 pt-10 border-t border-slate-100 flex items-center justify-between text-slate-400">
-               <div className="flex items-center gap-3">
-                  <Sparkles size={18} className="text-amber-400 animate-pulse" />
-                  <span className="text-[0.625rem] font-black uppercase tracking-widest italic">Previsão: 82% de fechamento na região us-central1</span>
-               </div>
-               <div className="flex -space-x-3">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-4 border-white bg-slate-200" />
-                  ))}
-                  <div className="w-8 h-8 rounded-full border-4 border-white bg-blue-600 flex items-center justify-center text-[0.625rem] font-black text-white">+5</div>
-               </div>
+              <div className="flex items-center gap-3">
+                <Sparkles size={18} className="text-amber-400 animate-pulse" />
+                <span className="text-[0.625rem] font-black uppercase tracking-widest italic">Previsão: 82% de fechamento na região us-central1</span>
+              </div>
+              <div className="flex -space-x-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full border-4 border-white bg-slate-200" />
+                ))}
+                <div className="w-8 h-8 rounded-full border-4 border-white bg-blue-600 flex items-center justify-center text-[0.625rem] font-black text-white">+5</div>
+              </div>
             </div>
           </div>
 
@@ -149,8 +148,8 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform group-hover:rotate-12 duration-1000"><Smartphone size={200} /></div>
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-white/10 mb-6">
-                 <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></div>
-                 <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">SGC Mobile Stream</span>
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></div>
+                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">SGC Mobile Stream</span>
               </div>
               <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Agilidade em Campo</h3>
               <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Sincronize laudos usando o microfone do celular enquanto realiza a inspeção.</p>
@@ -161,22 +160,22 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
           </div>
 
           <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-             <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">Status dos Robôs Regionais</h4>
-             <div className="space-y-6">
-                {[
-                  { name: 'Auto-Responder', status: 'Ativo', color: 'bg-emerald-500' },
-                  { name: 'Google Cloud Sync', status: 'Online', color: 'bg-emerald-500' },
-                  { name: 'Ricardo AI Logic', status: 'Processando', color: 'bg-amber-500', pulse: true }
-                ].map((bot, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full ${bot.color} ${bot.pulse ? 'animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]' : ''}`} />
-                        <span className="text-[0.75rem] font-black text-slate-700 uppercase tracking-tighter">{bot.name}</span>
-                    </div>
-                    <span className={`text-[0.5625rem] font-black uppercase tracking-widest ${bot.color.replace('bg-', 'text-')}`}>{bot.status}</span>
+            <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">Status dos Robôs Regionais</h4>
+            <div className="space-y-6">
+              {[
+                { name: 'Auto-Responder', status: 'Ativo', color: 'bg-emerald-500' },
+                { name: 'Google Cloud Sync', status: 'Online', color: 'bg-emerald-500' },
+                { name: 'Ricardo AI Logic', status: 'Processando', color: 'bg-amber-500', pulse: true }
+              ].map((bot, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2.5 h-2.5 rounded-full ${bot.color} ${bot.pulse ? 'animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]' : ''}`} />
+                    <span className="text-[0.75rem] font-black text-slate-700 uppercase tracking-tighter">{bot.name}</span>
                   </div>
-                ))}
-             </div>
+                  <span className={`text-[0.5625rem] font-black uppercase tracking-widest ${bot.color.replace('bg-', 'text-')}`}>{bot.status}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

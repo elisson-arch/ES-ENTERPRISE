@@ -64,6 +64,7 @@ export interface Client {
   googleContactId?: string;
   lastSyncAt?: string;
   updatedAt: string;
+  organizationId: string;
   additionalEmails?: string[];
   additionalPhones?: string[];
   status: 'Ativo' | 'Inativo' | 'Prospecção';
