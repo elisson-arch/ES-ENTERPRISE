@@ -231,10 +231,10 @@ const ClientsView = () => {
             Sincronizar Bidirecional
           </button>
           <button
-            onClick={() => seedService.seedClients()}
+            onClick={() => {/* Lógica para abrir modal de novo cliente */ }}
             className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
           >
-            <Plus size={16} /> Gerar 10 Clientes (Real)
+            <Plus size={16} /> Novo Cliente
           </button>
         </div>
       </header>

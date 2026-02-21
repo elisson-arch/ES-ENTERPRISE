@@ -4,15 +4,15 @@ import { ChatArea } from '../components/WhatsApp/ChatArea';
 import { ClientCRMDetails } from '../components/WhatsApp/ClientCRMDetails';
 import { WhatsAppModals } from '../components/WhatsApp/WhatsAppModals';
 import { useWhatsAppState } from '../hooks/useWhatsAppState';
-import { INITIAL_WHATSAPP_CHATS, DEFAULT_TEMPLATES } from '../services/mockData';
+import { DEFAULT_TEMPLATES } from '../services/mockData';
 import { X, Sparkles } from 'lucide-react';
 
 const WhatsAppView = () => {
-  const state = useWhatsAppState(INITIAL_WHATSAPP_CHATS);
+  const state = useWhatsAppState([]);
 
   const handleShareClient = async () => {
     if (!state.selectedChat) return;
-    
+
     const client = state.selectedChat;
     const shareText = `*Perfil do Cliente - ES Enterprise*\n\n` +
       `👤 *Nome:* ${client.clientName}\n` +
@@ -51,20 +51,20 @@ const WhatsAppView = () => {
 
       {(!state.isMobileView || !state.showChatOnMobile) && (
         <div className="flex-none w-full md:max-w-xs lg:max-w-[20rem] h-full border-r border-slate-200">
-          <ChatSidebar 
+          <ChatSidebar
             chats={state.chats}
             filteredChats={state.filteredChats}
             filters={state.filters}
             onFilterChange={(f) => state.setFilters(prev => ({ ...prev, ...f }))}
             selectedChatId={state.selectedChat?.id || ''}
-            onSelectChat={(c) => { 
+            onSelectChat={(c) => {
               if (state.isBulkMode) {
                 const next = new Set(state.selectedChatIds);
                 if (next.has(c.id)) next.delete(c.id); else next.add(c.id);
                 state.setSelectedChatIds(next);
               } else {
-                state.setSelectedChat(c); 
-                if(state.isMobileView) state.setShowChatOnMobile(true); 
+                state.setSelectedChat(c);
+                if (state.isMobileView) state.setShowChatOnMobile(true);
               }
             }}
             isBulkMode={state.isBulkMode}
@@ -77,7 +77,7 @@ const WhatsAppView = () => {
       )}
 
       <div className="flex-1 min-w-0 h-full">
-        <ChatArea 
+        <ChatArea
           selectedChat={state.selectedChat}
           onSendMessage={state.handleSendMessage}
           inputText={state.inputText}
@@ -86,25 +86,25 @@ const WhatsAppView = () => {
           isSending={state.isSending}
           isCallActive={false}
           callTimer="00:00"
-          onStartCall={() => {}}
-          onStopCall={() => {}}
-          onExport={() => {}}
+          onStartCall={() => { }}
+          onStopCall={() => { }}
+          onExport={() => { }}
           onOpenUpload={() => state.setModal('upload', true)}
           onToggleAI={(chat) => {
             const updated = { ...chat, aiEnabled: !chat.aiEnabled };
             state.setSelectedChat(updated);
             state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
           }}
-          onImageClick={() => {}}
+          onImageClick={() => { }}
           onBack={() => { state.setShowChatOnMobile(false); state.setShowDetailsOnMobile(false); }}
           isMobileView={state.isMobileView}
           showChatOnMobile={state.showChatOnMobile}
           pendingSuggestion={null}
-          onDiscardSuggestion={() => {}}
-          onEditSuggestion={() => {}}
-          onSendSuggestion={() => {}}
+          onDiscardSuggestion={() => { }}
+          onEditSuggestion={() => { }}
+          onSendSuggestion={() => { }}
           internalSearchTerm=""
-          onInternalSearchChange={() => {}}
+          onInternalSearchChange={() => { }}
           onOpenDetails={() => state.setShowDetailsOnMobile(true)}
           isRecording={state.isRecording}
           onStartRecording={state.handleStartRecording}
@@ -124,60 +124,60 @@ const WhatsAppView = () => {
                 <button onClick={() => state.setShowDetailsOnMobile(false)} className="absolute right-6 w-11 h-11 flex items-center justify-center text-slate-400 bg-slate-50 rounded-full"><X size={20} /></button>
               </div>
             )}
-            <ClientCRMDetails 
+            <ClientCRMDetails
               chat={state.selectedChat}
-              onGenerateWebsite={() => {}}
-              onGenerateReport={() => {}}
-              onDiagnose={() => {}}
+              onGenerateWebsite={() => { }}
+              onGenerateReport={() => { }}
+              onDiagnose={() => { }}
               onOpenSchedule={() => state.setModal('schedule', true)}
               onEditClient={() => state.setModal('clientEdit', true)}
               onShareClient={handleShareClient}
-              onSyncDrive={() => {}}
+              onSyncDrive={() => { }}
               onOpenQuote={() => state.setModal('quote', true)}
               templates={DEFAULT_TEMPLATES}
               templateSearchTerm=""
-              onTemplateSearchChange={() => {}}
+              onTemplateSearchChange={() => { }}
               isBulkMode={false}
-              onToggleBulkMode={() => {}}
+              onToggleBulkMode={() => { }}
               selectedTemplateIds={new Set()}
-              onToggleSelection={() => {}}
-              onSelectAllTemplates={() => {}}
-              onClearTemplateSelection={() => {}}
-              onBulkDelete={() => {}}
-              onDeleteTemplate={() => {}}
+              onToggleSelection={() => { }}
+              onSelectAllTemplates={() => { }}
+              onClearTemplateSelection={() => { }}
+              onBulkDelete={() => { }}
+              onDeleteTemplate={() => { }}
               onSelectTemplate={(t) => state.setInputText(t)}
               onEditTemplate={() => state.setModal('templateEdit', true)}
               expandedCategories={['Saudação']}
-              onToggleCategory={() => {}}
+              onToggleCategory={() => { }}
               onNewTemplate={() => state.setModal('templateNew', true)}
               onAddTask={(text) => {
-                 const newTask = { id: Date.now().toString(), text, completed: false, createdAt: new Date().toISOString() };
-                 const updated = { ...state.selectedChat!, tasks: [...(state.selectedChat!.tasks || []), newTask] };
-                 state.setSelectedChat(updated);
-                 state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+                const newTask = { id: Date.now().toString(), text, completed: false, createdAt: new Date().toISOString() };
+                const updated = { ...state.selectedChat!, tasks: [...(state.selectedChat!.tasks || []), newTask] };
+                state.setSelectedChat(updated);
+                state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
               }}
               onToggleTask={(taskId) => {
-                 const updatedTasks = (state.selectedChat!.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
-                 const updated = { ...state.selectedChat!, tasks: updatedTasks };
-                 state.setSelectedChat(updated);
-                 state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+                const updatedTasks = (state.selectedChat!.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+                const updated = { ...state.selectedChat!, tasks: updatedTasks };
+                state.setSelectedChat(updated);
+                state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
               }}
-              onDeleteTask={() => {}}
+              onDeleteTask={() => { }}
             />
           </div>
         </div>
       )}
 
-      <WhatsAppModals 
+      <WhatsAppModals
         showAI={state.modals.ai} aiTitle="" aiContent="" isGenerating={false} onCloseAI={() => state.setModal('ai', false)}
         showSchedule={state.modals.schedule} onCloseSchedule={() => state.setModal('schedule', false)}
         clientName={state.selectedChat?.clientName || ''}
         showUpload={state.modals.upload} onCloseUpload={() => state.setModal('upload', false)}
-        onFileUpload={() => {}} showNewTemplate={state.modals.templateNew} onCloseNewTemplate={() => state.setModal('templateNew', false)}
-        onCreateTemplate={() => {}} showEditTemplate={state.modals.templateEdit} onCloseEditTemplate={() => state.setModal('templateEdit', false)}
-        templateToEdit={null} onUpdateTemplate={() => {}} showEditClient={state.modals.clientEdit} onCloseEditClient={() => state.setModal('clientEdit', false)}
-        clientData={state.selectedChat} onSaveClient={() => {}} showQuote={state.modals.quote} onCloseQuote={() => state.setModal('quote', false)}
-        onSendQuote={() => {}} lightboxImage={null} onCloseLightbox={() => {}}
+        onFileUpload={() => { }} showNewTemplate={state.modals.templateNew} onCloseNewTemplate={() => state.setModal('templateNew', false)}
+        onCreateTemplate={() => { }} showEditTemplate={state.modals.templateEdit} onCloseEditTemplate={() => state.setModal('templateEdit', false)}
+        templateToEdit={null} onUpdateTemplate={() => { }} showEditClient={state.modals.clientEdit} onCloseEditClient={() => state.setModal('clientEdit', false)}
+        clientData={state.selectedChat} onSaveClient={() => { }} showQuote={state.modals.quote} onCloseQuote={() => state.setModal('quote', false)}
+        onSendQuote={() => { }} lightboxImage={null} onCloseLightbox={() => { }}
       />
     </div>
   );

@@ -1,13 +1,55 @@
 
-export const APP_CONFIG = {
+/**
+ * Interface para a configuração da aplicação
+ */
+export interface AppConfig {
+    METADATA: {
+        NAME: string;
+        DESCRIPTION: string;
+        VERSION: string;
+        REGION: string;
+    };
+    GOOGLE: {
+        CLIENT_ID: string;
+        SCOPES: string[];
+    };
+    AI: {
+        MODELS: {
+            PRIMARY: string;
+            FAST: string;
+            IMAGE: string;
+            IMAGE_EDIT: string;
+        };
+        SYSTEM_INSTRUCTIONS: {
+            RICARDO_IA: string;
+        };
+    };
+    API: {
+        AI_GENERATE_PROXY: string;
+        GSI_CLIENT_URL: string;
+    };
+    FIREBASE: {
+        API_KEY: string;
+        AUTH_DOMAIN: string;
+        PROJECT_ID: string;
+        STORAGE_BUCKET: string;
+        MESSAGING_SENDER_ID: string;
+        APP_ID: string;
+    };
+}
+
+/**
+ * Configurações Estáticas e Padronizadas
+ */
+const BASE_CONFIG: any = {
     METADATA: {
         NAME: "ES Enterprise",
         DESCRIPTION: "CRM Inteligente para Climatização",
-        VERSION: "2.5.0",
+        VERSION: "2.6.0",
         REGION: "us-central1"
     },
     GOOGLE: {
-        CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || "683732837133-r2jeruodpbl2bus99ard1nkas9aubjfg.apps.googleusercontent.com",
+        CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
         SCOPES: [
             'openid',
             'https://www.googleapis.com/auth/userinfo.email',
@@ -51,3 +93,39 @@ Ao responder:
         APP_ID: import.meta.env.VITE_FIREBASE_APP_ID || ""
     }
 };
+
+/**
+ * Singleton da Configuração
+ */
+export let APP_CONFIG: AppConfig = BASE_CONFIG;
+
+/**
+ * Função de Bootstrap: Carrega as chaves seguras do backend
+ */
+export async function loadSecureConfig(): Promise<AppConfig> {
+    try {
+        const response = await fetch('/api/config-secure');
+        if (!response.ok) throw new Error('Falha ao carregar configurações seguras');
+
+        const secureData = await response.json();
+
+        // Merge das configurações seguras
+        APP_CONFIG = {
+            ...BASE_CONFIG,
+            FIREBASE: {
+                ...BASE_CONFIG.FIREBASE,
+                ...secureData.firebase
+            },
+            GOOGLE: {
+                ...BASE_CONFIG.GOOGLE,
+                CLIENT_ID: secureData.googleClientId || BASE_CONFIG.GOOGLE.CLIENT_ID
+            }
+        };
+
+        console.log('[CONFIG] "O Cofre" foi aberto com sucesso via Backend. 🔐');
+        return APP_CONFIG;
+    } catch (error) {
+        console.warn('[CONFIG] Falha ao acessar "O Cofre". Usando chaves de ambiente fallback.', error);
+        return APP_CONFIG;
+    }
+}

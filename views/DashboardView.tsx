@@ -3,8 +3,10 @@ import {
   Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search
 } from 'lucide-react';
 import { OnboardingChecklist } from '../components/UI/OnboardingChecklist';
-import { OnboardingTask, CalendarEvent } from '../types';
+import { OnboardingTask, CalendarEvent, Client, Asset } from '../types';
 import { googleApiService } from '../services/googleApiService';
+import { firestoreService } from '../services/firestoreService';
+import { where } from 'firebase/firestore';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
   <button
@@ -43,15 +45,41 @@ const PriorityMission = ({ title, status, time, type }: any) => (
 const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboardingTasks }) => {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [stats, setStats] = useState({ clientsCount: 0, assetsCount: 0 });
+  const [recentMissions, setRecentMissions] = useState<any[]>([]);
   const userProfile = googleApiService.getUserProfile();
 
   useEffect(() => {
     const init = async () => {
+      // 1. Sincronizar Google Calendar
       if (googleApiService.isAuthenticated('calendar')) {
         const data = await googleApiService.syncCalendarEvents();
         setEvents(data || []);
       }
+
+      // 2. Subscrição para Métricas Reais (Firestore)
+      const unsubClients = firestoreService.subscribe<Client>('clients', (data) => {
+        setStats(prev => ({ ...prev, clientsCount: data.length }));
+
+        // Gerar missões baseadas em novos clientes
+        const missions = data.slice(0, 3).map(c => ({
+          title: `Atender ${c.name}`,
+          time: 'Novo Lead',
+          status: 'Sincronizado via Firestore',
+          type: 'lead'
+        }));
+        setRecentMissions(missions);
+      }, where('organizationId', '==', 'org_123'));
+
+      const unsubAssets = firestoreService.subscribe<Asset>('assets', (data) => {
+        setStats(prev => ({ ...prev, assetsCount: data.length }));
+      }, where('organizationId', '==', 'org_123'));
+
       setLoading(false);
+      return () => {
+        unsubClients();
+        unsubAssets();
+      };
     };
     init();
   }, []);
@@ -82,7 +110,7 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
               </div>
               <div className="w-1 h-1 bg-slate-300 rounded-full" />
               <div className="flex items-center gap-1 text-blue-600 text-[0.625rem] font-black uppercase tracking-tight italic">
-                Agilizado via {window.innerWidth < 1024 ? 'Mobile' : 'Desktop'}
+                {stats.clientsCount} Clientes | {stats.assetsCount} Ativos Reais
               </div>
             </div>
           </div>
@@ -116,30 +144,30 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             </div>
 
             <div className="space-y-4">
-              <PriorityMission title="Responder Condomínio Aurora" time="há 15 min" status="Aguardando Orçamento" type="urgent" />
-              <PriorityMission title="Visita Técnica: Hospital São Luiz" time="Hoje, 14:00" status="Confirmar Rota GPS" type="event" />
-              <PriorityMission title="Novo Lead: Padaria Pão de Mel" time="há 2h" status="WhatsApp Cloud Sync" type="lead" />
+              {recentMissions.length > 0 ? (
+                recentMissions.map((mission, idx) => (
+                  <PriorityMission key={idx} {...mission} />
+                ))
+              ) : (
+                <div className="p-8 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                  <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-widest italic">Nenhuma missão prioritária no momento</p>
+                </div>
+              )}
             </div>
 
             <div className="mt-10 pt-10 border-t border-slate-100 flex items-center justify-between text-slate-400">
               <div className="flex items-center gap-3">
                 <Sparkles size={18} className="text-amber-400 animate-pulse" />
-                <span className="text-[0.625rem] font-black uppercase tracking-widest italic">Previsão: 82% de fechamento na região us-central1</span>
-              </div>
-              <div className="flex -space-x-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full border-4 border-white bg-slate-200" />
-                ))}
-                <div className="w-8 h-8 rounded-full border-4 border-white bg-blue-600 flex items-center justify-center text-[0.625rem] font-black text-white">+5</div>
+                <span className="text-[0.625rem] font-black uppercase tracking-widest italic">Dashboard Conectado ao Cloud Firestore</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <QuickActionCard title="WhatsApp" desc="Abrir Conversas" icon={MessageSquare} color="bg-blue-600" onClick={() => window.location.hash = '#/whatsapp'} />
-            <QuickActionCard title="Agenda" desc="Rotas de Campo" icon={Calendar} color="bg-emerald-600" />
+            <QuickActionCard title="Agenda" desc="Rotas de Campo" icon={Calendar} color="bg-emerald-600" onClick={() => window.location.hash = '#/calendar'} />
             <QuickActionCard title="Clientes" desc="Base Unificada" icon={Users} color="bg-indigo-600" onClick={() => window.location.hash = '#/clientes'} />
-            <QuickActionCard title="Cloud" desc="Drive Drive" icon={Database} color="bg-amber-500" onClick={() => window.location.hash = '#/drive'} />
+            <QuickActionCard title="Inventário" desc="Ativos Reais" icon={Database} color="bg-amber-500" onClick={() => window.location.hash = '#/inventory'} />
           </div>
         </div>
 
@@ -149,21 +177,18 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-white/10 mb-6">
                 <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></div>
-                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">SGC Mobile Stream</span>
+                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">SGC Engine Real-time</span>
               </div>
-              <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Agilidade em Campo</h3>
-              <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Sincronize laudos usando o microfone do celular enquanto realiza a inspeção.</p>
+              <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Dados em Tempo Real</h3>
+              <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Você tem {stats.clientsCount} clientes ativos e {stats.assetsCount} equipamentos sob gestão no Firestore.</p>
             </div>
-            <button className="w-full h-[3.5rem] bg-blue-600 rounded-2xl font-black text-[0.625rem] uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-3 relative z-10">
-              <Play size={16} fill="currentColor" /> Assistir Tutorial Agile
-            </button>
           </div>
 
           <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
             <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">Status dos Robôs Regionais</h4>
             <div className="space-y-6">
               {[
-                { name: 'Auto-Responder', status: 'Ativo', color: 'bg-emerald-500' },
+                { name: 'Firestore Sync', status: 'Ativo', color: 'bg-emerald-500' },
                 { name: 'Google Cloud Sync', status: 'Online', color: 'bg-emerald-500' },
                 { name: 'Ricardo AI Logic', status: 'Processando', color: 'bg-amber-500', pulse: true }
               ].map((bot, i) => (

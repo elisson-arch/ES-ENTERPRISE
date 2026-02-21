@@ -79,6 +79,7 @@ export interface Asset {
   serialNumber: string;
   installationDate: string;
   lastMaintenance?: string;
+  organizationId?: string;
 }
 
 export interface ChatSession {
