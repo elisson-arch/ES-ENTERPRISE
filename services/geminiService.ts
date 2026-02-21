@@ -1,18 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { APP_CONFIG } from '../config/config';
 
-const HVAC_SYSTEM_INSTRUCTION = `Você é o Ricardo IA, o Engenheiro Chefe da ES Enterprise. 
-Sua especialidade absoluta é Climatização, Refrigeração (HVAC) e Gestão de Manutenção Industrial/Residencial.
-Ao responder:
-1. Use terminologia técnica precisa (BTUs, Compressor, Inverter, PMOC, Válvula de Expansão).
-2. Priorize diagnósticos baseados em eficiência energética e durabilidade do equipamento.
-3. Seja proativo sugerindo manutenções preventivas baseadas nos sintomas relatados.
-4. Mantenha um tom profissional, ágil e focado em soluções práticas de campo.`;
+const HVAC_SYSTEM_INSTRUCTION = APP_CONFIG.AI.SYSTEM_INSTRUCTIONS.RICARDO_IA;
 
 /**
  * Helper to handle specific Gemini API errors and notify the UI
  */
 const handleApiError = (err: any) => {
-  // If the request fails with this specific message, we must prompt for a new key
   if (err?.message?.includes("Requested entity was not found.")) {
     window.dispatchEvent(new CustomEvent('aistudio_key_reset'));
   }
@@ -41,11 +35,10 @@ export const geminiService = {
 
       const data = await response.json();
 
-      // Mapeamento simples para manter compatibilidade com o retorno do SDK original (.text)
       return {
         text: data.candidates?.[0]?.content?.parts?.[0]?.text || '',
         candidates: data.candidates,
-        data // Retorno completo se necessário
+        data
       };
     } catch (err) {
       console.error('[FRONTEND] Erro GeminiService:', err);
@@ -60,20 +53,20 @@ export const geminiService = {
         { text: prompt }
       ]
     };
-    const res = await this.callProxy('gemini-3-pro-preview', contents, { systemInstruction: HVAC_SYSTEM_INSTRUCTION });
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.PRIMARY, contents, { systemInstruction: HVAC_SYSTEM_INSTRUCTION });
     return res.text;
   },
 
   async getDeepResponse(prompt: string, context: string = "Diagnóstico Técnico de Campo") {
     const contents = { parts: [{ text: prompt }] };
-    const res = await this.callProxy('gemini-3-pro-preview', contents, {
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.PRIMARY, contents, {
       thinkingConfig: { thinkingBudget: 32768 },
       systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto atual: ${context}.`
     });
     return res.text;
   },
 
-  async getChatResponse(prompt: string, context: string, modelId: string = 'gemini-3-flash-preview') {
+  async getChatResponse(prompt: string, context: string, modelId: string = APP_CONFIG.AI.MODELS.FAST) {
     const contents = { parts: [{ text: prompt }] };
     const res = await this.callProxy(modelId, contents, {
       systemInstruction: `${HVAC_SYSTEM_INSTRUCTION}\nContexto do Atendimento: ${context}.`
@@ -83,7 +76,7 @@ export const geminiService = {
 
   async searchWeb(prompt: string) {
     const contents = { parts: [{ text: prompt }] };
-    const res = await this.callProxy('gemini-3-flash-preview', contents, {
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.FAST, contents, {
       tools: [{ googleSearch: {} }]
     });
 
@@ -97,7 +90,7 @@ export const geminiService = {
 
   async generateImage(prompt: string, aspectRatio: string = "16:9") {
     const contents = { parts: [{ text: `Projeto 3D profissional de climatização: ${prompt}` }] };
-    const res = await this.callProxy('gemini-3-pro-image-preview', contents, {
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.IMAGE, contents, {
       imageConfig: { aspectRatio, imageSize: "1K" }
     });
 
@@ -116,7 +109,7 @@ export const geminiService = {
         { text: prompt }
       ],
     };
-    const res = await this.callProxy('gemini-2.5-flash-image', contents);
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.IMAGE_EDIT, contents);
 
     if (res.candidates?.[0]?.content?.parts) {
       for (const part of res.candidates[0].content.parts) {
@@ -128,7 +121,7 @@ export const geminiService = {
 
   async generateSectionJSON(prompt: string) {
     const contents = { parts: [{ text: prompt }] };
-    const res = await this.callProxy('gemini-3-pro-preview', contents, {
+    const res = await this.callProxy(APP_CONFIG.AI.MODELS.PRIMARY, contents, {
       systemInstruction: "Você é um arquiteto de software especialista em React e UI/UX. Gere o JSON de um componente SiteElement baseado no comando do usuário. Responda apenas com o JSON bruto.",
       responseMimeType: "application/json"
     });

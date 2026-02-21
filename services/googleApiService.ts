@@ -1,20 +1,8 @@
 
 import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '../types';
+import { APP_CONFIG } from '../config/config';
 
-export const GOOGLE_CLIENT_ID = "683732837133-r2jeruodpbl2bus99ard1nkas9aubjfg.apps.googleusercontent.com";
-
-const WORKSPACE_SCOPES = [
-  'openid',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/contacts',
-  'https://www.googleapis.com/auth/calendar',
-  'https://www.googleapis.com/auth/drive',
-  'https://www.googleapis.com/auth/gmail.modify',
-  'https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/documents',
-  'https://www.googleapis.com/auth/tasks'
-];
+const { CLIENT_ID: GOOGLE_CLIENT_ID, SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;
 
 interface UserProfile {
   name: string;
@@ -40,11 +28,11 @@ class GoogleApiService {
 
   private async fetchApi(url: string, options: RequestInit = {}) {
     if (this.token?.accessToken.startsWith('CONTINGENCY')) {
-        return {}; 
+      return {};
     }
 
     if (!this.token?.accessToken) throw new Error("Não autenticado.");
-    
+
     const res = await fetch(url, {
       ...options,
       headers: {
@@ -62,8 +50,8 @@ class GoogleApiService {
   }
 
   private notify(error?: string) {
-    window.dispatchEvent(new CustomEvent('google_auth_change', { 
-      detail: { isAuthenticated: this.isAuthenticated(), profile: this.userProfile, error } 
+    window.dispatchEvent(new CustomEvent('google_auth_change', {
+      detail: { isAuthenticated: this.isAuthenticated(), profile: this.userProfile, error }
     }));
   }
 
@@ -85,7 +73,7 @@ class GoogleApiService {
     this.token = {
       accessToken: 'CONTINGENCY_' + Date.now(),
       refreshToken: '',
-      expiresAt: Date.now() + 86400000, 
+      expiresAt: Date.now() + 86400000,
       scopes: WORKSPACE_SCOPES
     };
     this.userProfile = {
@@ -103,8 +91,8 @@ class GoogleApiService {
   async loginAndAuthorize(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!(window as any).google) {
-          this.notify("SDK Google não carregado.");
-          return resolve(false);
+        this.notify("SDK Google não carregado.");
+        return resolve(false);
       }
 
       try {
@@ -123,7 +111,7 @@ class GoogleApiService {
               expiresAt: Date.now() + (resp.expires_in * 1000),
               scopes: resp.scope.split(' ')
             };
-            
+
             localStorage.setItem('sgc_token', JSON.stringify(this.token));
             const user = await this.fetchApi('https://www.googleapis.com/oauth2/v3/userinfo');
             this.userProfile = { name: user.name, email: user.email, picture: user.picture };
@@ -152,10 +140,10 @@ class GoogleApiService {
 
   async listFiles(): Promise<DriveFile[]> {
     if (this.token?.accessToken.startsWith('CONTINGENCY')) {
-        return [
-            { id: '1', name: 'Manual_Técnico_Daikin.pdf', mimeType: 'application/pdf', webViewLink: '#', modifiedTime: new Date().toISOString() },
-            { id: '2', name: 'Orçamento_Roberto_Manutencoes.pdf', mimeType: 'application/pdf', webViewLink: '#', modifiedTime: new Date().toISOString() }
-        ];
+      return [
+        { id: '1', name: 'Manual_Técnico_Daikin.pdf', mimeType: 'application/pdf', webViewLink: '#', modifiedTime: new Date().toISOString() },
+        { id: '2', name: 'Orçamento_Roberto_Manutencoes.pdf', mimeType: 'application/pdf', webViewLink: '#', modifiedTime: new Date().toISOString() }
+      ];
     }
     const data = await this.fetchApi('https://www.googleapis.com/drive/v3/files?pageSize=20&fields=files(id, name, mimeType, webViewLink, size, modifiedTime)');
     return data.files || [];
@@ -163,7 +151,7 @@ class GoogleApiService {
 
   async syncCalendarEvents(): Promise<CalendarEvent[]> {
     if (this.token?.accessToken.startsWith('CONTINGENCY')) {
-        return [{ id: 'e1', summary: 'Manutenção Preventiva - Roberto', start: new Date().toISOString(), end: new Date().toISOString() }];
+      return [{ id: 'e1', summary: 'Manutenção Preventiva - Roberto', start: new Date().toISOString(), end: new Date().toISOString() }];
     }
     const data = await this.fetchApi(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&maxResults=10`);
     return (data.items || []).map((i: any) => ({ id: i.id, summary: i.summary, start: i.start.dateTime || i.start.date, end: i.end.dateTime || i.end.date, location: i.location }));
