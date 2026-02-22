@@ -5,6 +5,9 @@
     "camera",
     "microphone",
     "geolocation",
-    "clipboard-read"
+    "clipboard-read",
+    "clipboard-write",
+    "payment",
+    "idle-detection"
   ]
 }
