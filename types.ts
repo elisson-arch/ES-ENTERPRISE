@@ -121,6 +121,7 @@ export interface Message {
   fileName?: string;
   fileType?: string;
   fileSize?: string;
+  displayTime?: string;
   groundingSources?: { title: string; uri: string }[];
 }
 

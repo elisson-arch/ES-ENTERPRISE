@@ -9,16 +9,16 @@ const COLLECTION_NAME = 'assets';
 export const inventoryService = {
     // Obter todos os ativos de uma organização
     async getAssetsByOrg(orgId: string): Promise<Asset[]> {
-        return firestoreService.query<Asset>(COLLECTION_NAME, [
+        return firestoreService.query<Asset>(COLLECTION_NAME,
             where('organizationId', '==', orgId)
-        ]);
+        );
     },
 
     // Obter ativos de um cliente específico
     async getAssetsByClient(clientId: string): Promise<Asset[]> {
-        return firestoreService.query<Asset>(COLLECTION_NAME, [
+        return firestoreService.query<Asset>(COLLECTION_NAME,
             where('clientId', '==', clientId)
-        ]);
+        );
     },
 
     // Criar novo ativo
