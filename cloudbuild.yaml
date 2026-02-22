@@ -29,5 +29,5 @@ images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/es-enterprise/$REPO_NAME:$COMMIT_SHA'
 
 options:
-  # Deixando o padrão do GCP decidir o melhor local para os logs enquanto a permissão é ajustada
-  # logging: CLOUD_LOGGING_ONLY
+  logging: CLOUD_LOGGING_ONLY
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
