@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Bell, MessageSquare, Trello, AlertCircle, CheckCircle, Trash2, Clock, Upload, Zap } from 'lucide-react';
+import { X, Bell, MessageSquare, Trello, AlertCircle, CheckCircle, Trash2, Clock, Upload, Zap, Wrench } from 'lucide-react';
 import { AppNotification, NotificationType } from '../../types';
 
 interface NotificationCenterProps {
@@ -18,6 +18,7 @@ const getIcon = (type: NotificationType) => {
     case 'success': return <CheckCircle size={18} className="text-emerald-500" />;
     case 'upload': return <Upload size={18} className="text-indigo-500" />;
     case 'automation': return <Zap size={18} className="text-amber-500" />;
+    case 'predictive': return <Wrench size={18} className="text-amber-500" />;
     default: return <Bell size={18} className="text-slate-500" />;
   }
 };

@@ -37,7 +37,20 @@ export interface GmailMessage {
   payload?: any;
 }
 
-export type NotificationType = 'message' | 'funnel' | 'sla' | 'success' | 'upload' | 'automation';
+export type NotificationType = 'message' | 'funnel' | 'sla' | 'success' | 'upload' | 'automation' | 'predictive';
+
+export interface PredictiveAlert {
+  assetId: string;
+  clientId: string;
+  assetType: string;
+  brand: string;
+  model: string;
+  severity: 'critical' | 'warning' | 'ok';
+  daysSinceLastMaintenance: number;
+  daysOverdue: number;
+  thresholdDays: number;
+  suggestedMaintenanceDate: string;
+}
 
 export interface AppNotification {
   id: string;

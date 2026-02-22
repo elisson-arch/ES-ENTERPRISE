@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MessageSquare, Trello, AlertCircle, CheckCircle, Upload } from 'lucide-react';
+import { X, MessageSquare, Trello, AlertCircle, CheckCircle, Upload, Wrench } from 'lucide-react';
 import { AppNotification, NotificationType } from '../../types';
 
 interface ToastContainerProps {
@@ -14,6 +14,7 @@ const getToastStyles = (type: NotificationType) => {
     case 'message': return { bg: 'bg-blue-600', icon: <MessageSquare className="text-white" size={20} /> };
     case 'funnel': return { bg: 'bg-purple-600', icon: <Trello className="text-white" size={20} /> };
     case 'upload': return { bg: 'bg-indigo-600', icon: <Upload className="text-white" size={20} /> };
+    case 'predictive': return { bg: 'bg-amber-600', icon: <Wrench className="text-white" size={20} /> };
     default: return { bg: 'bg-slate-800', icon: <AlertCircle className="text-white" size={20} /> };
   }
 };

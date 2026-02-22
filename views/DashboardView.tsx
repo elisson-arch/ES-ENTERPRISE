@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search
+  Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search, Wrench
 } from 'lucide-react';
 import { OnboardingChecklist } from '../components/UI/OnboardingChecklist';
-import { OnboardingTask, CalendarEvent, Client, Asset } from '../types';
+import { OnboardingTask, CalendarEvent, Client, Asset, PredictiveAlert } from '../types';
 import { googleApiService } from '../services/googleApiService';
 import { firestoreService } from '../services/firestoreService';
+import { predictiveService } from '../services/predictiveService';
+import { useAppContext } from '../hooks/useAppContext';
 import { where } from 'firebase/firestore';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
@@ -47,6 +49,9 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [stats, setStats] = useState({ clientsCount: 0, assetsCount: 0 });
   const [recentMissions, setRecentMissions] = useState<any[]>([]);
+  const [predictiveAlerts, setPredictiveAlerts] = useState<PredictiveAlert[]>([]);
+  const notifiedAssetsRef = useRef<Set<string>>(new Set());
+  const { addNotification } = useAppContext();
   const userProfile = googleApiService.getUserProfile();
 
   useEffect(() => {
@@ -73,6 +78,23 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
 
       const unsubAssets = firestoreService.subscribe<Asset>('assets', (data) => {
         setStats(prev => ({ ...prev, assetsCount: data.length }));
+
+        // Calcular alertas preditivos de manutenção
+        const alerts = predictiveService.analyzeAssetsRisk(data);
+        setPredictiveAlerts(alerts);
+
+        // Notificar ativos críticos (uma vez por sessão)
+        alerts
+          .filter(a => a.severity === 'critical' && !notifiedAssetsRef.current.has(a.assetId))
+          .forEach(a => {
+            addNotification({
+              type: 'predictive',
+              title: 'Manutenção Crítica',
+              description: `${a.brand} ${a.model} (${a.assetType}) — ${a.daysOverdue}d em atraso`,
+              priority: 'high',
+            });
+            notifiedAssetsRef.current.add(a.assetId);
+          });
       }, where('organizationId', '==', 'org_123'));
 
       setLoading(false);
@@ -144,15 +166,34 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             </div>
 
             <div className="space-y-4">
+              {/* Missões preditivas: ativos críticos aparecem primeiro */}
+              {predictiveAlerts.filter(a => a.severity === 'critical').map((alert) => (
+                <PriorityMission
+                  key={`pred-${alert.assetId}`}
+                  title={`${alert.brand} ${alert.model} — Manutenção Atrasada`}
+                  time={`${alert.daysOverdue}d em atraso`}
+                  status="Manutenção Preditiva"
+                  type="urgent"
+                />
+              ))}
+              {predictiveAlerts.filter(a => a.severity === 'warning').map((alert) => (
+                <PriorityMission
+                  key={`pred-${alert.assetId}`}
+                  title={`${alert.brand} ${alert.model} — Manutenção Próxima`}
+                  time={`${alert.daysSinceLastMaintenance}d sem manutenção`}
+                  status="Atenção Preventiva"
+                  type="lead"
+                />
+              ))}
               {recentMissions.length > 0 ? (
                 recentMissions.map((mission, idx) => (
                   <PriorityMission key={idx} {...mission} />
                 ))
-              ) : (
+              ) : predictiveAlerts.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                   <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-widest italic">Nenhuma missão prioritária no momento</p>
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div className="mt-10 pt-10 border-t border-slate-100 flex items-center justify-between text-slate-400">
@@ -181,6 +222,14 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
               </div>
               <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Dados em Tempo Real</h3>
               <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Você tem {stats.clientsCount} clientes ativos e {stats.assetsCount} equipamentos sob gestão no Firestore.</p>
+              {predictiveAlerts.length > 0 && (
+                <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-rose-500/20 border border-rose-500/30 rounded-2xl cursor-pointer" onClick={() => window.location.hash = '#/ativos'}>
+                  <Wrench size={16} className="text-rose-400 shrink-0" />
+                  <span className="text-[0.75rem] font-black text-rose-300 uppercase tracking-tight">
+                    {predictiveAlerts.filter(a => a.severity === 'critical').length} crítico(s) · {predictiveAlerts.filter(a => a.severity === 'warning').length} alerta(s) de manutenção
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

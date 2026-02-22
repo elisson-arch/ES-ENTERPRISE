@@ -16,11 +16,14 @@ import {
   CheckCircle2,
   Fan,
   Smartphone,
-  ArrowRight
+  ArrowRight,
+  Wrench,
+  AlertTriangle
 } from 'lucide-react';
-import type { Asset } from '../types';
+import type { Asset, PredictiveAlert } from '../types';
 
 import { inventoryService } from '../services/inventoryService';
+import { predictiveService } from '../services/predictiveService';
 
 const getAssetUI = (type: string) => {
   const t = type?.toLowerCase() || '';
@@ -44,10 +47,12 @@ const CATEGORIES = [
   { id: 'Outros', label: 'Outros', icon: Snowflake, color: 'bg-slate-600' }
 ];
 
-const AssetCardMobile = ({ asset, ui }: { asset: Asset, ui: any }) => {
+const AssetCardMobile = ({ asset, ui, alert }: { asset: Asset, ui: any, alert?: PredictiveAlert }) => {
   const Icon = ui.icon;
+  const isCritical = alert?.severity === 'critical';
+  const isWarning = alert?.severity === 'warning';
   return (
-    <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm active:scale-[0.98] transition-all group">
+    <div className={`bg-white p-6 rounded-[2.5rem] border shadow-sm active:scale-[0.98] transition-all group ${isCritical ? 'border-rose-200' : isWarning ? 'border-amber-200' : 'border-slate-100'}`}>
       <div className="flex items-center gap-5 mb-6">
         <div className={`w-14 h-14 rounded-2xl ${ui.color} ${ui.shadow} flex items-center justify-center text-white shrink-0 shadow-lg`}>
           <Icon size={28} />
@@ -59,12 +64,24 @@ const AssetCardMobile = ({ asset, ui }: { asset: Asset, ui: any }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+        <div className={`p-3 rounded-2xl border ${isCritical ? 'bg-rose-50 border-rose-100' : isWarning ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
           <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Status</p>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span className="text-[10px] font-black text-emerald-600 uppercase">Operacional</span>
-          </div>
+          {isCritical ? (
+            <div className="flex items-center gap-2">
+              <Wrench size={10} className="text-rose-500" />
+              <span className="text-[10px] font-black text-rose-600 uppercase">Atrasado {alert!.daysOverdue}d</span>
+            </div>
+          ) : isWarning ? (
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={10} className="text-amber-500" />
+              <span className="text-[10px] font-black text-amber-600 uppercase">Em breve</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+              <span className="text-[10px] font-black text-emerald-600 uppercase">Operacional</span>
+            </div>
+          )}
         </div>
         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
           <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Nº Série</p>
@@ -109,6 +126,15 @@ const InventoryView = () => {
       return matchesSearch && matchesCategory;
     });
   }, [assets, searchTerm, selectedCategory]);
+
+  const riskMap = useMemo(() => {
+    const map = new Map<string, PredictiveAlert>();
+    assets.forEach(a => {
+      const alert = predictiveService.calculateRiskScore(a);
+      if (alert.severity !== 'ok') map.set(a.id, alert);
+    });
+    return map;
+  }, [assets]);
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 pb-24 md:pb-10">
@@ -158,7 +184,7 @@ const InventoryView = () => {
       {/* View Híbrida: Mobile (Cards) vs Desktop (Tabela) */}
       <div className="block lg:hidden space-y-4">
         {filteredAssets.length > 0 ? filteredAssets.map(asset => (
-          <AssetCardMobile key={asset.id} asset={asset} ui={getAssetUI(asset.type)} />
+          <AssetCardMobile key={asset.id} asset={asset} ui={getAssetUI(asset.type)} alert={riskMap.get(asset.id)} />
         )) : (
           <div className="bg-white p-12 rounded-[2.5rem] text-center opacity-30">
             <Search size={40} className="mx-auto mb-4" />
@@ -182,8 +208,11 @@ const InventoryView = () => {
             {filteredAssets.length > 0 ? filteredAssets.map(asset => {
               const ui = getAssetUI(asset.type);
               const AssetIcon = ui.icon;
+              const riskAlert = riskMap.get(asset.id);
+              const isCritical = riskAlert?.severity === 'critical';
+              const isWarning = riskAlert?.severity === 'warning';
               return (
-                <tr key={asset.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
+                <tr key={asset.id} className={`hover:bg-slate-50/50 transition-colors group cursor-pointer ${isCritical ? 'bg-rose-50/30' : isWarning ? 'bg-amber-50/20' : ''}`}>
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-6">
                       <div className={`w-16 h-16 rounded-[1.5rem] ${ui.color} ${ui.shadow} flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform duration-500`}>
@@ -211,16 +240,39 @@ const InventoryView = () => {
                   </td>
                   <td className="px-8 py-5">
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]"></span>
-                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
-                          Operacional
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 opacity-40">
-                        <Fan size={10} className="animate-spin duration-[3000ms]" />
-                        <span className="text-[8px] font-black uppercase tracking-tighter">Eficiência 98%</span>
-                      </div>
+                      {isCritical ? (
+                        <div className="flex items-center gap-2">
+                          <Wrench size={12} className="text-rose-500" />
+                          <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">
+                            Manutenção Atrasada
+                          </span>
+                        </div>
+                      ) : isWarning ? (
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle size={12} className="text-amber-500" />
+                          <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                            Manutenção em breve
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]"></span>
+                          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                            Operacional
+                          </span>
+                        </div>
+                      )}
+                      {riskAlert ? (
+                        <div className="flex items-center gap-1 opacity-60">
+                          <History size={10} />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">{riskAlert.daysSinceLastMaintenance}d sem manutenção</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 opacity-40">
+                          <Fan size={10} className="animate-spin duration-[3000ms]" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">Eficiência 98%</span>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="px-8 py-5">
