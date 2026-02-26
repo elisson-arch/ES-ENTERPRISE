@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Sparkles, Stethoscope, FilePlus, CalendarClock, Zap, ClipboardList, Pencil, Trello, Clock, ChevronDown, ChevronUp, History, CreditCard, StickyNote, ListChecks, Plus, Trash2, CheckCircle2, Circle, Share2
 } from 'lucide-react';
@@ -38,6 +38,7 @@ interface ClientCRMDetailsProps {
   onAddTask: (text: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onSaveInternalNotes: (notes: string) => void;
 }
 
 const CollapsibleSection: React.FC<{ 
@@ -79,9 +80,15 @@ export const ClientCRMDetails: React.FC<ClientCRMDetailsProps> = ({
   onBulkDelete, onDeleteTemplate,
   onSelectTemplate, onEditTemplate, expandedCategories, onToggleCategory, onNewTemplate, onEditClient, onShareClient, onGenerateWebsite, onGenerateReport,
   onMoveFunnelStage, onAddTask, onToggleTask, onDeleteTask
+  , onSaveInternalNotes
 }) => {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['tasks', 'notes']));
   const [newTaskText, setNewTaskText] = useState('');
+  const [internalNotes, setInternalNotes] = useState(chat.internalNotes || '');
+
+  useEffect(() => {
+    setInternalNotes(chat.internalNotes || '');
+  }, [chat.id, chat.internalNotes]);
 
   const toggleSection = (id: string) => {
     const next = new Set(openSections);
@@ -205,10 +212,11 @@ export const ClientCRMDetails: React.FC<ClientCRMDetailsProps> = ({
              <textarea 
                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[10px] font-medium text-slate-600 leading-relaxed outline-none focus:border-indigo-300 transition-all h-24"
                placeholder="Adicionar notas sobre o cliente..."
-               defaultValue={chat.internalNotes}
+               value={internalNotes}
+               onChange={(e) => setInternalNotes(e.target.value)}
              />
              <div className="flex justify-end">
-                <button className="text-[9px] font-black uppercase text-indigo-600 hover:underline">Salvar Notas</button>
+                <button onClick={() => onSaveInternalNotes(internalNotes)} className="text-[9px] font-black uppercase text-indigo-600 hover:underline">Salvar Notas</button>
              </div>
           </div>
         </CollapsibleSection>

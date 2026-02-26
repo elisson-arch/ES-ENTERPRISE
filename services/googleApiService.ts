@@ -1,5 +1,4 @@
-
-import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '../types';
+﻿import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '../types';
 import { APP_CONFIG } from '../config/config';
 
 const { CLIENT_ID: GOOGLE_CLIENT_ID, SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;
@@ -9,6 +8,41 @@ interface UserProfile {
   email: string;
   picture: string;
 }
+
+type AccountType = 'commercial' | 'personal' | 'contingency' | 'unknown';
+
+interface AccessProfile {
+  accountType: AccountType;
+  email: string;
+  grantedScopes: string[];
+  missingScopes: string[];
+  fullAccess: boolean;
+}
+
+const FREE_EMAIL_DOMAINS = new Set([
+  'gmail.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'yahoo.com',
+  'icloud.com'
+]);
+
+const ROUTE_SCOPE_REQUIREMENTS: Record<string, string[]> = {
+  dashboard: [],
+  whatsapp: ['https://www.googleapis.com/auth/gmail.modify'],
+  clients: ['https://www.googleapis.com/auth/contacts'],
+  funnel: ['https://www.googleapis.com/auth/contacts'],
+  automations: ['https://www.googleapis.com/auth/tasks'],
+  inventory: [],
+  documents: ['https://www.googleapis.com/auth/documents'],
+  drive: ['https://www.googleapis.com/auth/drive'],
+  reports: ['https://www.googleapis.com/auth/spreadsheets'],
+  ia: [],
+  site: [],
+  security: ['https://www.googleapis.com/auth/userinfo.email'],
+  integrations: []
+};
 
 class GoogleApiService {
   private token: GoogleToken | null = null;
@@ -31,28 +65,38 @@ class GoogleApiService {
       return {};
     }
 
-    if (!this.token?.accessToken) throw new Error("Não autenticado.");
+    if (!this.token?.accessToken) throw new Error('Não autenticado.');
 
     const res = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
-        'Authorization': `Bearer ${this.token.accessToken}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.token.accessToken}`,
+        'Content-Type': 'application/json'
       }
     });
 
     if (res.status === 401) {
       this.revokeAccess();
-      throw new Error("Sessão expirada.");
+      throw new Error('Sessão expirada.');
     }
+
+    if (res.status === 403) {
+      const errPayload = await res.json().catch(() => ({}));
+      const msg = errPayload?.error?.message || 'Permissão negada pela API Google.';
+      throw new Error(`Serviço/API não habilitado ou sem permissão: ${msg}`);
+    }
+
     return res.json();
   }
 
   private notify(error?: string) {
-    window.dispatchEvent(new CustomEvent('google_auth_change', {
-      detail: { isAuthenticated: this.isAuthenticated(), profile: this.userProfile, error }
-    }));
+    const accessProfile = this.getAccessProfile();
+    window.dispatchEvent(
+      new CustomEvent('google_auth_change', {
+        detail: { isAuthenticated: this.isAuthenticated(), profile: this.userProfile, accessProfile, error }
+      })
+    );
   }
 
   private addLog(service: SyncLog['service'], action: string, details: string, status: 'success' | 'failure' = 'success') {
@@ -71,7 +115,7 @@ class GoogleApiService {
 
   async activateContingencyAccess() {
     this.token = {
-      accessToken: 'CONTINGENCY_' + Date.now(),
+      accessToken: `CONTINGENCY_${Date.now()}`,
       refreshToken: '',
       expiresAt: Date.now() + 86400000,
       scopes: WORKSPACE_SCOPES
@@ -91,7 +135,7 @@ class GoogleApiService {
   async loginAndAuthorize(): Promise<boolean> {
     return new Promise((resolve) => {
       if (!(window as any).google) {
-        this.notify("SDK Google não carregado.");
+        this.notify('SDK Google não carregado.');
         return resolve(false);
       }
 
@@ -101,14 +145,14 @@ class GoogleApiService {
           scope: WORKSPACE_SCOPES.join(' '),
           callback: async (resp: any) => {
             if (resp.error) {
-              this.notify(resp.error_description || "Erro no Google Cloud. Use o acesso de contingência.");
+              this.notify(resp.error_description || 'Erro no Google Cloud. Use o acesso de contingência.');
               return resolve(false);
             }
 
             this.token = {
               accessToken: resp.access_token,
               refreshToken: '',
-              expiresAt: Date.now() + (resp.expires_in * 1000),
+              expiresAt: Date.now() + resp.expires_in * 1000,
               scopes: resp.scope.split(' ')
             };
 
@@ -116,13 +160,19 @@ class GoogleApiService {
             const user = await this.fetchApi('https://www.googleapis.com/oauth2/v3/userinfo');
             this.userProfile = { name: user.name, email: user.email, picture: user.picture };
             localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
+
+            const accessProfile = this.getAccessProfile();
+            if (!accessProfile.fullAccess) {
+              this.notify('Acesso autenticado com permissões parciais. Autorize todos os escopos solicitados para desbloqueio completo.');
+            }
+
             this.notify();
             resolve(true);
-          },
+          }
         });
         client.requestAccessToken({ prompt: 'select_account' });
-      } catch (err) {
-        this.notify("Falha crítica no OAuth. Utilize o botão de contingência.");
+      } catch {
+        this.notify('Falha crítica no OAuth. Utilize o botão de contingência.');
         resolve(false);
       }
     });
@@ -132,11 +182,51 @@ class GoogleApiService {
     const active = !!this.token?.accessToken && this.token.expiresAt > Date.now();
     if (!scope) return active;
     if (this.token?.accessToken.startsWith('CONTINGENCY')) return true;
-    return active && (this.token?.scopes.some(s => s.includes(scope)) || false);
+    return active && (this.token?.scopes.some((s) => s.includes(scope)) || false);
   }
 
-  getUserProfile() { return this.userProfile; }
-  getRecentLogs() { return this.logs; }
+  private getAccountType(): AccountType {
+    if (this.token?.accessToken?.startsWith('CONTINGENCY')) return 'contingency';
+    const email = this.userProfile?.email || '';
+    if (!email.includes('@')) return 'unknown';
+    const domain = email.split('@')[1].toLowerCase();
+    return FREE_EMAIL_DOMAINS.has(domain) ? 'personal' : 'commercial';
+  }
+
+  getAccessProfile(): AccessProfile {
+    const grantedScopes = this.token?.scopes || [];
+    const missingScopes = WORKSPACE_SCOPES.filter((scope) => !grantedScopes.includes(scope));
+    const accountType = this.getAccountType();
+    const fullAccess = this.isAuthenticated() && missingScopes.length === 0;
+
+    return {
+      accountType,
+      email: this.userProfile?.email || '',
+      grantedScopes,
+      missingScopes,
+      fullAccess
+    };
+  }
+
+  canAccessRoute(routeId: string): boolean {
+    if (!this.isAuthenticated()) return false;
+
+    const profile = this.getAccessProfile();
+    if (profile.fullAccess) return true;
+
+    const required = ROUTE_SCOPE_REQUIREMENTS[routeId] || [];
+    if (required.length === 0) return true;
+
+    return required.every((scope) => this.isAuthenticated(scope));
+  }
+
+  getUserProfile() {
+    return this.userProfile;
+  }
+
+  getRecentLogs() {
+    return this.logs;
+  }
 
   async listFiles(): Promise<DriveFile[]> {
     if (this.token?.accessToken.startsWith('CONTINGENCY')) {
@@ -147,6 +237,85 @@ class GoogleApiService {
     }
     const data = await this.fetchApi('https://www.googleapis.com/drive/v3/files?pageSize=20&fields=files(id, name, mimeType, webViewLink, size, modifiedTime)');
     return data.files || [];
+  }
+
+  async ensureTenantDriveFolder(orgId: string): Promise<string> {
+    if (this.token?.accessToken.startsWith('CONTINGENCY')) {
+      return `contingency-folder-${orgId}`;
+    }
+
+    const folderName = `ES-ENTERPRISE-${orgId}`;
+    const query = `mimeType='application/vnd.google-apps.folder' and trashed=false and name='${folderName}'`;
+    const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)&pageSize=1`;
+    const found = await this.fetchApi(searchUrl);
+    const folder = found?.files?.[0];
+    if (folder?.id) return folder.id;
+
+    const createResp = await this.fetchApi('https://www.googleapis.com/drive/v3/files?fields=id,name', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: folderName,
+        mimeType: 'application/vnd.google-apps.folder'
+      })
+    });
+    return createResp.id;
+  }
+
+  async uploadFileToDrive(file: File, parentFolderId?: string): Promise<DriveFile> {
+    if (this.token?.accessToken.startsWith('CONTINGENCY')) {
+      return {
+        id: `contingency_${Date.now()}`,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        webViewLink: '#',
+        size: String(file.size),
+        modifiedTime: new Date().toISOString()
+      };
+    }
+
+    if (!this.token?.accessToken) throw new Error('Não autenticado.');
+
+    const metadata: Record<string, unknown> = { name: file.name };
+    if (parentFolderId) metadata.parents = [parentFolderId];
+
+    const boundary = `-------esenterprise-${Date.now()}`;
+    const bodyParts: BlobPart[] = [
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
+      `--${boundary}\r\nContent-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`,
+      file,
+      `\r\n--${boundary}--`
+    ];
+    const multipartBody = new Blob(bodyParts);
+
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink,size,modifiedTime', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token.accessToken}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`
+      },
+      body: multipartBody
+    });
+
+    if (res.status === 401) {
+      this.revokeAccess();
+      throw new Error('Sessão expirada.');
+    }
+
+    if (!res.ok) {
+      const errPayload = await res.json().catch(() => ({}));
+      const msg = errPayload?.error?.message || `Falha no upload (${res.status}).`;
+      throw new Error(`Falha no upload para Google Drive: ${msg}`);
+    }
+
+    return res.json();
+  }
+
+  async trashDriveFile(fileId: string): Promise<void> {
+    if (this.token?.accessToken.startsWith('CONTINGENCY')) return;
+    await this.fetchApi(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ trashed: true })
+    });
   }
 
   async syncCalendarEvents(): Promise<CalendarEvent[]> {
@@ -166,11 +335,20 @@ class GoogleApiService {
   }
 
   async checkHealth() {
-    return [{ service: 'Engine', status: true }, { service: 'Cloud', status: true }];
+    return [
+      { service: 'Engine', status: true },
+      { service: 'Cloud', status: true }
+    ];
   }
 
-  async requestWorkspaceAccess() { return this.loginAndAuthorize(); }
-  async revokeAccess() { localStorage.clear(); window.location.reload(); }
+  async requestWorkspaceAccess() {
+    return this.loginAndAuthorize();
+  }
+
+  async revokeAccess() {
+    localStorage.clear();
+    window.location.reload();
+  }
 }
 
 export const googleApiService = new GoogleApiService();

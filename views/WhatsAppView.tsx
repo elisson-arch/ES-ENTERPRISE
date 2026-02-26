@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { ChatSidebar } from '../components/WhatsApp/ChatSidebar';
 import { ChatArea } from '../components/WhatsApp/ChatArea';
 import { ClientCRMDetails } from '../components/WhatsApp/ClientCRMDetails';
@@ -6,9 +6,63 @@ import { WhatsAppModals } from '../components/WhatsApp/WhatsAppModals';
 import { useWhatsAppState } from '../hooks/useWhatsAppState';
 import { DEFAULT_TEMPLATES } from '../services/mockData';
 import { X, Sparkles } from 'lucide-react';
+import { ChatSession, ChatTemplate } from '../types';
+import { chatService } from '../services/chatService';
+import { geminiService } from '../services/geminiService';
+
+const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve((reader.result as string) || '');
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
 
 const WhatsAppView = () => {
   const state = useWhatsAppState([]);
+
+  const [templates, setTemplates] = useState<ChatTemplate[]>(DEFAULT_TEMPLATES);
+  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
+  const [isTemplateBulkMode, setIsTemplateBulkMode] = useState(false);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(['Saudação']);
+  const [templateToEdit, setTemplateToEdit] = useState<ChatTemplate | null>(null);
+
+  const [aiTitle, setAiTitle] = useState('');
+  const [aiContent, setAiContent] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [callSeconds, setCallSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!isCallActive) return;
+    const timer = setInterval(() => setCallSeconds(prev => prev + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isCallActive]);
+
+  const callTimer = useMemo(() => {
+    const min = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+    const sec = String(callSeconds % 60).padStart(2, '0');
+    return `${min}:${sec}`;
+  }, [callSeconds]);
+
+  const updateSelectedChatLocal = (updated: ChatSession) => {
+    state.setSelectedChat(updated);
+    state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+  };
+
+  const patchSelectedChat = async (patch: Partial<ChatSession>) => {
+    if (!state.selectedChat) return;
+    const updated = { ...state.selectedChat, ...patch };
+    updateSelectedChatLocal(updated);
+    try {
+      await chatService.upsertChat({ id: updated.id, organizationId: state.orgId, ...patch });
+    } catch (err) {
+      console.error('Erro ao persistir atualização do chat:', err);
+    }
+  };
 
   const handleShareClient = async () => {
     if (!state.selectedChat) return;
@@ -28,16 +82,118 @@ const WhatsAppView = () => {
           url: window.location.href,
         });
       } catch (err) {
-        console.error("Erro ao compartilhar:", err);
+        console.error('Erro ao compartilhar:', err);
       }
     } else {
       try {
         await navigator.clipboard.writeText(shareText);
-        alert("Copiado!");
-      } catch (err) {
-        alert("Erro ao copiar.");
+        alert('Copiado!');
+      } catch {
+        alert('Erro ao copiar.');
       }
     }
+  };
+
+  const handleOpenAiModal = async (title: string, prompt: string, context: string) => {
+    setAiTitle(title);
+    setAiContent('');
+    setIsAiGenerating(true);
+    state.setModal('ai', true);
+
+    try {
+      const text = await geminiService.getDeepResponse(prompt, context);
+      setAiContent(text || 'Sem resposta da IA.');
+    } catch (err) {
+      console.error('Erro na ação de IA:', err);
+      setAiContent('Não foi possível gerar resposta agora. Tente novamente em instantes.');
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
+  const handleExportMessages = () => {
+    if (!state.selectedChat) return;
+
+    const content = state.selectedChat.messages
+      .map((m) => `[${m.timestamp}] ${m.sender.toUpperCase()}: ${m.text}`)
+      .join('\n');
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat-${state.selectedChat.clientName.replace(/\s+/g, '-').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleArchiveConversation = async (chat: ChatSession) => {
+    if (chat.id !== state.selectedChat?.id) {
+      state.setSelectedChat(chat);
+    }
+    await patchSelectedChat({ chatStatus: 'Finalizado', status: 'Inativo' });
+  };
+
+  const handleFileUpload = async (files: File[]) => {
+    if (!state.selectedChat?.id) return;
+
+    for (const file of files) {
+      const messageBase = {
+        sender: 'agent' as const,
+        text: `📎 Arquivo enviado: ${file.name}`,
+        timestamp: new Date().toISOString(),
+        status: 'sent' as const,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: `${Math.round(file.size / 1024)} KB`
+      };
+
+      const payload = file.type.startsWith('image/')
+        ? { ...messageBase, imageUrl: await fileToBase64(file) }
+        : { ...messageBase, fileUrl: URL.createObjectURL(file) };
+
+      await chatService.sendMessage(state.selectedChat.id, payload);
+    }
+  };
+
+  const handleCreateTemplate = (template: { title: string; content: string; category: any; isApproved: boolean; }) => {
+    const newTemplate: ChatTemplate = {
+      id: `tpl_${Date.now()}`,
+      title: template.title,
+      content: template.content,
+      category: template.category,
+      isApproved: template.isApproved,
+      usageCount: 0
+    };
+    setTemplates(prev => [newTemplate, ...prev]);
+  };
+
+  const handleUpdateTemplate = (updated: ChatTemplate) => {
+    setTemplates(prev => prev.map(t => t.id === updated.id ? updated : t));
+    setTemplateToEdit(null);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== templateId));
+    setSelectedTemplateIds(prev => {
+      const next = new Set(prev);
+      next.delete(templateId);
+      return next;
+    });
+  };
+
+  const handleBulkDeleteTemplates = () => {
+    if (selectedTemplateIds.size === 0) return;
+    setTemplates(prev => prev.filter(t => !selectedTemplateIds.has(t.id)));
+    setSelectedTemplateIds(new Set());
+    setIsTemplateBulkMode(false);
+  };
+
+  const handleSendQuote = async (quoteText: string) => {
+    if (!quoteText.trim()) return;
+    await state.handleSendMessage(quoteText, 'agent');
   };
 
   return (
@@ -84,18 +240,22 @@ const WhatsAppView = () => {
           onInputTextChange={state.setInputText}
           isTyping={false}
           isSending={state.isSending}
-          isCallActive={false}
-          callTimer="00:00"
-          onStartCall={() => { }}
-          onStopCall={() => { }}
-          onExport={() => { }}
+          isCallActive={isCallActive}
+          callTimer={callTimer}
+          onStartCall={() => {
+            setIsCallActive(true);
+            setCallSeconds(0);
+          }}
+          onStopCall={() => setIsCallActive(false)}
+          onExport={handleExportMessages}
           onOpenUpload={() => state.setModal('upload', true)}
           onToggleAI={(chat) => {
             const updated = { ...chat, aiEnabled: !chat.aiEnabled };
-            state.setSelectedChat(updated);
-            state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+            updateSelectedChatLocal(updated);
+            chatService.upsertChat({ id: updated.id, organizationId: state.orgId, aiEnabled: updated.aiEnabled }).catch(console.error);
           }}
-          onImageClick={() => { }}
+          onArchiveConversation={handleArchiveConversation}
+          onImageClick={(url) => setLightboxImage(url)}
           onBack={() => { state.setShowChatOnMobile(false); state.setShowDetailsOnMobile(false); }}
           isMobileView={state.isMobileView}
           showChatOnMobile={state.showChatOnMobile}
@@ -103,8 +263,8 @@ const WhatsAppView = () => {
           onDiscardSuggestion={() => { }}
           onEditSuggestion={() => { }}
           onSendSuggestion={() => { }}
-          internalSearchTerm=""
-          onInternalSearchChange={() => { }}
+          internalSearchTerm={internalSearchTerm}
+          onInternalSearchChange={setInternalSearchTerm}
           onOpenDetails={() => state.setShowDetailsOnMobile(true)}
           isRecording={state.isRecording}
           onStartRecording={state.handleStartRecording}
@@ -126,58 +286,102 @@ const WhatsAppView = () => {
             )}
             <ClientCRMDetails
               chat={state.selectedChat}
-              onGenerateWebsite={() => { }}
-              onGenerateReport={() => { }}
-              onDiagnose={() => { }}
+              onGenerateWebsite={() => handleOpenAiModal('Site para o Cliente', `Crie uma proposta curta de landing page para o cliente ${state.selectedChat?.clientName}.`, 'Website Comercial')}
+              onGenerateReport={() => handleOpenAiModal('Relatório Técnico', `Gere um relatório técnico para o cliente ${state.selectedChat?.clientName}, estágio ${state.selectedChat?.funnelStage}.`, 'Relatório HVAC')}
+              onDiagnose={() => handleOpenAiModal('Diagnóstico Técnico', `Faça um diagnóstico técnico considerando o histórico do cliente ${state.selectedChat?.clientName}.`, 'Diagnóstico de Campo')}
               onOpenSchedule={() => state.setModal('schedule', true)}
               onEditClient={() => state.setModal('clientEdit', true)}
               onShareClient={handleShareClient}
-              onSyncDrive={() => { }}
+              onSyncDrive={state.syncLeads}
               onOpenQuote={() => state.setModal('quote', true)}
-              templates={DEFAULT_TEMPLATES}
-              templateSearchTerm=""
-              onTemplateSearchChange={() => { }}
-              isBulkMode={false}
-              onToggleBulkMode={() => { }}
-              selectedTemplateIds={new Set()}
-              onToggleSelection={() => { }}
-              onSelectAllTemplates={() => { }}
-              onClearTemplateSelection={() => { }}
-              onBulkDelete={() => { }}
-              onDeleteTemplate={() => { }}
-              onSelectTemplate={(t) => state.setInputText(t)}
-              onEditTemplate={() => state.setModal('templateEdit', true)}
-              expandedCategories={['Saudação']}
-              onToggleCategory={() => { }}
-              onNewTemplate={() => state.setModal('templateNew', true)}
+              templates={templates}
+              templateSearchTerm={templateSearchTerm}
+              onTemplateSearchChange={setTemplateSearchTerm}
+              isBulkMode={isTemplateBulkMode}
+              onToggleBulkMode={() => {
+                setIsTemplateBulkMode(prev => !prev);
+                setSelectedTemplateIds(new Set());
+              }}
+              selectedTemplateIds={selectedTemplateIds}
+              onToggleSelection={(id) => {
+                setSelectedTemplateIds(prev => {
+                  const next = new Set(prev);
+                  if (next.has(id)) next.delete(id); else next.add(id);
+                  return next;
+                });
+              }}
+              onSelectAllTemplates={(ids) => setSelectedTemplateIds(new Set(ids))}
+              onClearTemplateSelection={() => setSelectedTemplateIds(new Set())}
+              onBulkDelete={handleBulkDeleteTemplates}
+              onDeleteTemplate={handleDeleteTemplate}
+              onSelectTemplate={(content) => state.setInputText(content)}
+              onEditTemplate={(template) => {
+                setTemplateToEdit(template);
+                state.setModal('templateEdit', true);
+              }}
+              expandedCategories={expandedCategories}
+              onToggleCategory={(cat) => setExpandedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+              onNewTemplate={() => {
+                setTemplateToEdit(null);
+                state.setModal('templateNew', true);
+              }}
+              onMoveFunnelStage={(stage) => patchSelectedChat({ funnelStage: stage, lastStageChange: new Date().toISOString() })}
               onAddTask={(text) => {
+                if (!state.selectedChat) return;
                 const newTask = { id: Date.now().toString(), text, completed: false, createdAt: new Date().toISOString() };
-                const updated = { ...state.selectedChat!, tasks: [...(state.selectedChat!.tasks || []), newTask] };
-                state.setSelectedChat(updated);
-                state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+                patchSelectedChat({ tasks: [...(state.selectedChat.tasks || []), newTask] });
               }}
               onToggleTask={(taskId) => {
-                const updatedTasks = (state.selectedChat!.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
-                const updated = { ...state.selectedChat!, tasks: updatedTasks };
-                state.setSelectedChat(updated);
-                state.setChats(prev => prev.map(c => c.id === updated.id ? updated : c));
+                if (!state.selectedChat) return;
+                const updatedTasks = (state.selectedChat.tasks || []).map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+                patchSelectedChat({ tasks: updatedTasks });
               }}
-              onDeleteTask={() => { }}
+              onDeleteTask={(taskId) => {
+                if (!state.selectedChat) return;
+                patchSelectedChat({ tasks: (state.selectedChat.tasks || []).filter(t => t.id !== taskId) });
+              }}
+              onSaveInternalNotes={(notes) => patchSelectedChat({ internalNotes: notes })}
             />
           </div>
         </div>
       )}
 
       <WhatsAppModals
-        showAI={state.modals.ai} aiTitle="" aiContent="" isGenerating={false} onCloseAI={() => state.setModal('ai', false)}
-        showSchedule={state.modals.schedule} onCloseSchedule={() => state.setModal('schedule', false)}
+        showAI={state.modals.ai}
+        aiTitle={aiTitle}
+        aiContent={aiContent}
+        isGenerating={isAiGenerating}
+        onCloseAI={() => state.setModal('ai', false)}
+        showSchedule={state.modals.schedule}
+        onCloseSchedule={() => state.setModal('schedule', false)}
         clientName={state.selectedChat?.clientName || ''}
-        showUpload={state.modals.upload} onCloseUpload={() => state.setModal('upload', false)}
-        onFileUpload={() => { }} showNewTemplate={state.modals.templateNew} onCloseNewTemplate={() => state.setModal('templateNew', false)}
-        onCreateTemplate={() => { }} showEditTemplate={state.modals.templateEdit} onCloseEditTemplate={() => state.setModal('templateEdit', false)}
-        templateToEdit={null} onUpdateTemplate={() => { }} showEditClient={state.modals.clientEdit} onCloseEditClient={() => state.setModal('clientEdit', false)}
-        clientData={state.selectedChat} onSaveClient={() => { }} showQuote={state.modals.quote} onCloseQuote={() => state.setModal('quote', false)}
-        onSendQuote={() => { }} lightboxImage={null} onCloseLightbox={() => { }}
+        clientAddress={state.selectedChat?.clientAddress}
+        showUpload={state.modals.upload}
+        onCloseUpload={() => state.setModal('upload', false)}
+        onFileUpload={handleFileUpload}
+        showNewTemplate={state.modals.templateNew}
+        onCloseNewTemplate={() => state.setModal('templateNew', false)}
+        onCreateTemplate={handleCreateTemplate}
+        showEditTemplate={state.modals.templateEdit}
+        onCloseEditTemplate={() => {
+          setTemplateToEdit(null);
+          state.setModal('templateEdit', false);
+        }}
+        templateToEdit={templateToEdit}
+        onUpdateTemplate={handleUpdateTemplate}
+        showEditClient={state.modals.clientEdit}
+        onCloseEditClient={() => state.setModal('clientEdit', false)}
+        clientData={state.selectedChat}
+        onSaveClient={(updatedData) => patchSelectedChat(updatedData)}
+        showQuote={state.modals.quote}
+        onCloseQuote={() => state.setModal('quote', false)}
+        onSendQuote={handleSendQuote}
+        lightboxImage={lightboxImage}
+        onCloseLightbox={() => setLightboxImage(null)}
+        onConfirmSchedule={(details) => {
+          const summary = `Agendamento confirmado para ${details.date} às ${details.time}.`;
+          state.handleSendMessage(summary, 'agent').catch(console.error);
+        }}
       />
     </div>
   );

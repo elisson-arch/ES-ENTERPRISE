@@ -17,11 +17,13 @@ import {
 } from 'lucide-react';
 
 export interface FileData {
+  id: string;
   name: string;
   type: string;
   category: string;
   size: string;
   date: string;
+  webViewLink?: string;
 }
 
 interface FileManagerProps {
@@ -30,6 +32,9 @@ interface FileManagerProps {
   onSearchChange: (val: string) => void;
   currentView: 'all' | 'clients' | 'company';
   onViewChange: (view: 'all' | 'clients' | 'company') => void;
+  onDownload?: (file: FileData) => void;
+  onShare?: (file: FileData) => void;
+  onDelete?: (file: FileData) => void;
 }
 
 export const FileManager: React.FC<FileManagerProps> = ({
@@ -37,7 +42,10 @@ export const FileManager: React.FC<FileManagerProps> = ({
   searchTerm,
   onSearchChange,
   currentView,
-  onViewChange
+  onViewChange,
+  onDownload,
+  onShare,
+  onDelete
 }) => {
   const getIcon = (type: string) => {
     switch (type) {
@@ -135,8 +143,8 @@ export const FileManager: React.FC<FileManagerProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {files.length > 0 ? files.map((file, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50 transition-all group cursor-pointer">
+              {files.length > 0 ? files.map((file) => (
+                <tr key={file.id} className="hover:bg-slate-50/50 transition-all group cursor-pointer">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-5">
                       <div className="p-4 bg-slate-100 rounded-2xl group-hover:bg-white group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 border border-transparent group-hover:border-slate-100">
@@ -154,13 +162,13 @@ export const FileManager: React.FC<FileManagerProps> = ({
                   <td className="px-8 py-5 text-xs font-black text-slate-400 hidden md:table-cell text-center uppercase italic">{file.date}</td>
                   <td className="px-8 py-5 text-right">
                     <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Download">
+                      <button onClick={() => onDownload?.(file)} className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all" title="Download">
                         <Download size={18} />
                       </button>
-                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-all" title="Compartilhar">
+                      <button onClick={() => onShare?.(file)} className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition-all" title="Compartilhar">
                         <Share2 size={18} />
                       </button>
-                      <button className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-300 hover:text-slate-800 shadow-sm transition-all">
+                      <button onClick={() => onDelete?.(file)} className="w-11 h-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-300 hover:text-rose-600 shadow-sm transition-all">
                         <MoreVertical size={18} />
                       </button>
                     </div>

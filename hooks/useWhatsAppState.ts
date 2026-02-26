@@ -4,6 +4,7 @@ import { ChatSession, Message, ClientTask } from '../types';
 import { whatsappApiService } from '../services/whatsappApiService';
 import { googleSyncService } from '../services/googleSyncService';
 import { chatService } from '../services/chatService';
+import { tenantService } from '../services/tenantService';
 
 export const useWhatsAppState = (initialChats: ChatSession[]) => {
   const [chats, setChats] = useState<ChatSession[]>([]);
@@ -18,6 +19,7 @@ export const useWhatsAppState = (initialChats: ChatSession[]) => {
   const [selectedChatIds, setSelectedChatIds] = useState<Set<string>>(new Set());
   const [inputText, setInputText] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
 
   // Estados de Modais
   const [modals, setModals] = useState({
@@ -41,14 +43,26 @@ export const useWhatsAppState = (initialChats: ChatSession[]) => {
 
   // Listener para os Chats da Organização
   useEffect(() => {
-    const unsubscribe = chatService.subscribeToChats('org_123', (data) => {
+    const unsubscribe = chatService.subscribeToChats(orgId, (data) => {
       setChats(data);
       // Se não houver nada selecionado, seleciona o primeiro
-      if (!selectedChat && data.length > 0) {
-        setSelectedChat(data[0]);
-      }
+      setSelectedChat((prev) => {
+        if (data.length === 0) return null;
+        if (!prev) return data[0];
+        const current = data.find((chat) => chat.id === prev.id);
+        return current || data[0];
+      });
     });
     return () => unsubscribe();
+  }, [orgId]);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const derived = tenantService.resolveAndPersistFromSession();
+      setOrgId(derived);
+    };
+    window.addEventListener('google_auth_change', handleAuthChange);
+    return () => window.removeEventListener('google_auth_change', handleAuthChange);
   }, []);
 
   // Listener para as Mensagens do Chat Selecionado
@@ -121,7 +135,7 @@ export const useWhatsAppState = (initialChats: ChatSession[]) => {
             status: (data.status || 'Prospecção') as any,
             chatStatus: 'Aberto',
             funnelStage: (data.status || 'Prospecção') as any,
-            organizationId: 'org_123'
+            organizationId: orgId
           });
         }
       }
@@ -172,6 +186,7 @@ export const useWhatsAppState = (initialChats: ChatSession[]) => {
     selectedChatIds, setSelectedChatIds,
     filters, setFilters,
     inputText, setInputText,
+    orgId,
     isSyncing,
     filteredChats,
     handleSendMessage,

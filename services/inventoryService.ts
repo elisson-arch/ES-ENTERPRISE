@@ -1,10 +1,13 @@
 
 import { firestoreService } from './firestoreService';
 import { Asset } from '../types';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, runTransaction, doc, arrayUnion } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { auditService } from './auditService';
+import { tenantService } from './tenantService';
 
 const COLLECTION_NAME = 'assets';
+const resolveOrgId = (orgId?: string) => orgId || tenantService.getCurrentOrgId();
 
 export const inventoryService = {
     // Obter todos os ativos de uma organização
@@ -23,11 +26,36 @@ export const inventoryService = {
 
     // Criar novo ativo
     async createAsset(asset: Omit<Asset, 'id'>): Promise<string> {
-        const assetData = {
-            ...asset,
-            updatedAt: new Date().toISOString()
-        };
-        return firestoreService.add(COLLECTION_NAME, assetData);
+        const now = new Date().toISOString();
+        const assetRef = doc(collection(db, COLLECTION_NAME));
+        const clientRef = doc(db, 'clients', asset.clientId);
+
+        await runTransaction(db, async (tx) => {
+            const clientSnap = await tx.get(clientRef);
+            if (!clientSnap.exists()) {
+                throw new Error(`Cliente não encontrado para vínculo do ativo: ${asset.clientId}`);
+            }
+
+            tx.set(assetRef, {
+                ...asset,
+                updatedAt: now
+            });
+
+            tx.update(clientRef, {
+                linkedAssetIds: arrayUnion(assetRef.id),
+                updatedAt: now
+            });
+        });
+
+        await auditService.log({
+            organizationId: resolveOrgId(asset.organizationId),
+            entityType: 'asset',
+            entityId: assetRef.id,
+            action: 'ASSET_CREATE',
+            after: { ...asset, id: assetRef.id }
+        });
+
+        return assetRef.id;
     },
 
     // Atualizar ativo existente
@@ -36,12 +64,25 @@ export const inventoryService = {
             ...data,
             updatedAt: new Date().toISOString()
         };
-        return firestoreService.update(COLLECTION_NAME, id, updateData);
+        await firestoreService.update(COLLECTION_NAME, id, updateData);
+        await auditService.log({
+            organizationId: resolveOrgId(data.organizationId),
+            entityType: 'asset',
+            entityId: id,
+            action: 'ASSET_UPDATE',
+            after: updateData as Record<string, unknown>
+        });
     },
 
     // Deletar ativo
-    async deleteAsset(id: string): Promise<void> {
-        return firestoreService.delete(COLLECTION_NAME, id);
+    async deleteAsset(id: string, organizationId?: string): Promise<void> {
+        await firestoreService.delete(COLLECTION_NAME, id);
+        await auditService.log({
+            organizationId: resolveOrgId(organizationId),
+            entityType: 'asset',
+            entityId: id,
+            action: 'ASSET_DELETE'
+        });
     },
 
     // Inscrição em tempo real para ativos da organização

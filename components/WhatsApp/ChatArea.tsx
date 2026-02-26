@@ -18,6 +18,7 @@ interface ChatAreaProps {
   onExport: () => void;
   onOpenUpload: () => void;
   onToggleAI: (chat: ChatSession) => void;
+  onArchiveConversation: (chat: ChatSession) => void;
   onImageClick: (url: string) => void;
   onBack: () => void;
   isMobileView: boolean;
@@ -37,7 +38,7 @@ interface ChatAreaProps {
 export const ChatArea: React.FC<ChatAreaProps> = ({
   selectedChat, onSendMessage, inputText, onInputTextChange, isTyping, isSending,
   isCallActive, callTimer, onStartCall, onStopCall, onExport, onOpenUpload,
-  onToggleAI, onImageClick, onBack, isMobileView, showChatOnMobile,
+  onToggleAI, onArchiveConversation, onImageClick, onBack, isMobileView, showChatOnMobile,
   pendingSuggestion, onDiscardSuggestion, onEditSuggestion, onSendSuggestion,
   internalSearchTerm, onInternalSearchChange, onOpenDetails,
   isRecording, onStartRecording, onStopRecording
@@ -64,6 +65,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             onExport={onExport}
             onOpenUpload={onOpenUpload}
             onToggleAI={() => onToggleAI(selectedChat)}
+            onArchiveConversation={() => onArchiveConversation(selectedChat)}
             showOptions={false}
             setShowOptions={() => {}}
             onInternalSearch={() => {}}

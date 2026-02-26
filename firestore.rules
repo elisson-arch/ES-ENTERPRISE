@@ -1,0 +1,122 @@
+﻿rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function orgUserPath(orgId) {
+      return /databases/$(database)/documents/organizations/$(orgId)/users/$(request.auth.uid);
+    }
+
+    function isOrgMember(orgId) {
+      return isAuthenticated() && exists(orgUserPath(orgId));
+    }
+
+    function isOrgUserActive(orgId) {
+      return isOrgMember(orgId) && get(orgUserPath(orgId)).data.status == 'active';
+    }
+
+    function hasRole(orgId, roles) {
+      return isOrgUserActive(orgId) && (get(orgUserPath(orgId)).data.role in roles);
+    }
+
+    function canWriteBusinessData(orgId) {
+      return hasRole(orgId, ['owner', 'admin', 'manager']);
+    }
+
+    function canWriteOperationalData(orgId) {
+      return hasRole(orgId, ['owner', 'admin', 'manager', 'tech']);
+    }
+
+    // V2 multi-tenant model
+    match /organizations/{orgId} {
+      allow read: if isOrgUserActive(orgId);
+      allow create: if isAuthenticated();
+      allow update, delete: if hasRole(orgId, ['owner', 'admin']);
+
+      match /users/{userId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if hasRole(orgId, ['owner', 'admin']);
+      }
+
+      match /clients/{clientId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if canWriteBusinessData(orgId);
+
+        match /timeline/{eventId} {
+          allow read: if isOrgUserActive(orgId);
+          allow create, update, delete: if canWriteBusinessData(orgId);
+        }
+      }
+
+      match /assets/{assetId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if canWriteOperationalData(orgId);
+
+        match /maintenance_logs/{logId} {
+          allow read: if isOrgUserActive(orgId);
+          allow create, update, delete: if canWriteOperationalData(orgId);
+        }
+      }
+
+      match /orders/{orderId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if canWriteOperationalData(orgId);
+      }
+
+      match /chats/{chatId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if canWriteOperationalData(orgId);
+
+        match /messages/{messageId} {
+          allow read: if isOrgUserActive(orgId);
+          allow create, update: if canWriteOperationalData(orgId);
+          allow delete: if hasRole(orgId, ['owner', 'admin']);
+        }
+      }
+
+      match /drive_files/{fileId} {
+        allow read: if isOrgUserActive(orgId);
+        allow create, update, delete: if canWriteOperationalData(orgId);
+      }
+
+      match /audit_logs/{logId} {
+        allow read: if hasRole(orgId, ['owner', 'admin', 'manager']);
+        allow create: if isOrgUserActive(orgId);
+        allow update, delete: if false;
+      }
+
+      match /views/{viewCollection}/{viewId} {
+        allow read: if isOrgUserActive(orgId);
+        allow write: if hasRole(orgId, ['owner', 'admin']);
+      }
+    }
+
+    // Legacy compatibility (existing top-level collections)
+    match /clients/{docId} {
+      allow read, delete: if isAuthenticated() && exists(orgUserPath(resource.data.organizationId));
+      allow create, update: if isAuthenticated() && exists(orgUserPath(request.resource.data.organizationId));
+    }
+
+    match /assets/{docId} {
+      allow read, delete: if isAuthenticated() && exists(orgUserPath(resource.data.organizationId));
+      allow create, update: if isAuthenticated() && exists(orgUserPath(request.resource.data.organizationId));
+    }
+
+    match /chats/{docId} {
+      allow read, delete: if isAuthenticated() && exists(orgUserPath(resource.data.organizationId));
+      allow create, update: if isAuthenticated() && exists(orgUserPath(request.resource.data.organizationId));
+    }
+
+    match /chats/{docId}/{subCollection}/{subDocId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /audit_logs/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+  }
+}
