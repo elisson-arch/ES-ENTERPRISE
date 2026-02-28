@@ -1,6 +1,7 @@
 
 import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '../types';
 import { APP_CONFIG } from '../config/config';
+import { organizationService } from './organizationService';
 
 const { CLIENT_ID: GOOGLE_CLIENT_ID, SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;
 
@@ -8,6 +9,8 @@ interface UserProfile {
   name: string;
   email: string;
   picture: string;
+  organizationId?: string;
+  isNew?: boolean;
 }
 
 class GoogleApiService {
@@ -79,7 +82,8 @@ class GoogleApiService {
     this.userProfile = {
       name: 'Gestor ES Enterprise',
       email: 'contato@esarcondicionado.com.br',
-      picture: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100'
+      picture: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100',
+      organizationId: 'contato@esarcondicionado.com.br'
     };
     localStorage.setItem('sgc_token', JSON.stringify(this.token));
     localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
@@ -114,9 +118,26 @@ class GoogleApiService {
 
             localStorage.setItem('sgc_token', JSON.stringify(this.token));
             const user = await this.fetchApi('https://www.googleapis.com/oauth2/v3/userinfo');
-            this.userProfile = { name: user.name, email: user.email, picture: user.picture };
+
+            // Encontra ou cria organização automaticamente para qualquer conta Google
+            const { org, isNew } = await organizationService.findOrCreateOrg({
+              email: user.email,
+              name: user.name,
+              picture: user.picture
+            });
+
+            this.userProfile = {
+              name: user.name,
+              email: user.email,
+              picture: user.picture,
+              organizationId: org.id,
+              isNew
+            };
             localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
-            this.notify();
+
+            window.dispatchEvent(new CustomEvent('google_auth_change', {
+              detail: { isAuthenticated: true, profile: this.userProfile, isNew }
+            }));
             resolve(true);
           },
         });
@@ -171,6 +192,41 @@ class GoogleApiService {
 
   async requestWorkspaceAccess() { return this.loginAndAuthorize(); }
   async revokeAccess() { localStorage.clear(); window.location.reload(); }
+
+  // --- Multi-tenant sync helpers ---
+
+  async fetchPeopleConnections(): Promise<any[]> {
+    const url = 'https://people.googleapis.com/v1/people/me/connections'
+      + '?personFields=names,emailAddresses,phoneNumbers,organizations&pageSize=1000';
+    const data = await this.fetchApi(url);
+    this.addLog('CONTACTS', 'PEOPLE_API_FETCH', `Retornados ${data.connections?.length ?? 0} contatos.`);
+    return data.connections || [];
+  }
+
+  async findDriveFolder(name: string, parentId?: string): Promise<string | null> {
+    const parentClause = parentId ? ` and '${parentId}' in parents` : '';
+    const q = encodeURIComponent(
+      `name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false${parentClause}`
+    );
+    const data = await this.fetchApi(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`
+    );
+    return data.files?.[0]?.id ?? null;
+  }
+
+  async createDriveFolder(name: string, parentId?: string): Promise<string> {
+    const metadata: Record<string, any> = {
+      name,
+      mimeType: 'application/vnd.google-apps.folder'
+    };
+    if (parentId) metadata.parents = [parentId];
+    const data = await this.fetchApi('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      body: JSON.stringify(metadata)
+    });
+    this.addLog('DRIVE', 'FOLDER_CREATED', `Pasta "${name}" criada (id: ${data.id}).`);
+    return data.id;
+  }
 }
 
 export const googleApiService = new GoogleApiService();

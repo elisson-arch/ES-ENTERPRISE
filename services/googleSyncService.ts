@@ -1,5 +1,8 @@
 
-import { Client, SyncLog } from '../types';
+import { Client } from '../types';
+import { googleApiService } from './googleApiService';
+import { clientService } from './clientService';
+import { auditLogService } from './auditLogService';
 
 /**
  * googleSyncService v3.0 - Professional Edition
@@ -58,12 +61,117 @@ export const googleSyncService = {
     const conflictingFields: string[] = [];
     if (crmClient.email !== googleVersion.email) conflictingFields.push('E-mail');
     if (crmClient.phone !== googleVersion.phone) conflictingFields.push('Telefone');
-    
+
     const isDirty = crmClient.lastSyncAt && new Date(crmClient.updatedAt) > new Date(crmClient.lastSyncAt);
-    
+
     return {
       hasConflict: isDirty && conflictingFields.length > 0,
       fields: conflictingFields
     };
+  },
+
+  /**
+   * Worker: sincroniza Google Contacts → Firestore para uma organização.
+   * O token OAuth do cliente NUNCA é persistido; opera apenas em memória de sessão.
+   */
+  async syncContactsToFirestore(
+    organizationId: string,
+    userId: string
+  ): Promise<{ imported: number; skipped: number; errors: string[] }> {
+    if (!organizationId) throw new Error('organizationId obrigatório para sync.');
+
+    const result = { imported: 0, skipped: 0, errors: [] as string[] };
+
+    let connections: any[];
+    try {
+      connections = await googleApiService.fetchPeopleConnections();
+    } catch (e: any) {
+      result.errors.push(`Falha ao buscar contatos da People API: ${e.message}`);
+      return result;
+    }
+
+    for (const person of connections) {
+      const name = person.names?.[0]?.displayName;
+      const phones: string[] = (person.phoneNumbers ?? []).map((p: any) => p.value);
+      const emails: string[] = (person.emailAddresses ?? []).map((e: any) => e.value);
+
+      if (!name || (phones.length === 0 && emails.length === 0)) {
+        result.skipped++;
+        continue;
+      }
+
+      try {
+        const now = new Date().toISOString();
+        const data: Partial<Client> = {
+          name,
+          email: emails[0] ?? '',
+          additionalEmails: emails.slice(1),
+          phone: phones[0] ?? '',
+          additionalPhones: phones.slice(1),
+          origin: 'Google',
+          status: 'Ativo',
+          organizationId,
+          googleContactId: person.resourceName,
+          syncTimestamp: now,
+          lastSyncAt: now,
+          updatedAt: now
+        };
+
+        await clientService.upsertByGoogleId(person.resourceName, data, organizationId);
+        result.imported++;
+      } catch (e: any) {
+        result.errors.push(`Erro ao importar "${name}": ${e.message}`);
+      }
+    }
+
+    await auditLogService.recordSyncEvent({
+      organizationId,
+      userId,
+      eventType: 'CONTACTS_SYNC',
+      details: {
+        contactsImported: result.imported,
+        contactsSkipped: result.skipped,
+        errors: result.errors
+      }
+    });
+
+    return result;
+  },
+
+  /**
+   * Arquitetura de storage distribuído: garante pasta "! ES-ENTERPRISE/{clientName}"
+   * no Drive do cliente e armazena drive_folder_id no Firestore.
+   * Arquivos residem no Drive do CLIENTE — nunca no projeto principal.
+   */
+  async ensureDriveFolderStructure(
+    clientId: string,
+    clientName: string,
+    organizationId: string,
+    userId: string
+  ): Promise<string> {
+    if (!organizationId) throw new Error('organizationId obrigatório para criar estrutura de Drive.');
+
+    const ROOT_FOLDER = '! ES-ENTERPRISE';
+
+    let rootId = await googleApiService.findDriveFolder(ROOT_FOLDER);
+    if (!rootId) {
+      rootId = await googleApiService.createDriveFolder(ROOT_FOLDER);
+    }
+
+    const subFolderId = await googleApiService.createDriveFolder(clientName, rootId);
+
+    await clientService.updateClient(clientId, { drive_folder_id: subFolderId });
+
+    await auditLogService.recordSyncEvent({
+      organizationId,
+      userId,
+      eventType: 'DRIVE_FOLDER_CREATED',
+      details: {
+        masterFolderId: rootId,
+        clientFolderIds: [subFolderId]
+      }
+    });
+
+    return subFolderId;
   }
 };
