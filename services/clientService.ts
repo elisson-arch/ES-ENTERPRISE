@@ -1,4 +1,4 @@
-import { where } from "firebase/firestore";
+
 import { firestoreService } from "./firestoreService";
 import { Client } from "../types";
 
@@ -11,9 +11,8 @@ export const clientService = {
      * Obtem todos os clientes de uma organizacao
      */
     async getClientsByOrg(orgId: string): Promise<Client[]> {
-        return firestoreService.query<Client>(
-            COLLECTION_NAME,
-            where('organizationId', '==', orgId)
+        return firestoreService.query<Client>(COLLECTION_NAME,
+            // Adicionar filtros quando necessário via QueryConstraint do Firestore
         );
     },
 
@@ -41,11 +40,7 @@ export const clientService = {
     /**
      * Subscreve para mudancas em tempo real na lista de clientes
      */
-    subscribeToClients(orgId: string, callback: (clients: Client[]) => void) {
-        return firestoreService.subscribe<Client>(
-            COLLECTION_NAME,
-            callback,
-            where('organizationId', '==', orgId)
-        );
+    subscribeToClients(callback: (clients: Client[]) => void) {
+        return firestoreService.subscribe<Client>(COLLECTION_NAME, callback);
     }
 };

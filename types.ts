@@ -84,6 +84,7 @@ export interface Client {
   lastSyncAt?: string;
   updatedAt: string;
   organizationId: string;
+  drive_folder_id?: string;
   additionalEmails?: string[];
   additionalPhones?: string[];
   status: 'Ativo' | 'Inativo' | 'Prospecção';
@@ -174,6 +175,21 @@ export interface AuditLog {
   device: string;
   timestamp: string;
   severity: 'low' | 'medium' | 'high';
+}
+
+export interface AuditLogEvent {
+  id: string;
+  organizationId: string;
+  eventType: 'CONTACTS_SYNC' | 'DRIVE_FOLDER_CREATED' | 'FILE_UPLOADED' | 'ONBOARDING_COMPLETE';
+  timestamp: string;
+  details: {
+    contactsImported?: number;
+    contactsSkipped?: number;
+    masterFolderId?: string;
+    clientFolderIds?: string[];
+    errors?: string[];
+  };
+  userId: string;
 }
 
 export interface OnboardingTask {
