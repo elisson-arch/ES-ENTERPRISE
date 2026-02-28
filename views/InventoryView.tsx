@@ -24,6 +24,7 @@ import type { Asset, PredictiveAlert } from '../types';
 
 import { inventoryService } from '../services/inventoryService';
 import { predictiveService } from '../services/predictiveService';
+import { tenantService } from '../services/tenantService';
 
 const getAssetUI = (type: string) => {
   const t = type?.toLowerCase() || '';
@@ -107,13 +108,23 @@ const InventoryView = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
 
   useEffect(() => {
-    const unsubscribe = inventoryService.subscribeToAssets('org_123', (data) => {
+    const unsubscribe = inventoryService.subscribeToAssets(orgId, (data) => {
       setAssets(data);
       setLoading(false);
     });
     return () => unsubscribe();
+  }, [orgId]);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const derived = tenantService.resolveAndPersistFromSession();
+      setOrgId(derived);
+    };
+    window.addEventListener('google_auth_change', handleAuthChange);
+    return () => window.removeEventListener('google_auth_change', handleAuthChange);
   }, []);
 
   const filteredAssets = useMemo(() => {

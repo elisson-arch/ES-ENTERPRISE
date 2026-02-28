@@ -21,6 +21,7 @@ interface MessageWindowProps {
   onExport: () => void;
   onOpenUpload: () => void;
   onToggleAI: () => void;
+  onArchiveConversation: () => void;
   showOptions: boolean;
   setShowOptions: (val: boolean) => void;
   onInternalSearch: (val: string) => void;
@@ -41,7 +42,7 @@ interface MessageWindowProps {
 export const MessageWindow: React.FC<MessageWindowProps> = ({
   chat, onSendMessage, inputText, onInputTextChange, isTyping, isSending,
   isCallActive, callTimer, onStartCall, onStopCall, onExport, onOpenUpload,
-  onToggleAI, showOptions, setShowOptions, 
+  onToggleAI, onArchiveConversation, showOptions, setShowOptions, 
   internalSearchTerm, 
   onImageClick, onBack, showBackButton,
   pendingSuggestion, onDiscardSuggestion, onEditSuggestion, onSendSuggestion,
@@ -148,7 +149,7 @@ export const MessageWindow: React.FC<MessageWindowProps> = ({
                       <span>Exportar Mensagens</span>
                     </div>
                   </button>
-                  <button onClick={() => {}} className="group w-full px-4 py-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-colors text-slate-700">
+                  <button onClick={onArchiveConversation} className="group w-full px-4 py-3 flex items-center justify-between text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-colors text-slate-700">
                     <div className="flex items-center gap-3 group-hover:text-red-700">
                       <Archive size={16} className="text-slate-400" /> 
                       <span>Arquivar Conversa</span>

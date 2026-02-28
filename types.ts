@@ -64,13 +64,19 @@ export interface AppNotification {
 
 export interface Client {
   id: string;
+  clientCode?: string;
   name: string;
+  legalName?: string;
   document: string;
   email: string;
   phone: string;
   address: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   type: 'Residencial' | 'Comercial';
   assets: Asset[];
+  linkedAssetIds?: string[];
   origin: 'Google' | 'Manual' | 'Site' | 'WhatsApp';
   notes?: string;
   syncTimestamp?: string;
@@ -237,4 +243,207 @@ export interface SiteTheme {
 export interface SiteDNA {
   theme: SiteTheme;
   pages: Record<string, SiteElement[]>;
+}
+
+// Firestore V2 domain contracts (multi-tenant)
+export type OrgUserRole = 'owner' | 'admin' | 'manager' | 'tech' | 'viewer';
+export type OrgUserStatus = 'active' | 'disabled' | 'invited';
+
+export interface OrganizationSettings {
+  theme: 'light' | 'dark';
+  aiModel: string;
+  autoDispatch: boolean;
+}
+
+export interface OrganizationSubscription {
+  tier: 'starter' | 'pro' | 'enterprise';
+  status: 'active' | 'past_due' | 'canceled';
+}
+
+export interface OrganizationDoc {
+  id: string;
+  name: string;
+  cnpj: string;
+  settings: OrganizationSettings;
+  subscription: OrganizationSubscription;
+  featureFlags?: Record<string, boolean>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrgUserDoc {
+  id: string;
+  name: string;
+  email: string;
+  role: OrgUserRole;
+  status: OrgUserStatus;
+  permissions?: string[];
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientContactV2 {
+  phone: string;
+  email: string;
+}
+
+export interface ClientAddressV2 {
+  street: string;
+  number: string;
+  district?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  geo?: { lat: number; lng: number };
+  geohash?: string;
+}
+
+export interface ClientMetricsV2 {
+  totalSpent: number;
+  lifetimeValue: number;
+  openOrders: number;
+}
+
+export interface ClientDocV2 {
+  id: string;
+  clientCode: string;
+  name: string;
+  legalName?: string;
+  document: string;
+  contact: ClientContactV2;
+  address: ClientAddressV2;
+  funnel: { stage: string; updatedAt: string };
+  metrics: ClientMetricsV2;
+  status: 'Ativo' | 'Inativo' | 'Prospecção';
+  origin: 'Manual' | 'Google' | 'Site' | 'WhatsApp';
+  tags?: string[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssetHealthV2 {
+  score: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  lastAnalysisAt: string;
+}
+
+export interface AssetMaintenanceV2 {
+  lastDate?: string;
+  nextDue?: string;
+}
+
+export interface AssetIotConfigV2 {
+  gatewayId?: string;
+  sensorTopic?: string;
+  lastTelemetryAt?: string;
+}
+
+export interface AssetDocV2 {
+  id: string;
+  assetCode: string;
+  clientId: string;
+  type: string;
+  brand: string;
+  model: string;
+  serialNumber: string;
+  health: AssetHealthV2;
+  maintenance: AssetMaintenanceV2;
+  iot?: AssetIotConfigV2;
+  status: 'active' | 'inactive' | 'maintenance';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderCheckPointV2 {
+  time: string;
+  location?: { lat: number; lng: number };
+}
+
+export interface OrderDocV2 {
+  id: string;
+  orderCode: string;
+  clientId: string;
+  assetId: string;
+  technicianId: string;
+  status: 'open' | 'in_progress' | 'paused' | 'completed' | 'canceled';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  slaDueAt?: string;
+  checkIn?: OrderCheckPointV2;
+  checkOut?: OrderCheckPointV2;
+  technicalReport?: {
+    diagnostic: string;
+    partsUsed: string[];
+  };
+  aiAnalysis?: {
+    summary: string;
+    riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  };
+  voiceTranscriptUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatDocV2 {
+  id: string;
+  clientId: string;
+  channel: 'whatsapp';
+  aiEnabled: boolean;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessageDocV2 {
+  id: string;
+  sender: 'ai' | 'client' | 'agent';
+  text: string;
+  timestamp: string;
+  groundingSources?: { title: string; uri: string }[];
+}
+
+export interface AuditLogDocV2 {
+  id: string;
+  organizationId: string;
+  entityType: 'client' | 'asset' | 'order' | 'chat' | 'sync';
+  entityId: string;
+  action: string;
+  actorId: string;
+  actorName: string;
+  before?: Record<string, unknown> | null;
+  after?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface DashboardDailyViewDocV2 {
+  id: string;
+  date: string; // yyyyMMdd
+  newClients: number;
+  ordersOpen: number;
+  ordersCompleted: number;
+  revenue: number;
+  topRisks: Array<{ assetId: string; riskLevel: string }>;
+}
+
+export interface TenantDriveFileDoc {
+  id: string;
+  organizationId: string;
+  provider: 'google_drive';
+  providerFileId: string;
+  folderId?: string;
+  name: string;
+  mimeType: string;
+  webViewLink: string;
+  sizeBytes?: number;
+  category: 'clients' | 'company' | 'all';
+  status: 'active' | 'deleted';
+  linkedEntityType?: 'client' | 'asset' | 'order' | 'chat' | 'generic';
+  linkedEntityId?: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
 }

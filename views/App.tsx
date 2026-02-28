@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router';
 import DashboardView from './DashboardView';
@@ -25,7 +25,7 @@ import { HelpGuide } from '../components/UI/HelpGuide';
 import { Navigation } from '../components/UI/Navigation';
 import { googleApiService } from '../services/googleApiService';
 import { useAppContext } from '../hooks/useAppContext';
-import { HelpCircle, Key } from 'lucide-react';
+import { HelpCircle, Key, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {
   const {
@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [toasts, setToasts] = useState<any[]>([]);
+  const accessProfile = googleApiService.getAccessProfile();
 
   useEffect(() => {
     setIsAuthenticated(googleApiService.isAuthenticated());
@@ -47,7 +48,7 @@ const App: React.FC = () => {
     window.addEventListener('google_auth_change', handler);
 
     const checkApiKey = async () => {
-      // No modo Cloud Run/Proxy, não precisamos verificar chaves no window
+      // No modo Cloud Run/Proxy, nÃ£o precisamos verificar chaves no window
       setHasApiKey(true);
     };
     checkApiKey();
@@ -65,8 +66,27 @@ const App: React.FC = () => {
   }, []);
 
   const handleSelectApiKey = async () => {
-    // Agora o servidor gerencia a chave, mas mantemos o placeholder se o usuário quiser trocar via UI futuramente
+    // Agora o servidor gerencia a chave, mas mantemos o placeholder se o usuÃ¡rio quiser trocar via UI futuramente
     setHasApiKey(true);
+  };
+
+  const guardRoute = (routeId: string, element: React.ReactNode) => {
+    if (googleApiService.canAccessRoute(routeId)) return element;
+
+    return (
+      <div className="p-4 md:p-6 lg:p-10">
+        <div className="max-w-3xl bg-white border border-amber-100 rounded-3xl p-8 shadow-sm">
+          <div className="flex items-center gap-3 text-amber-600 mb-4">
+            <ShieldAlert size={22} />
+            <h3 className="text-sm font-black uppercase tracking-widest">PermissÃ£o Insuficiente</h3>
+          </div>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Este mÃ³dulo requer permissÃµes adicionais do Google. Autorize os escopos pendentes
+            e habilite o serviÃ§o/API correspondente na conta para desbloquear.
+          </p>
+        </div>
+      </div>
+    );
   };
 
   if (!isAuthenticated) {
@@ -81,9 +101,9 @@ const App: React.FC = () => {
             <Key size={40} />
           </div>
           <div className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Configuração de IA</h2>
+            <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">ConfiguraÃ§Ã£o de IA</h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Problema de autenticação detectado com os motores Ricardo IA.
+              Problema de autenticaÃ§Ã£o detectado com os motores Ricardo IA.
             </p>
           </div>
           <button
@@ -117,20 +137,27 @@ const App: React.FC = () => {
 
               <main className="flex-1 lg:ml-64 relative overflow-hidden flex flex-col pt-16 lg:pt-0 pb-24 lg:pb-0">
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  {!accessProfile.fullAccess && (
+                    <div className="px-4 md:px-6 lg:px-10 pt-4">
+                      <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 text-[11px] font-bold text-amber-700">
+                        Acesso parcial detectado ({accessProfile.accountType}). Autorize os escopos pendentes e habilite os serviços/API necessários.
+                      </div>
+                    </div>
+                  )}
                   <Routes>
-                    <Route path="/" element={<div className="p-4 md:p-6 lg:p-10"><DashboardView /></div>} />
-                    <Route path="/whatsapp" element={<WhatsAppView />} />
-                    <Route path="/clientes" element={<div className="p-4 md:p-6 lg:p-10"><ClientsView /></div>} />
-                    <Route path="/funnel" element={<div className="p-4 md:p-6 lg:p-10 h-full"><FunnelView /></div>} />
-                    <Route path="/reports" element={<div className="p-4 md:p-6 lg:p-10 h-full"><ReportsView /></div>} />
-                    <Route path="/integrations" element={<div className="p-4 md:p-6 lg:p-10 h-full"><IntegrationsView /></div>} />
-                    <Route path="/security" element={<div className="p-4 md:p-6 lg:p-10 h-full"><SecurityView /></div>} />
-                    <Route path="/automations" element={<div className="p-4 md:p-6 lg:p-10 h-full"><AutomationView /></div>} />
-                    <Route path="/ativos" element={<div className="p-4 md:p-6 lg:p-10"><InventoryView /></div>} />
-                    <Route path="/documentos" element={<div className="p-4 md:p-6 lg:p-10"><DocumentsView /></div>} />
-                    <Route path="/drive" element={<div className="p-4 md:p-6 lg:p-10"><DriveView /></div>} />
-                    <Route path="/ia" element={<div className="p-4 md:p-6 lg:p-10"><AIView /></div>} />
-                    <Route path="/site" element={<div className="p-4 md:p-6 lg:p-10"><WebsiteBuilderView /></div>} />
+                    <Route path="/" element={guardRoute('dashboard', <div className="p-4 md:p-6 lg:p-10"><DashboardView /></div>)} />
+                    <Route path="/whatsapp" element={guardRoute('whatsapp', <WhatsAppView />)} />
+                    <Route path="/clientes" element={guardRoute('clients', <div className="p-4 md:p-6 lg:p-10"><ClientsView /></div>)} />
+                    <Route path="/funnel" element={guardRoute('funnel', <div className="p-4 md:p-6 lg:p-10 h-full"><FunnelView /></div>)} />
+                    <Route path="/reports" element={guardRoute('reports', <div className="p-4 md:p-6 lg:p-10 h-full"><ReportsView /></div>)} />
+                    <Route path="/integrations" element={guardRoute('integrations', <div className="p-4 md:p-6 lg:p-10 h-full"><IntegrationsView /></div>)} />
+                    <Route path="/security" element={guardRoute('security', <div className="p-4 md:p-6 lg:p-10 h-full"><SecurityView /></div>)} />
+                    <Route path="/automations" element={guardRoute('automations', <div className="p-4 md:p-6 lg:p-10 h-full"><AutomationView /></div>)} />
+                    <Route path="/ativos" element={guardRoute('inventory', <div className="p-4 md:p-6 lg:p-10"><InventoryView /></div>)} />
+                    <Route path="/documentos" element={guardRoute('documents', <div className="p-4 md:p-6 lg:p-10"><DocumentsView /></div>)} />
+                    <Route path="/drive" element={guardRoute('drive', <div className="p-4 md:p-6 lg:p-10"><DriveView /></div>)} />
+                    <Route path="/ia" element={guardRoute('ia', <div className="p-4 md:p-6 lg:p-10"><AIView /></div>)} />
+                    <Route path="/site" element={guardRoute('site', <div className="p-4 md:p-6 lg:p-10"><WebsiteBuilderView /></div>)} />
                   </Routes>
                 </div>
               </main>
@@ -166,3 +193,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

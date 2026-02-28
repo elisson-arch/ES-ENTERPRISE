@@ -32,9 +32,13 @@ import {
   MonitorSmartphone
 } from 'lucide-react';
 import type { SyncLog } from '../types';
+import type { Asset } from '../types';
 import { googleSyncService } from '../services/googleSyncService';
 import { clientService, Client } from '../services/clientService';
 import { seedService } from '../services/seedService';
+import { inventoryService } from '../services/inventoryService';
+import { auditService } from '../services/auditService';
+import { tenantService } from '../services/tenantService';
 
 // Mocks removidos para uso do Firestore real
 
@@ -50,6 +54,50 @@ const StatCard = ({ label, value, icon: Icon, color }: any) => (
   </div>
 );
 
+const PAGE_SIZE = 9;
+
+type ClientFormState = {
+  id?: string;
+  name: string;
+  legalName: string;
+  clientCode: string;
+  document: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  type: 'Residencial' | 'Comercial';
+  status: 'Ativo' | 'Inativo' | 'Prospecção';
+  origin: 'Manual' | 'Google' | 'Site' | 'WhatsApp';
+  notes: string;
+};
+
+const generateClientCode = () => {
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  const date = new Date();
+  const stamp = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+  return `CLI-${stamp}-${random}`;
+};
+
+const emptyClientForm = (): ClientFormState => ({
+  name: '',
+  legalName: '',
+  clientCode: generateClientCode(),
+  document: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  type: 'Residencial',
+  status: 'Prospecção',
+  origin: 'Manual',
+  notes: ''
+});
+
 const ClientsView = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,14 +108,50 @@ const ClientsView = () => {
   const [conflict, setConflict] = useState<{ crm: Client, google: any } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [onboardingClient, setOnboardingClient] = useState<Client | null>(null);
+  const [showClientForm, setShowClientForm] = useState(false);
+  const [isSavingClient, setIsSavingClient] = useState(false);
+  const [clientForm, setClientForm] = useState<ClientFormState>(emptyClientForm());
+  const [linkedAssets, setLinkedAssets] = useState<Asset[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | Client['status']>('all');
+  const [originFilter, setOriginFilter] = useState<'all' | Client['origin']>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | Client['type']>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
 
   useEffect(() => {
-    const unsubscribe = clientService.subscribeToClients((data) => {
+    const unsubscribe = clientService.subscribeToClients(orgId, (data) => {
       setClients(data);
       setLoading(false);
     });
     return () => unsubscribe();
+  }, [orgId]);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const derived = tenantService.resolveAndPersistFromSession();
+      setOrgId(derived);
+    };
+    window.addEventListener('google_auth_change', handleAuthChange);
+    return () => window.removeEventListener('google_auth_change', handleAuthChange);
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadLinkedAssets = async () => {
+      if (!selectedClient?.id) {
+        setLinkedAssets([]);
+        return;
+      }
+      try {
+        const assets = await inventoryService.getAssetsByClient(selectedClient.id);
+        if (mounted) setLinkedAssets(assets);
+      } catch (err) {
+        console.error('Falha ao carregar ativos vinculados:', err);
+      }
+    };
+    loadLinkedAssets();
+    return () => { mounted = false; };
+  }, [selectedClient?.id]);
 
   const stats = useMemo(() => {
     const statusCounts = clients.reduce((acc, c) => {
@@ -97,12 +181,153 @@ const ClientsView = () => {
   }, [clients]);
 
   const filteredClients = useMemo(() => {
-    return clients.filter(c =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm)
-    );
-  }, [clients, searchTerm]);
+    return clients.filter(c => {
+      const query = searchTerm.toLowerCase();
+      const matchesSearch =
+        c.name.toLowerCase().includes(query) ||
+        c.email.toLowerCase().includes(query) ||
+        c.phone.includes(searchTerm) ||
+        (c.document || '').toLowerCase().includes(query) ||
+        (c.clientCode || '').toLowerCase().includes(query);
+
+      const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+      const matchesOrigin = originFilter === 'all' || c.origin === originFilter;
+      const matchesType = typeFilter === 'all' || c.type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesOrigin && matchesType;
+    });
+  }, [clients, searchTerm, statusFilter, originFilter, typeFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredClients.length / PAGE_SIZE));
+  const paginatedClients = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredClients.slice(start, start + PAGE_SIZE);
+  }, [filteredClients, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, originFilter, typeFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const openCreateClient = () => {
+    setClientForm(emptyClientForm());
+    setShowClientForm(true);
+  };
+
+  const openEditClient = (client: Client) => {
+    setClientForm({
+      id: client.id,
+      name: client.name || '',
+      legalName: client.legalName || '',
+      clientCode: client.clientCode || generateClientCode(),
+      document: client.document || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      address: client.address || '',
+      city: client.city || '',
+      state: client.state || '',
+      zipCode: client.zipCode || '',
+      type: client.type || 'Residencial',
+      status: client.status || 'Prospecção',
+      origin: client.origin || 'Manual',
+      notes: client.notes || ''
+    });
+    setShowClientForm(true);
+  };
+
+  const writeAudit = async (
+    entityType: 'client' | 'sync',
+    entityId: string,
+    action: 'CLIENT_CREATE' | 'CLIENT_UPDATE' | 'CLIENT_DELETE' | 'CLIENT_SYNC' | 'CLIENT_CONFLICT_RESOLVE',
+    before?: Record<string, unknown> | null,
+    after?: Record<string, unknown> | null,
+    metadata?: Record<string, unknown>
+  ) => {
+    try {
+      await auditService.log({
+        organizationId: orgId,
+        entityType,
+        entityId,
+        action,
+        before: before || null,
+        after: after || null,
+        metadata
+      });
+    } catch (err) {
+      console.error('Falha ao gravar auditoria:', err);
+    }
+  };
+
+  const handleSaveClient = async () => {
+    if (!clientForm.name.trim() || !clientForm.phone.trim()) {
+      alert('Nome e telefone são obrigatórios.');
+      return;
+    }
+
+    setIsSavingClient(true);
+    try {
+      const now = new Date().toISOString();
+      const previous = clientForm.id ? clients.find(c => c.id === clientForm.id) : null;
+      const payload = {
+        clientCode: clientForm.clientCode || generateClientCode(),
+        name: clientForm.name.trim(),
+        legalName: clientForm.legalName.trim(),
+        document: clientForm.document.trim(),
+        email: clientForm.email.trim(),
+        phone: clientForm.phone.trim(),
+        address: clientForm.address.trim(),
+        city: clientForm.city.trim(),
+        state: clientForm.state.trim(),
+        zipCode: clientForm.zipCode.trim(),
+        type: clientForm.type,
+        status: clientForm.status,
+        origin: clientForm.origin,
+        notes: clientForm.notes.trim(),
+        organizationId: orgId,
+        updatedAt: now
+      };
+
+      if (clientForm.id) {
+        await clientService.updateClient(clientForm.id, payload);
+        await writeAudit('client', clientForm.id, 'CLIENT_UPDATE', previous as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+      } else {
+        const newId = await clientService.createClient({
+          ...payload,
+          assets: [],
+          linkedAssetIds: [],
+          syncTimestamp: now
+        });
+        await writeAudit('client', newId, 'CLIENT_CREATE', null, { ...payload, id: newId } as unknown as Record<string, unknown>);
+      }
+
+      setShowClientForm(false);
+      setClientForm(emptyClientForm());
+    } catch (err) {
+      console.error('Erro ao salvar cliente:', err);
+      alert('Não foi possível salvar o cliente agora.');
+    } finally {
+      setIsSavingClient(false);
+    }
+  };
+
+  const handleDeleteClient = async (clientId: string) => {
+    const ok = window.confirm('Deseja realmente excluir este cliente?');
+    if (!ok) return;
+    try {
+      const previous = clients.find(c => c.id === clientId) || null;
+      await clientService.deleteClient(clientId);
+      await writeAudit('client', clientId, 'CLIENT_DELETE', previous as unknown as Record<string, unknown>, null);
+      if (selectedClient?.id === clientId) setSelectedClient(null);
+    } catch (err) {
+      console.error('Erro ao excluir cliente:', err);
+      alert('Não foi possível excluir o cliente.');
+    }
+  };
 
   const handleFullSync = async () => {
     setIsSyncing(true);
@@ -144,6 +369,7 @@ const ClientsView = () => {
         } else {
           const newClient: Client = {
             id: Date.now().toString(),
+            clientCode: generateClientCode(),
             name: update.name!,
             document: '---',
             email: update.email!,
@@ -160,7 +386,7 @@ const ClientsView = () => {
             lastSyncAt: new Date().toISOString(),
             googleContactId: update.googleContactId,
             syncTimestamp: update.syncTimestamp,
-            organizationId: 'org_123'
+            organizationId: orgId
           };
           updatedClients = [newClient, ...updatedClients];
           setOnboardingClient(newClient);
@@ -179,6 +405,10 @@ const ClientsView = () => {
 
       setClients(updatedClients);
       setSyncLogs(prev => [...newLogs, ...prev].slice(0, 50));
+      await writeAudit('sync', `sync_${Date.now()}`, 'CLIENT_SYNC', null, {
+        importedOrUpdated: newLogs.length,
+        totalGoogleRecords: googleRawData.length
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -186,7 +416,7 @@ const ClientsView = () => {
     }
   };
 
-  const resolveConflict = (winner: 'crm' | 'google') => {
+  const resolveConflict = async (winner: 'crm' | 'google') => {
     if (!conflict) return;
     const { crm, google } = conflict;
 
@@ -205,6 +435,7 @@ const ClientsView = () => {
       details: `Mesclagem manual concluída. Versão ${winner.toUpperCase()} preservada.`,
       timestamp: new Date().toISOString()
     }, ...prev]);
+    await writeAudit('sync', crm.id, 'CLIENT_CONFLICT_RESOLVE', crm as unknown as Record<string, unknown>, google as Record<string, unknown>, { winner });
     setConflict(null);
   };
 
@@ -231,7 +462,7 @@ const ClientsView = () => {
             Sincronizar Bidirecional
           </button>
           <button
-            onClick={() => {/* Lógica para abrir modal de novo cliente */ }}
+            onClick={openCreateClient}
             className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
           >
             <Plus size={16} /> Novo Cliente
@@ -261,8 +492,46 @@ const ClientsView = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2 hover:bg-slate-50 transition-all">
-          <Filter size={16} /> Filtros Avançados
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+          className="w-full md:w-auto px-4 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600"
+        >
+          <option value="all">Status: Todos</option>
+          <option value="Ativo">Status: Ativo</option>
+          <option value="Prospecção">Status: Prospecção</option>
+          <option value="Inativo">Status: Inativo</option>
+        </select>
+        <select
+          value={originFilter}
+          onChange={(e) => setOriginFilter(e.target.value as typeof originFilter)}
+          className="w-full md:w-auto px-4 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600"
+        >
+          <option value="all">Origem: Todas</option>
+          <option value="Manual">Origem: Manual</option>
+          <option value="Google">Origem: Google</option>
+          <option value="Site">Origem: Site</option>
+          <option value="WhatsApp">Origem: WhatsApp</option>
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+          className="w-full md:w-auto px-4 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600"
+        >
+          <option value="all">Tipo: Todos</option>
+          <option value="Residencial">Tipo: Residencial</option>
+          <option value="Comercial">Tipo: Comercial</option>
+        </select>
+        <button
+          onClick={() => {
+            setSearchTerm('');
+            setStatusFilter('all');
+            setOriginFilter('all');
+            setTypeFilter('all');
+          }}
+          className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2 hover:bg-slate-50 transition-all"
+        >
+          <Filter size={16} /> Limpar
         </button>
       </div>
 
@@ -276,7 +545,7 @@ const ClientsView = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/10 flex items-center gap-2">
+            <button onClick={() => { setSelectedClient(onboardingClient); setOnboardingClient(null); }} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/10 flex items-center gap-2">
               <Package size={14} /> Cadastrar Ativos
             </button>
             <button className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
@@ -314,7 +583,7 @@ const ClientsView = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredClients.map(client => {
+        {paginatedClients.map(client => {
           const isOutdated = client.googleContactId && client.lastSyncAt && new Date(client.updatedAt) > new Date(client.lastSyncAt);
 
           return (
@@ -343,6 +612,7 @@ const ClientsView = () => {
               <div className="mb-6">
                 <h3 className="text-lg font-black text-slate-800 line-clamp-1 italic uppercase tracking-tighter">{client.name}</h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">{client.status} • {client.type}</p>
+                <p className="text-[9px] text-slate-400 font-mono mt-1">{client.clientCode || 'SEM-CODIGO'}</p>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -366,6 +636,117 @@ const ClientsView = () => {
           );
         })}
       </div>
+
+      <div className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          Página {currentPage} de {totalPages} • {filteredClients.length} clientes filtrados
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-600 disabled:opacity-40"
+          >
+            Anterior
+          </button>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase disabled:opacity-40"
+          >
+            Próxima
+          </button>
+        </div>
+      </div>
+
+      {showClientForm && (
+        <div className="fixed inset-0 z-[900] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowClientForm(false)} />
+          <div className="relative bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95">
+            <div className="p-6 border-b bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">{clientForm.id ? 'Editar Cliente' : 'Novo Cliente'}</h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID único operacional: {clientForm.clientCode}</p>
+              </div>
+              <button onClick={() => setShowClientForm(false)} className="p-2 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Nome Fantasia</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.name} onChange={(e) => setClientForm(prev => ({ ...prev, name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Razão Social</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.legalName} onChange={(e) => setClientForm(prev => ({ ...prev, legalName: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Documento (CPF/CNPJ)</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.document} onChange={(e) => setClientForm(prev => ({ ...prev, document: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Telefone</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.phone} onChange={(e) => setClientForm(prev => ({ ...prev, phone: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase">E-mail</label>
+                <input type="email" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.email} onChange={(e) => setClientForm(prev => ({ ...prev, email: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Endereço</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.address} onChange={(e) => setClientForm(prev => ({ ...prev, address: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Cidade</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.city} onChange={(e) => setClientForm(prev => ({ ...prev, city: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">UF</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.state} onChange={(e) => setClientForm(prev => ({ ...prev, state: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">CEP</label>
+                <input className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.zipCode} onChange={(e) => setClientForm(prev => ({ ...prev, zipCode: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Tipo</label>
+                <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.type} onChange={(e) => setClientForm(prev => ({ ...prev, type: e.target.value as ClientFormState['type'] }))}>
+                  <option value="Residencial">Residencial</option>
+                  <option value="Comercial">Comercial</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Status</label>
+                <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.status} onChange={(e) => setClientForm(prev => ({ ...prev, status: e.target.value as ClientFormState['status'] }))}>
+                  <option value="Prospecção">Prospecção</option>
+                  <option value="Ativo">Ativo</option>
+                  <option value="Inativo">Inativo</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Origem</label>
+                <select className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" value={clientForm.origin} onChange={(e) => setClientForm(prev => ({ ...prev, origin: e.target.value as ClientFormState['origin'] }))}>
+                  <option value="Manual">Manual</option>
+                  <option value="Google">Google</option>
+                  <option value="Site">Site</option>
+                  <option value="WhatsApp">WhatsApp</option>
+                </select>
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase">Observações</label>
+                <textarea className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium h-24" value={clientForm.notes} onChange={(e) => setClientForm(prev => ({ ...prev, notes: e.target.value }))} />
+              </div>
+            </div>
+
+            <div className="p-6 border-t bg-slate-50 flex gap-3">
+              <button onClick={() => setShowClientForm(false)} className="flex-1 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-500">Cancelar</button>
+              <button onClick={handleSaveClient} disabled={isSavingClient} className="flex-[2] py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg disabled:opacity-60">
+                {isSavingClient ? 'Salvando...' : 'Salvar Cliente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {conflict && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -415,6 +796,7 @@ const ClientsView = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">{selectedClient.name}</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Cliente: {selectedClient.clientCode || 'SEM-CODIGO'}</p>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Google: {selectedClient.googleContactId || 'Local'}</p>
                 </div>
               </div>
@@ -457,11 +839,37 @@ const ClientsView = () => {
                   </div>
                 </div>
               </section>
+
+              <section className="space-y-4">
+                <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest border-b pb-2">Ativos Vinculados (Tabela assets)</h4>
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                  <p className="text-[9px] font-black uppercase text-slate-500 mb-2">Relacionamento técnico por chave</p>
+                  <p className="text-[10px] font-mono text-slate-700">assets.clientId = clients.id ({selectedClient.id})</p>
+                </div>
+                {linkedAssets.length > 0 ? (
+                  <div className="space-y-2">
+                    {linkedAssets.slice(0, 6).map((asset) => (
+                      <div key={asset.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{asset.brand} • {asset.model}</p>
+                        <p className="text-[9px] text-slate-400 font-mono">SN: {asset.serialNumber}</p>
+                      </div>
+                    ))}
+                    {linkedAssets.length > 6 && (
+                      <p className="text-[9px] font-bold text-slate-400 uppercase">+{linkedAssets.length - 6} ativos adicionais</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                    <p className="text-[10px] font-black text-amber-700 uppercase">Nenhum ativo vinculado ainda</p>
+                    <p className="text-[9px] text-amber-600 mt-1">Cadastre ativos no módulo de inventário usando este `clients.id`.</p>
+                  </div>
+                )}
+              </section>
             </div>
 
             <div className="p-8 border-t bg-slate-50 flex gap-3">
-              <button className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-400">Excluir</button>
-              <button className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Salvar & Sync</button>
+              <button onClick={() => handleDeleteClient(selectedClient.id)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-400">Excluir</button>
+              <button onClick={() => openEditClient(selectedClient)} className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Salvar & Sync</button>
             </div>
           </div>
         </div>

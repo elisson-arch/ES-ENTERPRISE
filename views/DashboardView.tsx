@@ -9,6 +9,7 @@ import { firestoreService } from '../services/firestoreService';
 import { predictiveService } from '../services/predictiveService';
 import { useAppContext } from '../hooks/useAppContext';
 import { where } from 'firebase/firestore';
+import { tenantService } from '../services/tenantService';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
   <button
@@ -50,6 +51,7 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
   const [stats, setStats] = useState({ clientsCount: 0, assetsCount: 0 });
   const [recentMissions, setRecentMissions] = useState<any[]>([]);
   const [predictiveAlerts, setPredictiveAlerts] = useState<PredictiveAlert[]>([]);
+  const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
   const notifiedAssetsRef = useRef<Set<string>>(new Set());
   const { addNotification } = useAppContext();
   const userProfile = googleApiService.getUserProfile();
@@ -74,7 +76,7 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
           type: 'lead'
         }));
         setRecentMissions(missions);
-      }, where('organizationId', '==', 'org_123'));
+      }, where('organizationId', '==', orgId));
 
       const unsubAssets = firestoreService.subscribe<Asset>('assets', (data) => {
         setStats(prev => ({ ...prev, assetsCount: data.length }));
@@ -95,7 +97,7 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             });
             notifiedAssetsRef.current.add(a.assetId);
           });
-      }, where('organizationId', '==', 'org_123'));
+      }, where('organizationId', '==', orgId));
 
       setLoading(false);
       return () => {
@@ -104,6 +106,16 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
       };
     };
     init();
+  }, [addNotification, orgId]);
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      const derived = tenantService.resolveAndPersistFromSession();
+      setOrgId(derived);
+      notifiedAssetsRef.current.clear();
+    };
+    window.addEventListener('google_auth_change', handleAuthChange);
+    return () => window.removeEventListener('google_auth_change', handleAuthChange);
   }, []);
 
   return (

@@ -55,6 +55,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const allowedRoutes = NAVIGATION_ROUTES.filter((route) => googleApiService.canAccessRoute(route.id));
 
   const isPublicSite = location.pathname.startsWith('/v/');
   if (isPublicSite) return null;
@@ -101,7 +102,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           </div>
 
           <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar">
-            {NAVIGATION_ROUTES.map((item) => (
+            {allowedRoutes.map((item) => (
               <SidebarItem
                 key={item.path}
                 icon={item.icon}
@@ -135,7 +136,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Mobile Bottom Bar */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-xl border-t border-slate-200 z-40 flex items-center justify-around px-6 pb-4 pt-2 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-        {NAVIGATION_ROUTES.filter(r => ['dashboard', 'whatsapp', 'funnel'].includes(r.id)).map(route => (
+        {allowedRoutes.filter(r => ['dashboard', 'whatsapp', 'funnel'].includes(r.id)).map(route => (
           <Link
             key={route.id}
             to={route.path}

@@ -1,7 +1,7 @@
+import { inventoryService } from './inventoryService';
+import { tenantService } from './tenantService';
 
-import { inventoryService } from '../services/inventoryService';
-
-const SEED_ASSETS = [
+const buildSeedAssets = (organizationId: string) => ([
     {
         clientId: 'Hospital_Sao_Luiz_ID',
         type: 'Chiller Industrial Parafuso',
@@ -10,7 +10,7 @@ const SEED_ASSETS = [
         serialNumber: 'CRR-9981-P',
         installationDate: '15/03/2023',
         lastMaintenance: '10/01/2024',
-        organizationId: 'org_123'
+        organizationId
     },
     {
         clientId: 'Condominio_Aurora_ID',
@@ -20,7 +20,7 @@ const SEED_ASSETS = [
         serialNumber: 'DKN-2024-X102',
         installationDate: '12/01/2024',
         lastMaintenance: '15/05/2024',
-        organizationId: 'org_123'
+        organizationId
     },
     {
         clientId: 'Academia_Fit_ID',
@@ -30,19 +30,21 @@ const SEED_ASSETS = [
         serialNumber: 'LG-MX-5541',
         installationDate: '05/02/2024',
         lastMaintenance: '20/05/2024',
-        organizationId: 'org_123'
+        organizationId
     }
-];
+]);
 
 export const seedInventory = async () => {
+    const organizationId = tenantService.getCurrentOrgId();
+    const seedAssets = buildSeedAssets(organizationId);
     console.log('[SeedInventory] Iniciando semeadura de ativos...');
-    for (const asset of SEED_ASSETS) {
+    for (const asset of seedAssets) {
         try {
             await inventoryService.createAsset(asset);
-            console.log(`✅ Ativo ${asset.brand} adicionado.`);
+            console.log(`[SeedInventory] Ativo ${asset.brand} adicionado.`);
         } catch (err) {
-            console.error(`❌ Erro ao adicionar ${asset.brand}:`, err);
+            console.error(`[SeedInventory] Erro ao adicionar ${asset.brand}:`, err);
         }
     }
-    console.log('[SeedInventory] Concluído.');
+    console.log('[SeedInventory] Concluido.');
 };
