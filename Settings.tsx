@@ -3,6 +3,21 @@ import React, { useState } from 'react';
 import { useTranslation } from './hooks/useTranslation';
 import { Languages } from 'lucide-react';
 
+interface Scope {
+  id: string;
+  name: string;
+  desc: string;
+  active: boolean;
+  restricted?: boolean;
+}
+
+const SCOPES: Scope[] = [
+  { id: 'drive', name: 'Google Drive', desc: 'Acesso a arquivos e Drives Compartilhados (2TB)', active: true },
+  { id: 'meet', name: 'Google Meet', desc: 'Gestão de gravações e logs de conferência', active: true },
+  { id: 'admin', name: 'Admin SDK', desc: 'Relatórios de uso e governança de dados', active: false },
+  { id: 'vault', name: 'Google Vault', desc: 'Acesso a eDiscovery (Requer Business Plus)', active: false, restricted: true },
+];
+
 const Settings: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -18,13 +33,6 @@ const Settings: React.FC = () => {
       setLastSync(new Date().toLocaleString());
     }, 2000);
   };
-
-  const scopes = [
-    { id: 'drive', name: 'Google Drive', desc: 'Acesso a arquivos e Drives Compartilhados (2TB)', active: true },
-    { id: 'meet', name: 'Google Meet', desc: 'Gestão de gravações e logs de conferência', active: true },
-    { id: 'admin', name: 'Admin SDK', desc: 'Relatórios de uso e governança de dados', active: false },
-    { id: 'vault', name: 'Google Vault', desc: 'Acesso a eDiscovery (Requer Business Plus)', active: false, restricted: true },
-  ];
 
   return (
     <div className="space-y-8 animate-fadeIn pb-20">
@@ -74,7 +82,7 @@ const Settings: React.FC = () => {
               Escopos e Permissões de API
             </h3>
             <div className="space-y-4">
-              {scopes.map((scope) => (
+              {SCOPES.map((scope) => (
                 <div key={scope.id} className={`p-4 rounded-2xl border transition-all ${scope.restricted ? 'bg-gray-50/50 border-gray-100 opacity-60' : 'bg-white border-gray-100 hover:border-blue-100'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
