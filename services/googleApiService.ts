@@ -179,18 +179,12 @@ class GoogleApiService {
             };
             localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
 
-<<<<<<< HEAD
-            window.dispatchEvent(new CustomEvent('google_auth_change', {
-              detail: { isAuthenticated: true, profile: this.userProfile, isNew }
-            }));
-=======
             const accessProfile = this.getAccessProfile();
             if (!accessProfile.fullAccess) {
               this.notify('Acesso autenticado com permissões parciais. Autorize todos os escopos solicitados para desbloqueio completo.');
             }
 
             this.notify();
->>>>>>> d5469e476bccb6672671c564e9762b702679395c
             resolve(true);
           }
         });
@@ -365,7 +359,6 @@ class GoogleApiService {
     ];
   }
 
-<<<<<<< HEAD
   async requestWorkspaceAccess() { return this.loginAndAuthorize(); }
   async revokeAccess() { localStorage.clear(); window.location.reload(); }
 
@@ -402,15 +395,6 @@ class GoogleApiService {
     });
     this.addLog('DRIVE', 'FOLDER_CREATED', `Pasta "${name}" criada (id: ${data.id}).`);
     return data.id;
-=======
-  async requestWorkspaceAccess() {
-    return this.loginAndAuthorize();
-  }
-
-  async revokeAccess() {
-    localStorage.clear();
-    window.location.reload();
->>>>>>> d5469e476bccb6672671c564e9762b702679395c
   }
 }
 
