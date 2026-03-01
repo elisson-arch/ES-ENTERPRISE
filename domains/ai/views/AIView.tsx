@@ -1,13 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   Send, Bot, User, Sparkles, AlertTriangle, Lightbulb,
   Cpu, Zap, Brain, ChevronDown, Mic, MicOff, Loader2,
   Camera, Globe, Search, Link as LinkIcon, Image as ImageIcon,
   CheckCircle2, AlertCircle, Wand2, Filter, Languages
 } from 'lucide-react';
-import { geminiService } from '../services/geminiService';
-import { Message } from '../types';
-import { useTranslation } from '../hooks/useTranslation';
+import { geminiService } from '@ai/services/geminiService';
+import { Message } from '@shared/types/common.types';
+import { useTranslation } from '@shared/hooks/useTranslation';
 
 const AI_MODELS = [
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', desc: 'Raciocínio Técnico Profundo', icon: <Brain size={14} className="text-indigo-500" /> },

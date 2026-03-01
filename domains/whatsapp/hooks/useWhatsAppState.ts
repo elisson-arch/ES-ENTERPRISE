@@ -1,10 +1,10 @@
-
+﻿
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { ChatSession, Message, ClientTask } from '../types';
-import { whatsappApiService } from '../services/whatsappApiService';
-import { googleSyncService } from '../services/googleSyncService';
-import { chatService } from '../services/chatService';
-import { tenantService } from '../services/tenantService';
+import { ChatSession, Message, ClientTask } from '@shared/types/common.types';
+import { whatsappApiService } from '@whatsapp/services/whatsappApiService';
+import { googleSyncService } from '@google-workspace/services/googleSyncService';
+import { chatService } from '@whatsapp/services/chatService';
+import { tenantService } from '@auth/services/tenantService';
 
 export const useWhatsAppState = (initialChats: ChatSession[]) => {
   const [chats, setChats] = useState<ChatSession[]>([]);

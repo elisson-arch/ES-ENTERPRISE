@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search, Wrench
 } from 'lucide-react';
 import { OnboardingChecklist } from '../components/UI/OnboardingChecklist';
 import { OnboardingTask, CalendarEvent, Client, Asset, PredictiveAlert } from '../types';
-import { googleApiService } from '../services/googleApiService';
-import { firestoreService } from '../services/firestoreService';
-import { predictiveService } from '../services/predictiveService';
-import { useAppContext } from '../hooks/useAppContext';
+import { googleApiService } from '@google-workspace/services/googleApiService';
+import { firestoreService } from '@shared/services/firestoreService';
+import { predictiveService } from '@ai/services/predictiveService';
+import { useAppContext } from '@shared/hooks/useAppContext';
 import { where } from 'firebase/firestore';
-import { tenantService } from '../services/tenantService';
+import { tenantService } from '@auth/services/tenantService';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
   <button

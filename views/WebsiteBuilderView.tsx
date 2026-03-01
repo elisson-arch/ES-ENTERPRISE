@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { 
   Wand2, Rocket, Code, Eye, RefreshCw, Smartphone, Monitor, 
@@ -6,10 +6,10 @@ import {
   Terminal, Globe, Zap, MessageSquare, Mic, Loader2
 } from 'lucide-react';
 import { SiteDNA, SiteElement } from '../types';
-import { INITIAL_SITE_DATA } from '../services/mockTemplates';
+import { INITIAL_SITE_DATA } from '@whatsapp/services/mockTemplates';
 import { WebsiteEngine } from '../components/WebBuilder/WebsiteEngine';
-import { siteService } from '../services/siteService';
-import { geminiService } from '../services/geminiService';
+import { siteService } from '@site-builder/services/siteService';
+import { geminiService } from '@ai/services/geminiService';
 
 const WebsiteBuilderView = () => {
   const [dna, setDna] = useState<SiteDNA>({

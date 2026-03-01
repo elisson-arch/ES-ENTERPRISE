@@ -1,8 +1,8 @@
-
+﻿
 import { firestoreService } from './firestoreService';
-import { Asset } from '../types';
+import { Asset } from '@shared/types/common.types';
 import { collection, query, where, onSnapshot, runTransaction, doc, arrayUnion } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db } from '@shared/config/firebase';
 import { auditService } from './auditService';
 import { tenantService } from './tenantService';
 

@@ -1,7 +1,7 @@
-
+﻿
 import React, { useState } from 'react';
 import { MoreVertical, Bot, PhoneCall, FileDown, Archive, Search, X, ChevronLeft, Sparkles } from 'lucide-react';
-import { ChatSession } from '../../types';
+import { ChatSession } from '@shared/types/common.types';
 import { CallOverlay } from './CallOverlay';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';

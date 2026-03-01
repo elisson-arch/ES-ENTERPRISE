@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   FileText, 
   Download, 
@@ -16,7 +16,7 @@ import {
   Zap,
   Plus
 } from 'lucide-react';
-import { geminiService } from '../services/geminiService';
+import { geminiService } from '@ai/services/geminiService';
 
 const DocumentsView = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

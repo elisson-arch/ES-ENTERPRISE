@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppNotification } from '../types';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AppNotification } from '@shared/types/common.types';
 
 interface AppContextType {
     notifications: AppNotification[];

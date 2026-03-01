@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo } from 'react';
 import { 
   Trello, 
@@ -13,7 +13,7 @@ import {
   ChevronRight,
   ChevronLeft
 } from 'lucide-react';
-import { ChatSession } from '../types';
+import { ChatSession } from '@shared/types/common.types';
 
 const FUNNEL_STAGES = [
   { id: 'Prospecção', color: 'bg-blue-500', label: 'Prospecção' },

@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { X, MessageSquare, Trello, AlertCircle, CheckCircle, Upload, Wrench } from 'lucide-react';
-import { AppNotification, NotificationType } from '../../types';
+import { AppNotification, NotificationType } from '@shared/types/common.types';
 
 interface ToastContainerProps {
   toasts: AppNotification[];

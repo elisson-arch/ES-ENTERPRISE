@@ -1,4 +1,4 @@
-import { Asset, PredictiveAlert } from '../types';
+﻿import { Asset, PredictiveAlert } from '@shared/types/common.types';
 
 // Thresholds (em dias) entre manutenções por tipo de equipamento HVAC
 const MAINTENANCE_THRESHOLDS: Record<string, number> = {

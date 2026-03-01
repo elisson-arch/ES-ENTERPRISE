@@ -1,31 +1,39 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router';
-import DashboardView from './DashboardView';
-import ClientsView from './ClientsView';
-import InventoryView from './InventoryView';
-import DocumentsView from './DocumentsView';
-import AIView from './AIView';
-import WebsiteBuilderView from './WebsiteBuilderView';
-import PublicSiteView from './PublicSiteView';
-import DriveView from './DriveView';
-import WhatsAppView from './WhatsAppView';
-import FunnelView from './FunnelView';
-import AutomationView from './AutomationView';
-import ReportsView from './ReportsView';
-import IntegrationsView from './IntegrationsView';
-import SecurityView from './SecurityView';
-import LoginView from './LoginView';
-import PrivacyPolicyView from './PrivacyPolicyView';
-import TermsOfServiceView from './TermsOfServiceView';
-import { NotificationCenter } from '../components/Notifications/NotificationCenter';
-import { ToastContainer } from '../components/Notifications/ToastContainer';
-import { GlobalSearch } from '../components/UI/GlobalSearch';
-import { HelpGuide } from '../components/UI/HelpGuide';
-import { Navigation } from '../components/UI/Navigation';
-import { googleApiService } from '../services/googleApiService';
-import { useAppContext } from '../hooks/useAppContext';
+
+// ─── Views por domínio ───────────────────────────────────────────────────────
+import DashboardView from '@reports/views/DashboardView';
+import ReportsView from '@reports/views/ReportsView';
+import ClientsView from '@clients/views/ClientsView';
+import FunnelView from '@clients/views/FunnelView';
+import InventoryView from '@inventory/views/InventoryView';
+import DocumentsView from '@shared/views/DocumentsView';
+import AIView from '@ai/views/AIView';
+import AutomationView from '@ai/views/AutomationView';
+import WebsiteBuilderView from '@site-builder/views/WebsiteBuilderView';
+import PublicSiteView from '@site-builder/views/PublicSiteView';
+import DriveView from '@google-workspace/views/DriveView';
+import WhatsAppView from '@whatsapp/views/WhatsAppView';
+import IntegrationsView from '@shared/views/IntegrationsView';
+import SecurityView from '@auth/views/SecurityView';
+import LoginView from '@auth/views/LoginView';
+import PrivacyPolicyView from '@auth/views/PrivacyPolicyView';
+import TermsOfServiceView from '@shared/views/TermsOfServiceView';
+
+// ─── Shared Kernel ───────────────────────────────────────────────────────────
+import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { ToastContainer } from '@shared/components/Notifications/ToastContainer';
+import { GlobalSearch } from '@shared/components/UI/GlobalSearch';
+import { HelpGuide } from '@shared/components/UI/HelpGuide';
+import { Navigation } from '@shared/components/UI/Navigation';
+import { useAppContext } from '@shared/hooks/useAppContext';
+
+// ─── Google Workspace ────────────────────────────────────────────────────────
+import { googleApiService } from '@google-workspace/services/googleApiService';
+
 import { HelpCircle, Key, ShieldAlert } from 'lucide-react';
+
 
 const App: React.FC = () => {
   const {

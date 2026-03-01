@@ -1,5 +1,5 @@
-
-import { Client } from '../types';
+﻿
+import { Client } from '@shared/types/common.types';
 import { googleApiService } from './googleApiService';
 import { clientService } from './clientService';
 import { auditLogService } from './auditLogService';

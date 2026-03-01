@@ -1,7 +1,7 @@
-
+﻿
 import React from 'react';
 import { Bot, PanelRightOpen } from 'lucide-react';
-import { ChatSession } from '../../types';
+import { ChatSession } from '@shared/types/common.types';
 import { MessageWindow } from './MessageWindow';
 
 interface ChatAreaProps {

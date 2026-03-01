@@ -3,12 +3,12 @@ import { ChatSidebar } from '../components/WhatsApp/ChatSidebar';
 import { ChatArea } from '../components/WhatsApp/ChatArea';
 import { ClientCRMDetails } from '../components/WhatsApp/ClientCRMDetails';
 import { WhatsAppModals } from '../components/WhatsApp/WhatsAppModals';
-import { useWhatsAppState } from '../hooks/useWhatsAppState';
-import { DEFAULT_TEMPLATES } from '../services/mockData';
+import { useWhatsAppState } from '@whatsapp/hooks/useWhatsAppState';
+import { DEFAULT_TEMPLATES } from '@shared/services/mockData';
 import { X, Sparkles } from 'lucide-react';
-import { ChatSession, ChatTemplate } from '../types';
-import { chatService } from '../services/chatService';
-import { geminiService } from '../services/geminiService';
+import { ChatSession, ChatTemplate } from '@shared/types/common.types';
+import { chatService } from '@whatsapp/services/chatService';
+import { geminiService } from '@ai/services/geminiService';
 
 const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
   const reader = new FileReader();

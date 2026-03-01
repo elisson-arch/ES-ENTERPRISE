@@ -1,7 +1,7 @@
-
+﻿
 import React, { useState } from 'react';
 import { Search, Filter, Calendar, Tag, Briefcase, Trash2, MailOpen, MessageSquare, Clock, CheckSquare, Layers, Archive, Check, Users, RefreshCw, Cloud } from 'lucide-react';
-import { ChatSession } from '../../types';
+import { ChatSession } from '@shared/types/common.types';
 import { ClientList } from './ClientList';
 
 interface ChatSidebarProps {

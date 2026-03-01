@@ -1,5 +1,5 @@
-
-import { ChatSession, ChatTemplate } from '../types';
+﻿
+import { ChatSession, ChatTemplate } from '@shared/types/common.types';
 
 export const INITIAL_WHATSAPP_CHATS: ChatSession[] = [
   {

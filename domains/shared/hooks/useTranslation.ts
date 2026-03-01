@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { translationService } from '../services/translationService';
-import { Message } from '../types';
+﻿import { useState, useEffect } from 'react';
+import { translationService } from '@shared/services/translationService';
+import { Message } from '@shared/types/common.types';
 
 export const useTranslation = () => {
     const [isAutoTranslateEnabled, setIsAutoTranslateEnabled] = useState<boolean>(() => {

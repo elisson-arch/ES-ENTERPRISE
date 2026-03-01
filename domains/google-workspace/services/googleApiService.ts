@@ -1,5 +1,5 @@
-﻿import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '../types';
-import { APP_CONFIG } from '../config/config';
+﻿import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '@shared/types/common.types';
+import { APP_CONFIG } from '@shared/config/config';
 import { organizationService } from './organizationService';
 
 const { CLIENT_ID: GOOGLE_CLIENT_ID, SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;

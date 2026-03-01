@@ -23,8 +23,8 @@ import { ToastContainer } from '../components/Notifications/ToastContainer';
 import { GlobalSearch } from '../components/UI/GlobalSearch';
 import { HelpGuide } from '../components/UI/HelpGuide';
 import { Navigation } from '../components/UI/Navigation';
-import { googleApiService } from '../services/googleApiService';
-import { useAppContext } from '../hooks/useAppContext';
+import { googleApiService } from '@google-workspace/services/googleApiService';
+import { useAppContext } from '@shared/hooks/useAppContext';
 import { HelpCircle, Key, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {

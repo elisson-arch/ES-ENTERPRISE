@@ -1,8 +1,8 @@
-
+﻿
 import { firestoreService } from './firestoreService';
-import { ChatSession, Message } from '../types';
+import { ChatSession, Message } from '@shared/types/common.types';
 import { collection, query, where, onSnapshot, orderBy, Timestamp, addDoc, updateDoc, doc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db } from '@shared/config/firebase';
 
 const CHATS_COLLECTION = 'chats';
 const MESSAGES_COLLECTION = 'messages';

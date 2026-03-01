@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import {
   Globe,
@@ -33,11 +33,11 @@ import {
   FolderOpen,
   Zap
 } from 'lucide-react';
-import { googleApiService } from '../services/googleApiService';
-import { googleSyncService } from '../services/googleSyncService';
-import { clientService } from '../services/clientService';
-import { auditLogService } from '../services/auditLogService';
-import { whatsappApiService } from '../services/whatsappApiService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
+import { googleSyncService } from '@google-workspace/services/googleSyncService';
+import { clientService } from '@clients/services/clientService';
+import { auditLogService } from '@shared/services/auditLogService';
+import { whatsappApiService } from '@whatsapp/services/whatsappApiService';
 
 type OnboardingStep = 'idle' | 'authenticating' | 'syncing_contacts' | 'creating_folders' | 'done' | 'error';
 

@@ -1,8 +1,8 @@
-
+﻿
 import React, { useRef, useEffect, useState } from 'react';
 import { Check, CheckCheck, Bot, Clock, Cloud, Info, Mic, FileText, Download, Eye, ExternalLink, Video, Languages } from 'lucide-react';
-import { Message } from '../../types';
-import { useTranslation } from '../../hooks/useTranslation';
+import { Message } from '@shared/types/common.types';
+import { useTranslation } from '../@shared/hooks/useTranslation';
 
 interface MessageListProps {
   messages: Message[];

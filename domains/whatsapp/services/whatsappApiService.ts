@@ -1,5 +1,5 @@
-
-import { Message, ChatSession } from '../types';
+﻿
+import { Message, ChatSession } from '@shared/types/common.types';
 
 /**
  * WhatsApp Business API Service v5.0

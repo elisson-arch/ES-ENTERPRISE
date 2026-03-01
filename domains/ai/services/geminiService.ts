@@ -1,5 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { APP_CONFIG } from '../config/config';
+﻿import { GoogleGenAI, Type } from "@google/genai";
+import { APP_CONFIG } from '@shared/config/config';
 
 const HVAC_SYSTEM_INSTRUCTION = APP_CONFIG.AI.SYSTEM_INSTRUCTIONS.RICARDO_IA;
 

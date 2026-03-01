@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLocation } from 'react-router';
 import {
@@ -11,10 +11,10 @@ import {
   Sun,
   Plus
 } from 'lucide-react';
-import { googleApiService } from '../../services/googleApiService';
-import { NAVIGATION_ROUTES } from '../../config/navigation';
-import { theme } from '../../config/theme';
-import { t } from '../../services/i18nService';
+import { googleApiService } from '../@google-workspace/services/googleApiService';
+import { NAVIGATION_ROUTES } from '../@shared/config/navigation';
+import { theme } from '../@shared/config/theme';
+import { t } from '../@shared/services/i18nService';
 
 interface SidebarItemProps {
   icon: any;

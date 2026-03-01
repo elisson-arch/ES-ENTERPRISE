@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { 
   Shield, 
   Fingerprint, 
@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 // Fix: Import useNavigate from react-router to resolve export error
 import { useNavigate } from 'react-router';
-import { AuditLog } from '../types';
+import { AuditLog } from '@shared/types/common.types';
 
 const mockLogs: AuditLog[] = [
   { id: '1', userId: 'u1', userName: 'Ricardo Silva', action: 'LOGIN_SUCCESS', resource: 'SGC Admin', ip: '189.12.34.56', device: 'Chrome / MacOS', timestamp: '2024-05-22 14:30', severity: 'low' },

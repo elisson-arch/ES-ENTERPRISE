@@ -1,7 +1,7 @@
-
+﻿
 import React from 'react';
 import { Search, Check, Square, CheckSquare } from 'lucide-react';
-import { ChatSession } from '../../types';
+import { ChatSession } from '@shared/types/common.types';
 
 interface ClientListProps {
   chats: ChatSession[];

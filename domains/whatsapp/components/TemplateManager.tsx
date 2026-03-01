@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo } from 'react';
 import { 
   MessageSquareQuote, 
@@ -25,7 +25,7 @@ import {
   Clock,
   Heart
 } from 'lucide-react';
-import { ChatTemplate } from '../../types';
+import { ChatTemplate } from '@shared/types/common.types';
 
 interface TemplateManagerProps {
   templates: ChatTemplate[];

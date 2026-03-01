@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { X, Bell, MessageSquare, Trello, AlertCircle, CheckCircle, Trash2, Clock, Upload, Zap, Wrench } from 'lucide-react';
-import { AppNotification, NotificationType } from '../../types';
+import { AppNotification, NotificationType } from '@shared/types/common.types';
 
 interface NotificationCenterProps {
   isOpen: boolean;

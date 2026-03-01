@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { 
   NavbarRenderer, 
@@ -7,7 +7,7 @@ import {
   PricingRenderer, 
   FooterRenderer 
 } from './Renderers';
-import { SiteDNA, SiteElement } from '../../types';
+import { SiteDNA, SiteElement } from '@shared/types/common.types';
 import { 
   ArrowUp, 
   ArrowDown, 

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
@@ -31,14 +31,14 @@ import {
   Database,
   MonitorSmartphone
 } from 'lucide-react';
-import type { SyncLog } from '../types';
-import type { Asset } from '../types';
-import { googleSyncService } from '../services/googleSyncService';
-import { clientService, Client } from '../services/clientService';
-import { seedService } from '../services/seedService';
-import { inventoryService } from '../services/inventoryService';
-import { auditService } from '../services/auditService';
-import { tenantService } from '../services/tenantService';
+import type { SyncLog } from '@shared/types/common.types';
+import type { Asset } from '@shared/types/common.types';
+import { googleSyncService } from '@google-workspace/services/googleSyncService';
+import { clientService, Client } from '@clients/services/clientService';
+import { seedService } from '@inventory/services/seedService';
+import { inventoryService } from '@inventory/services/inventoryService';
+import { auditService } from '@shared/services/auditService';
+import { tenantService } from '@auth/services/tenantService';
 
 // Mocks removidos para uso do Firestore real
 

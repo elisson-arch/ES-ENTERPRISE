@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
@@ -20,11 +20,11 @@ import {
   Wrench,
   AlertTriangle
 } from 'lucide-react';
-import type { Asset, PredictiveAlert } from '../types';
+import type { Asset, PredictiveAlert } from '@shared/types/common.types';
 
-import { inventoryService } from '../services/inventoryService';
-import { predictiveService } from '../services/predictiveService';
-import { tenantService } from '../services/tenantService';
+import { inventoryService } from '@inventory/services/inventoryService';
+import { predictiveService } from '@ai/services/predictiveService';
+import { tenantService } from '@auth/services/tenantService';
 
 const getAssetUI = (type: string) => {
   const t = type?.toLowerCase() || '';

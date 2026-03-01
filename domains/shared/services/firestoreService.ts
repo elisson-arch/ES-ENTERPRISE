@@ -1,4 +1,4 @@
-
+﻿
 import {
     collection,
     doc,
@@ -13,7 +13,7 @@ import {
     DocumentData,
     QueryConstraint
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db } from "@shared/config/firebase";
 
 export const firestoreService = {
     /**

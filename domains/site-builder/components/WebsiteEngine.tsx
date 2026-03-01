@@ -1,6 +1,6 @@
-
+﻿
 import React from 'react';
-import { SiteDNA, SiteElement } from '../../types';
+import { SiteDNA, SiteElement } from '@shared/types/common.types';
 import * as Renderers from './Renderers';
 
 interface WebsiteEngineProps {

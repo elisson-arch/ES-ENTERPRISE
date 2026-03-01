@@ -1,9 +1,9 @@
-
+﻿
 import React, { useEffect, useState } from 'react';
 import { 
   Sparkles, Stethoscope, FilePlus, CalendarClock, Zap, ClipboardList, Pencil, Trello, Clock, ChevronDown, ChevronUp, History, CreditCard, StickyNote, ListChecks, Plus, Trash2, CheckCircle2, Circle, Share2
 } from 'lucide-react';
-import { ChatSession, ChatTemplate } from '../../types';
+import { ChatSession, ChatTemplate } from '@shared/types/common.types';
 import { TemplateManager } from './TemplateManager';
 
 interface ClientCRMDetailsProps {

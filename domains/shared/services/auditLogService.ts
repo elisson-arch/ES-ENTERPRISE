@@ -1,5 +1,5 @@
-
-import { AuditLogEvent } from '../types';
+﻿
+import { AuditLogEvent } from '@shared/types/common.types';
 import { firestoreService } from './firestoreService';
 
 const COLLECTION_NAME = 'audit_logs';

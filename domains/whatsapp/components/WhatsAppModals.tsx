@@ -4,8 +4,8 @@ import {
   MessageSquare, FileText, Loader2, ShieldCheck, Clock, Globe,
   CheckCircle2, Users, ShoppingCart, Mail
 } from 'lucide-react';
-import { ChatSession, ChatTemplate } from '../../types';
-import { googleApiService } from '../../services/googleApiService';
+import { ChatSession, ChatTemplate } from '@shared/types/common.types';
+import { googleApiService } from '../@google-workspace/services/googleApiService';
 
 interface WhatsAppModalsProps {
   showAI: boolean;

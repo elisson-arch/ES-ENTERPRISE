@@ -10,10 +10,10 @@ import {
   Link2
 } from 'lucide-react';
 import { FileManager, FileData } from '../components/Drive/FileManager';
-import { googleApiService } from '../services/googleApiService';
-import { driveFileService } from '../services/driveFileService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
+import { driveFileService } from '@google-workspace/services/driveFileService';
 import { TenantDriveFileDoc } from '../types';
-import { tenantService } from '../services/tenantService';
+import { tenantService } from '@auth/services/tenantService';
 
 const DriveView = () => {
   const [searchTerm, setSearchTerm] = useState('');

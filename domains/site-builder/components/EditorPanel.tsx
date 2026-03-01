@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Settings2, Trash2, AlignLeft, AlignCenter, AlignRight, Layout, Palette, 
   Type as TypeIcon, MousePointer2, Image as ImageIcon, Sparkles, Loader2,
   Maximize2
 } from 'lucide-react';
-import { SiteElement } from '../../types';
-import { geminiService } from '../../services/geminiService';
+import { SiteElement } from '@shared/types/common.types';
+import { geminiService } from '../@ai/services/geminiService';
 
 interface EditorPanelProps {
   selectedElement: SiteElement | null;

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import {
   Zap,
@@ -14,7 +14,7 @@ import {
   LogIn,
   AlertTriangle
 } from 'lucide-react';
-import { googleApiService } from '../services/googleApiService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
 
 type AuthStatus = 'idle' | 'loading' | 'registering' | 'connecting' | 'done_new' | 'done_returning' | 'error';
 

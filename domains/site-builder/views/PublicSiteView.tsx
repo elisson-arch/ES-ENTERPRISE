@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 // Fix: Import hooks from react-router to resolve export errors
 import { useParams, useNavigate } from 'react-router';
-import { siteService } from '../services/siteService';
+import { siteService } from '@site-builder/services/siteService';
 import { Canvas } from '../components/WebBuilder/Canvas';
-import { SiteDNA } from '../types';
+import { SiteDNA } from '@shared/types/common.types';
 import { Loader2, AlertCircle, Home } from 'lucide-react';
 
 const PublicSiteView = () => {
