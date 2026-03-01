@@ -1,1 +1,0 @@
-// Arquivo deletado para consolidação na pasta views/

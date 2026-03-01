@@ -24,64 +24,64 @@
         "./*"
       ],
       "@domains/*": [
-        "./domains/*"
+        "../../domains/*"
       ],
       "@shared": [
-        "./domains/shared/index.ts"
+        "../../domains/shared/index.ts"
       ],
       "@shared/*": [
-        "./domains/shared/*"
+        "../../domains/shared/*"
       ],
       "@auth": [
-        "./domains/auth/index.ts"
+        "../../domains/auth/index.ts"
       ],
       "@auth/*": [
-        "./domains/auth/*"
+        "../../domains/auth/*"
       ],
       "@google-workspace": [
-        "./domains/google-workspace/index.ts"
+        "../../domains/google-workspace/index.ts"
       ],
       "@google-workspace/*": [
-        "./domains/google-workspace/*"
+        "../../domains/google-workspace/*"
       ],
       "@whatsapp": [
-        "./domains/whatsapp/index.ts"
+        "../../domains/whatsapp/index.ts"
       ],
       "@whatsapp/*": [
-        "./domains/whatsapp/*"
+        "../../domains/whatsapp/*"
       ],
       "@clients": [
-        "./domains/clients/index.ts"
+        "../../domains/clients/index.ts"
       ],
       "@clients/*": [
-        "./domains/clients/*"
+        "../../domains/clients/*"
       ],
       "@inventory": [
-        "./domains/inventory/index.ts"
+        "../../domains/inventory/index.ts"
       ],
       "@inventory/*": [
-        "./domains/inventory/*"
+        "../../domains/inventory/*"
       ],
       "@ai": [
-        "./domains/ai/index.ts"
+        "../../domains/ai/index.ts"
       ],
       "@ai/*": [
-        "./domains/ai/*"
+        "../../domains/ai/*"
       ],
       "@site-builder": [
-        "./domains/site-builder/index.ts"
+        "../../domains/site-builder/index.ts"
       ],
       "@site-builder/*": [
-        "./domains/site-builder/*"
+        "../../domains/site-builder/*"
       ],
       "@reports": [
-        "./domains/reports/index.ts"
+        "../../domains/reports/index.ts"
       ],
       "@reports/*": [
-        "./domains/reports/*"
+        "../../domains/reports/*"
       ],
       "@infra/*": [
-        "./infra/*"
+        "../../infra/*"
       ]
     },
     "allowImportingTsExtensions": true,

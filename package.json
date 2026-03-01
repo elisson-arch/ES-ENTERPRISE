@@ -7,10 +7,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "start": "node server.js",
-    "test": "vitest run",
+    "dev": "vite apps/web",
+    "build": "tsc -p apps/web/tsconfig.json && vite build apps/web",
+    "start": "node apps/api/server.js",
+    "test": "vitest run --config apps/web/vitest.config.ts",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
