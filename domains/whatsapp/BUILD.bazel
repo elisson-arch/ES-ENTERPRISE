@@ -1,0 +1,23 @@
+﻿# domains/whatsapp BUILD.bazel
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "whatsapp",
+    srcs = glob([
+        "**/*.ts",
+        "**/*.tsx",
+    ], exclude = ["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [
+        "//domains/shared",
+    ],
+    declaration = True,
+)
+
+ts_project(
+    name = "whatsapp_tests",
+    srcs = glob(["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [":whatsapp"],
+    testonly = True,
+)

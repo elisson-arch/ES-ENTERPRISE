@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig(({ mode }) => {
   // Use __dirname instead of process.cwd() to resolve the environment path reliably and avoid TS error
   const env = loadEnv(mode, __dirname, '');
-  
+
   return {
     base: '/',
     server: {
@@ -70,6 +70,17 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './'),
+        '@domains': path.resolve(__dirname, './domains'),
+        '@shared': path.resolve(__dirname, './domains/shared'),
+        '@auth': path.resolve(__dirname, './domains/auth'),
+        '@google-workspace': path.resolve(__dirname, './domains/google-workspace'),
+        '@whatsapp': path.resolve(__dirname, './domains/whatsapp'),
+        '@clients': path.resolve(__dirname, './domains/clients'),
+        '@inventory': path.resolve(__dirname, './domains/inventory'),
+        '@ai': path.resolve(__dirname, './domains/ai'),
+        '@site-builder': path.resolve(__dirname, './domains/site-builder'),
+        '@reports': path.resolve(__dirname, './domains/reports'),
+        '@infra': path.resolve(__dirname, './infra'),
       }
     },
     build: {
