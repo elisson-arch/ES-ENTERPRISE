@@ -1,4 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\ES\\.antigravity\\ES-ENTERPRISE",
+      "c:\\Users\\ES\\.claude\\projects\\c--Users-ES--antigravity-ES-ENTERPRISE\\memory"
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "python .claude/scripts/context-monitor.py"

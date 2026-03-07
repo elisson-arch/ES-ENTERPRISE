@@ -20,6 +20,7 @@ import SecurityView from '@auth/views/SecurityView';
 import LoginView from '@auth/views/LoginView';
 import PrivacyPolicyView from '@auth/views/PrivacyPolicyView';
 import TermsOfServiceView from '@shared/views/TermsOfServiceView';
+import Settings from '@shared/views/Settings';
 
 // ─── Shared Kernel ───────────────────────────────────────────────────────────
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
@@ -56,7 +57,7 @@ const App: React.FC = () => {
     window.addEventListener('google_auth_change', handler);
 
     const checkApiKey = async () => {
-      // No modo Cloud Run/Proxy, nÃ£o precisamos verificar chaves no window
+      // No modo Cloud Run/Proxy, não precisamos verificar chaves no window
       setHasApiKey(true);
     };
     checkApiKey();
@@ -74,7 +75,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleSelectApiKey = async () => {
-    // Agora o servidor gerencia a chave, mas mantemos o placeholder se o usuÃ¡rio quiser trocar via UI futuramente
+    // Agora o servidor gerencia a chave, mas mantemos o placeholder se o usuário quiser trocar via UI futuramente
     setHasApiKey(true);
   };
 
@@ -86,11 +87,11 @@ const App: React.FC = () => {
         <div className="max-w-3xl bg-white border border-amber-100 rounded-3xl p-8 shadow-sm">
           <div className="flex items-center gap-3 text-amber-600 mb-4">
             <ShieldAlert size={22} />
-            <h3 className="text-sm font-black uppercase tracking-widest">PermissÃ£o Insuficiente</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest">Permissão Insuficiente</h3>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Este mÃ³dulo requer permissÃµes adicionais do Google. Autorize os escopos pendentes
-            e habilite o serviÃ§o/API correspondente na conta para desbloquear.
+            Este mÃ³dulo requer permissões adicionais do Google. Autorize os escopos pendentes
+            e habilite o serviço/API correspondente na conta para desbloquear.
           </p>
         </div>
       </div>
@@ -109,9 +110,9 @@ const App: React.FC = () => {
             <Key size={40} />
           </div>
           <div className="space-y-4">
-            <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">ConfiguraÃ§Ã£o de IA</h2>
+            <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">Configuração de IA</h2>
             <p className="text-slate-500 text-sm font-medium leading-relaxed">
-              Problema de autenticaÃ§Ã£o detectado com os motores Ricardo IA.
+              Problema de autenticação detectado com os motores Ricardo IA.
             </p>
           </div>
           <button
@@ -166,6 +167,7 @@ const App: React.FC = () => {
                     <Route path="/drive" element={guardRoute('drive', <div className="p-4 md:p-6 lg:p-10"><DriveView /></div>)} />
                     <Route path="/ia" element={guardRoute('ia', <div className="p-4 md:p-6 lg:p-10"><AIView /></div>)} />
                     <Route path="/site" element={guardRoute('site', <div className="p-4 md:p-6 lg:p-10"><WebsiteBuilderView /></div>)} />
+                    <Route path="/settings" element={<div className="p-4 md:p-6 lg:p-10"><Settings /></div>} />
                   </Routes>
                 </div>
               </main>

@@ -1,8 +1,8 @@
 ﻿
-import { Client } from '@shared/types/common.types';
+import { Client } from '@clients/types/clients.types';
 import { googleApiService } from './googleApiService';
-import { clientService } from './clientService';
-import { auditLogService } from './auditLogService';
+import { clientService } from '@clients/services/clientService';
+import { auditLogService } from '@shared/services/auditLogService';
 
 /**
  * googleSyncService v3.0 - Professional Edition
@@ -24,37 +24,28 @@ export const googleSyncService = {
   },
 
   async pullFromGoogle(): Promise<any[]> {
-    // Simulação de busca real em API de Contatos do Google Workspace
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const connections = await googleApiService.fetchPeopleConnections();
 
-    return [
-      {
-        googleContactId: 'roberto_pro_001',
-        name: 'Roberto Manutenções',
-        emails: ['contato@robertomanutencoes.com.br'],
-        phones: ['(11) 97777-6666'],
-        address: 'Rua Augusta, 1200 - Consolação, SP',
-        notes: 'Lead profissional: Focar em manutenção preventiva residencial.',
-        type: 'Residencial',
-        status: 'Prospecção'
-      },
-      {
-        googleContactId: 'google_xyz123',
-        name: 'Condomínio Residencial Aurora',
-        emails: ['contato@aurora.com.br', 'financeiro@aurora.com.br'],
-        phones: ['(11) 98765-4321', '(11) 3344-5566'],
-        address: 'Av. das Flores, 450 - SP',
-        notes: 'Contrato de manutenção industrial ativo.'
-      },
-      {
-        googleContactId: 'google_hosp_002',
-        name: 'Hospital Central Mater',
-        emails: ['manutencao@centralmater.com.br'],
-        phones: ['(11) 2233-4455'],
-        address: 'Rua da Paz, 500 - Santo Amaro, SP',
-        notes: 'Troca de chillers pendente para Q3.'
-      }
-    ];
+    return connections
+      .map((person: any) => {
+        const name = person.names?.[0]?.displayName;
+        if (!name) return null;
+
+        const emails: string[] = (person.emailAddresses ?? []).map((e: any) => e.value);
+        const phones: string[] = (person.phoneNumbers ?? []).map((p: any) => p.value);
+        const org = person.organizations?.[0];
+        const address = org ? [org.name, org.location].filter(Boolean).join(' — ') : '';
+
+        return {
+          googleContactId: person.resourceName,
+          name,
+          emails,
+          phones,
+          address,
+          notes: ''
+        };
+      })
+      .filter(Boolean);
   },
 
   detectConflict(crmClient: Client, googleVersion: Partial<Client>): { hasConflict: boolean, fields: string[] } {
@@ -158,7 +149,10 @@ export const googleSyncService = {
       rootId = await googleApiService.createDriveFolder(ROOT_FOLDER);
     }
 
-    const subFolderId = await googleApiService.createDriveFolder(clientName, rootId);
+    let subFolderId = await googleApiService.findDriveFolder(clientName, rootId);
+    if (!subFolderId) {
+      subFolderId = await googleApiService.createDriveFolder(clientName, rootId);
+    }
 
     await clientService.updateClient(clientId, { drive_folder_id: subFolderId });
 

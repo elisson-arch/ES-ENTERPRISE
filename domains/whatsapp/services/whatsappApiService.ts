@@ -1,5 +1,5 @@
 ﻿
-import { Message, ChatSession } from '@shared/types/common.types';
+import { Message, ChatSession } from '@whatsapp/types/whatsapp.types';
 
 /**
  * WhatsApp Business API Service v5.0
@@ -7,9 +7,9 @@ import { Message, ChatSession } from '@shared/types/common.types';
  */
 class WhatsAppApiService {
   private config = {
-    baseUrl: localStorage.getItem('sgc_wa_url') || 'https://graph.facebook.com/v19.0',
-    token: localStorage.getItem('sgc_wa_token') || '',
-    phoneId: localStorage.getItem('sgc_wa_phone_id') || '',
+    baseUrl: sessionStorage.getItem('sgc_wa_url') || 'https://graph.facebook.com/v19.0',
+    token: sessionStorage.getItem('sgc_wa_token') || '',
+    phoneId: sessionStorage.getItem('sgc_wa_phone_id') || '',
     status: 'DISCONNECTED' as 'CONNECTED' | 'DISCONNECTED' | 'ERROR'
   };
 
@@ -88,9 +88,9 @@ class WhatsAppApiService {
   }
 
   saveConfig(newConfig: { url: string, token: string, phoneId: string }) {
-    localStorage.setItem('sgc_wa_url', newConfig.url);
-    localStorage.setItem('sgc_wa_token', newConfig.token);
-    localStorage.setItem('sgc_wa_phone_id', newConfig.phoneId);
+    sessionStorage.setItem('sgc_wa_url', newConfig.url);
+    sessionStorage.setItem('sgc_wa_token', newConfig.token);
+    sessionStorage.setItem('sgc_wa_phone_id', newConfig.phoneId);
     this.config = { ...this.config, ...newConfig };
     this.refreshStatus();
   }

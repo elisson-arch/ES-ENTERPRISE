@@ -1,8 +1,8 @@
 ﻿import { where } from 'firebase/firestore';
-import { firestoreService } from './firestoreService';
+import { firestoreService } from '@shared/services/firestoreService';
 import { googleApiService } from './googleApiService';
-import { auditService } from './auditService';
-import { TenantDriveFileDoc } from '@shared/types/common.types';
+import { auditService } from '@shared/services/auditService';
+import { TenantDriveFileDoc } from '@google-workspace/types/google-workspace.types';
 
 const collectionPath = (orgId: string) => `organizations/${orgId}/drive_files`;
 

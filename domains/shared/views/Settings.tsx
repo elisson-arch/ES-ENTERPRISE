@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useTranslation } from './hooks/useTranslation';
+import { useTranslation } from '@shared/hooks/useTranslation';
 import { Languages } from 'lucide-react';
 
 interface Scope {

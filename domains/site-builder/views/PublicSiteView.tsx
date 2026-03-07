@@ -2,7 +2,7 @@
 // Fix: Import hooks from react-router to resolve export errors
 import { useParams, useNavigate } from 'react-router';
 import { siteService } from '@site-builder/services/siteService';
-import { Canvas } from '../components/WebBuilder/Canvas';
+import { Canvas } from '../components/Canvas';
 import { SiteDNA } from '@shared/types/common.types';
 import { Loader2, AlertCircle, Home } from 'lucide-react';
 

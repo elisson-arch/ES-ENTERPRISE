@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react';
-import { ChatSidebar } from '../components/WhatsApp/ChatSidebar';
-import { ChatArea } from '../components/WhatsApp/ChatArea';
-import { ClientCRMDetails } from '../components/WhatsApp/ClientCRMDetails';
-import { WhatsAppModals } from '../components/WhatsApp/WhatsAppModals';
+import { ChatSidebar } from '../components/ChatSidebar';
+import { ChatArea } from '../components/ChatArea';
+import { ClientCRMDetails } from '../components/ClientCRMDetails';
+import { WhatsAppModals } from '../components/WhatsAppModals';
 import { useWhatsAppState } from '@whatsapp/hooks/useWhatsAppState';
 import { DEFAULT_TEMPLATES } from '@shared/services/mockData';
 import { X, Sparkles } from 'lucide-react';

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { SiteDNA, SiteElement } from '@shared/types/common.types';
 import { INITIAL_SITE_DATA } from '@whatsapp/services/mockTemplates';
-import { WebsiteEngine } from '../components/WebBuilder/WebsiteEngine';
+import { WebsiteEngine } from '../components/WebsiteEngine';
 import { siteService } from '@site-builder/services/siteService';
 import { geminiService } from '@ai/services/geminiService';
 

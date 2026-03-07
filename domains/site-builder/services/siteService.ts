@@ -1,5 +1,5 @@
 
-import { SiteDNA } from '../types';
+import { SiteDNA } from '../types/site-builder.types';
 
 const DB_KEY = 'sgc_published_sites';
 

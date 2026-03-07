@@ -5,7 +5,7 @@ import {
   CheckCircle2, Users, ShoppingCart, Mail
 } from 'lucide-react';
 import { ChatSession, ChatTemplate } from '@shared/types/common.types';
-import { googleApiService } from '../@google-workspace/services/googleApiService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
 
 interface WhatsAppModalsProps {
   showAI: boolean;

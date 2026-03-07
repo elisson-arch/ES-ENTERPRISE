@@ -48,7 +48,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const clearAllNotifications = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setNotifications([]);
     };
 
     const toggleTheme = () => setIsDarkMode(!isDarkMode);

@@ -1,6 +1,7 @@
 
-import { firestoreService } from "./firestoreService";
-import { Client } from "../types";
+import { where } from 'firebase/firestore';
+import { firestoreService } from '@shared/services/firestoreService';
+import { Client } from '../types/clients.types';
 
 export type { Client };
 
@@ -11,9 +12,7 @@ export const clientService = {
      * Obtem todos os clientes de uma organizacao
      */
     async getClientsByOrg(orgId: string): Promise<Client[]> {
-        return firestoreService.query<Client>(COLLECTION_NAME,
-            // Adicionar filtros quando necessário via QueryConstraint do Firestore
-        );
+        return firestoreService.query<Client>(COLLECTION_NAME, where('organizationId', '==', orgId));
     },
 
     /**
@@ -40,7 +39,23 @@ export const clientService = {
     /**
      * Subscreve para mudancas em tempo real na lista de clientes
      */
-    subscribeToClients(callback: (clients: Client[]) => void) {
-        return firestoreService.subscribe<Client>(COLLECTION_NAME, callback);
+    subscribeToClients(orgId: string, callback: (clients: Client[]) => void) {
+        return firestoreService.subscribe<Client>(COLLECTION_NAME, callback, where('organizationId', '==', orgId));
+    },
+
+    /**
+     * Insere ou atualiza um cliente pelo ID do contato Google.
+     */
+    async upsertByGoogleId(googleContactId: string, data: Partial<Client>, orgId: string): Promise<string> {
+        const existing = await firestoreService.query<Client>(
+            COLLECTION_NAME,
+            where('googleContactId', '==', googleContactId),
+            where('organizationId', '==', orgId)
+        );
+        if (existing.length > 0) {
+            await firestoreService.update(COLLECTION_NAME, existing[0].id, data);
+            return existing[0].id;
+        }
+        return firestoreService.add(COLLECTION_NAME, { ...data, organizationId: orgId } as Client);
     }
 };

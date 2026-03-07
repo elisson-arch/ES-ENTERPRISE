@@ -1,8 +1,10 @@
-﻿import { Client, GoogleTask, CalendarEvent, GmailMessage, SyncLog, GoogleToken, DriveFile } from '@shared/types/common.types';
+﻿import { GoogleToken, DriveFile, CalendarEvent, GmailMessage, SyncLog } from '@google-workspace/types/google-workspace.types';
 import { APP_CONFIG } from '@shared/config/config';
-import { organizationService } from './organizationService';
+import { organizationService } from '@auth/services/organizationService';
+import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
+import { auth } from '@shared/config/firebase';
 
-const { CLIENT_ID: GOOGLE_CLIENT_ID, SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;
+const { SCOPES: WORKSPACE_SCOPES } = APP_CONFIG.GOOGLE;
 
 interface UserProfile {
   name: string;
@@ -80,7 +82,10 @@ class GoogleApiService {
     });
 
     if (res.status === 401) {
-      this.revokeAccess();
+      // Limpa o token localmente sem forçar reload — a UI detecta via isAuthenticated()
+      this.token = null;
+      localStorage.removeItem('sgc_token');
+      this.notify('Sessão expirada. Por favor, faça login novamente.');
       throw new Error('Sessão expirada.');
     }
 
@@ -137,63 +142,53 @@ class GoogleApiService {
   }
 
   async loginAndAuthorize(): Promise<boolean> {
-    return new Promise((resolve) => {
-      if (!(window as any).google) {
-        this.notify('SDK Google não carregado.');
-        return resolve(false);
+    try {
+      const provider = new GoogleAuthProvider();
+      WORKSPACE_SCOPES.forEach(scope => {
+        if (scope !== 'openid') provider.addScope(scope);
+      });
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+
+      this.token = {
+        accessToken: credential?.accessToken ?? '',
+        refreshToken: '',
+        expiresAt: Date.now() + 3600 * 1000,
+        scopes: WORKSPACE_SCOPES
+      };
+
+      const { org, isNew } = await organizationService.findOrCreateOrg({
+        email: result.user.email!,
+        name: result.user.displayName ?? '',
+        picture: result.user.photoURL ?? undefined
+      });
+
+      this.userProfile = {
+        name: result.user.displayName ?? '',
+        email: result.user.email!,
+        picture: result.user.photoURL ?? '',
+        organizationId: org.id,
+        isNew
+      };
+
+      localStorage.setItem('sgc_token', JSON.stringify(this.token));
+      localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
+
+      const accessProfile = this.getAccessProfile();
+      if (!accessProfile.fullAccess) {
+        this.notify('Acesso autenticado com permissões parciais. Autorize todos os escopos solicitados para desbloqueio completo.');
       }
 
-      try {
-        const client = (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: WORKSPACE_SCOPES.join(' '),
-          callback: async (resp: any) => {
-            if (resp.error) {
-              this.notify(resp.error_description || 'Erro no Google Cloud. Use o acesso de contingência.');
-              return resolve(false);
-            }
-
-            this.token = {
-              accessToken: resp.access_token,
-              refreshToken: '',
-              expiresAt: Date.now() + resp.expires_in * 1000,
-              scopes: resp.scope.split(' ')
-            };
-
-            localStorage.setItem('sgc_token', JSON.stringify(this.token));
-            const user = await this.fetchApi('https://www.googleapis.com/oauth2/v3/userinfo');
-
-            // Encontra ou cria organização automaticamente para qualquer conta Google
-            const { org, isNew } = await organizationService.findOrCreateOrg({
-              email: user.email,
-              name: user.name,
-              picture: user.picture
-            });
-
-            this.userProfile = {
-              name: user.name,
-              email: user.email,
-              picture: user.picture,
-              organizationId: org.id,
-              isNew
-            };
-            localStorage.setItem('sgc_profile', JSON.stringify(this.userProfile));
-
-            const accessProfile = this.getAccessProfile();
-            if (!accessProfile.fullAccess) {
-              this.notify('Acesso autenticado com permissões parciais. Autorize todos os escopos solicitados para desbloqueio completo.');
-            }
-
-            this.notify();
-            resolve(true);
-          }
-        });
-        client.requestAccessToken({ prompt: 'select_account' });
-      } catch {
-        this.notify('Falha crítica no OAuth. Utilize o botão de contingência.');
-        resolve(false);
+      this.notify();
+      return true;
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        this.notify(error.message || 'Falha no login. Utilize o acesso de contingência.');
       }
-    });
+      return false;
+    }
   }
 
   isAuthenticated(scope?: string): boolean {
@@ -360,7 +355,11 @@ class GoogleApiService {
   }
 
   async requestWorkspaceAccess() { return this.loginAndAuthorize(); }
-  async revokeAccess() { localStorage.clear(); window.location.reload(); }
+  async revokeAccess() {
+    await firebaseSignOut(auth).catch(() => {});
+    localStorage.clear();
+    window.location.reload();
+  }
 
   // --- Multi-tenant sync helpers ---
 

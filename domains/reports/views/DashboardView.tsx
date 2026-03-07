@@ -2,7 +2,7 @@
 import {
   Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search, Wrench
 } from 'lucide-react';
-import { OnboardingChecklist } from '../components/UI/OnboardingChecklist';
+import { OnboardingChecklist } from '@shared/components/UI/OnboardingChecklist';
 import { OnboardingTask, CalendarEvent, Client, Asset, PredictiveAlert } from '@shared/types/common.types';
 import { googleApiService } from '@google-workspace/services/googleApiService';
 import { firestoreService } from '@shared/services/firestoreService';

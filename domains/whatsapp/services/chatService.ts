@@ -1,5 +1,5 @@
 ﻿
-import { firestoreService } from './firestoreService';
+import { firestoreService } from '@shared/services/firestoreService';
 import { ChatSession, Message } from '@shared/types/common.types';
 import { collection, query, where, onSnapshot, orderBy, Timestamp, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@shared/config/firebase';
