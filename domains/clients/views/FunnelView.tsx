@@ -91,7 +91,7 @@ const FunnelView = () => {
     setLeads(prev => prev.map(l => {
       if (l.id !== leadId) return l;
       const currentIndex = FUNNEL_STAGES.findIndex(s => s.id === l.funnelStage);
-      let nextIndex = direction === 'forward' ? currentIndex + 1 : currentIndex - 1;
+      const nextIndex = direction === 'forward' ? currentIndex + 1 : currentIndex - 1;
       
       if (nextIndex >= 0 && nextIndex < FUNNEL_STAGES.length) {
         return { 

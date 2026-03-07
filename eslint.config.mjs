@@ -4,60 +4,41 @@ import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 
 export default tseslint.config(
+    // ── Global ignores ────────────────────────────────────────────────────────
+    {
+        ignores: [
+            'node_modules/**',
+            'dist/**',
+            'infra/**',
+            '.claude/**',
+            'apps/api/google_apps_script_database.js',
+        ],
+    },
+
+    // ── Base JS + TS recommended ──────────────────────────────────────────────
     js.configs.recommended,
     ...tseslint.configs.recommended,
+
+    // ── Domain Isolation (TS/TSX files only) ──────────────────────────────────
     {
+        files: ['**/*.ts', '**/*.tsx'],
         plugins: { import: importPlugin },
         rules: {
-            // ─── Domain Isolation ────────────────────────────────────────────────
-            // shared/ cannot import FROM other domains (it's the Shared Kernel)
             'import/no-restricted-paths': [
                 'error',
                 {
                     zones: [
-                        // shared Kernel: CANNOT import from other domains
-                        {
-                            target: './domains/shared',
-                            from: './domains/auth',
-                            message: '[@shared] Cannot import from @auth. Shared Kernel has no dependencies on other domains.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/google-workspace',
-                            message: '[@shared] Cannot import from @google-workspace.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/whatsapp',
-                            message: '[@shared] Cannot import from @whatsapp.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/clients',
-                            message: '[@shared] Cannot import from @clients.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/inventory',
-                            message: '[@shared] Cannot import from @inventory.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/ai',
-                            message: '[@shared] Cannot import from @ai.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/site-builder',
-                            message: '[@shared] Cannot import from @site-builder.',
-                        },
-                        {
-                            target: './domains/shared',
-                            from: './domains/reports',
-                            message: '[@shared] Cannot import from @reports.',
-                        },
-                        // Domains CANNOT directly import from each other (must go through shared)
-                        { target: './domains/whatsapp', from: './domains/auth', message: 'Cross-domain import forbidden. Use @shared if needed.' },
+                        // Shared Kernel: zero deps on other domains
+                        { target: './domains/shared', from: './domains/auth', message: '[@shared] Cannot import from @auth.' },
+                        { target: './domains/shared', from: './domains/google-workspace', message: '[@shared] Cannot import from @google-workspace.' },
+                        { target: './domains/shared', from: './domains/whatsapp', message: '[@shared] Cannot import from @whatsapp.' },
+                        { target: './domains/shared', from: './domains/clients', message: '[@shared] Cannot import from @clients.' },
+                        { target: './domains/shared', from: './domains/inventory', message: '[@shared] Cannot import from @inventory.' },
+                        { target: './domains/shared', from: './domains/ai', message: '[@shared] Cannot import from @ai.' },
+                        { target: './domains/shared', from: './domains/site-builder', message: '[@shared] Cannot import from @site-builder.' },
+                        { target: './domains/shared', from: './domains/reports', message: '[@shared] Cannot import from @reports.' },
+                        // Cross-domain imports forbidden
+                        { target: './domains/whatsapp', from: './domains/auth', message: 'Cross-domain import forbidden: use @shared.' },
                         { target: './domains/whatsapp', from: './domains/google-workspace', message: 'Cross-domain import forbidden.' },
                         { target: './domains/whatsapp', from: './domains/clients', message: 'Cross-domain import forbidden.' },
                         { target: './domains/whatsapp', from: './domains/ai', message: 'Cross-domain import forbidden.' },
@@ -74,13 +55,33 @@ export default tseslint.config(
             ],
         },
     },
+
+    // ── Node.js env for API and CLI scripts ───────────────────────────────────
     {
-        // Apply only to TypeScript/TSX files
+        files: ['apps/api/**/*.ts', 'scripts/**/*.ts', 'scripts/**/*.js'],
+        languageOptions: {
+            globals: {
+                process: 'readonly',
+                console: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+            },
+        },
+        rules: {
+            '@typescript-eslint/no-require-imports': 'off',
+            'no-undef': 'off',
+        },
+    },
+
+    // ── Relax strict rules (large codebase, migration in progress) ────────────
+    {
         files: ['**/*.ts', '**/*.tsx'],
-        ignores: [
-            'node_modules/**',
-            'dist/**',
-            'infra/**',
-        ],
+        rules: {
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+            '@typescript-eslint/no-empty-object-type': 'warn',
+            '@typescript-eslint/no-unsafe-function-type': 'warn',
+            'no-empty': ['warn', { allowEmptyCatch: true }],
+        },
     },
 );

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": [
+            "ES2022"
+        ],
+        "outDir": "../../dist/api",
+        "rootDir": ".",
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": false,
+        "allowJs": true,
+        "noEmit": false
+    },
+    "include": [
+        "./**/*.ts"
+    ]
+}

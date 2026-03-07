@@ -7,9 +7,13 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "vite apps/web",
-    "build": "tsc -p apps/web/tsconfig.json && vite build apps/web",
-    "start": "node apps/api/server.js",
+    "dev": "concurrently -n \"API,WEB\" -c \"bgBlue,bgGreen\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:web": "vite apps/web",
+    "dev:api": "tsx watch apps/api/server.ts",
+    "build": "npm run build:api && npm run build:web",
+    "build:web": "tsc -p apps/web/tsconfig.json && vite build apps/web",
+    "build:api": "tsc -p apps/api/tsconfig.api.json",
+    "start": "node dist/api/server.js",
     "test": "vitest run --config apps/web/vitest.config.ts",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix"
@@ -30,14 +34,20 @@
     "vite-plugin-pwa": "^0.19.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/express": "^4.17.21",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.0.3",
+    "eslint-plugin-import": "^2.32.0",
     "jsdom": "^28.1.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.4.0",
+    "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   }
 }
