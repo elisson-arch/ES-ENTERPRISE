@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -19,19 +19,19 @@ const distPath = path.resolve(__dirname, '../../dist');
 // Serve arquivos estáticos gerados pelo Vite build
 app.use(express.static(distPath, {
     maxAge: '1d',
-    setHeaders: (res, filePath) => {
+    setHeaders: (res: Response, filePath: string) => {
         if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
     },
 }));
 
 // Health check para Cloud Run
-app.get('/healthz', (_req, res) => res.status(200).send('OK'));
+app.get('/healthz', (_req: Request, res: Response) => res.status(200).send('OK'));
 
 /**
  * Configuração segura: entrega Firebase config ao frontend
  * sem expor em variáveis de build estáticas.
  */
-app.get('/api/config-secure', (_req, res) => {
+app.get('/api/config-secure', (_req: Request, res: Response) => {
     res.json({
         firebase: {
             apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
@@ -48,7 +48,7 @@ app.get('/api/config-secure', (_req, res) => {
 /**
  * Proxy Gemini: mantém API_KEY no backend, nunca exposta ao cliente.
  */
-app.post('/api/ai/generate', async (req, res) => {
+app.post('/api/ai/generate', async (req: Request, res: Response) => {
     try {
         const { model, contents, config } = req.body;
 
@@ -74,7 +74,7 @@ app.post('/api/ai/generate', async (req, res) => {
 /**
  * Fallback SPA: rotas como /whatsapp ou /clientes funcionam no F5.
  */
-app.get('*', (_req, res) => {
+app.get('*', (_req: Request, res: Response) => {
     const indexPath = path.join(distPath, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
