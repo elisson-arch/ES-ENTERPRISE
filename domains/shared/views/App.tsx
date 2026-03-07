@@ -90,7 +90,7 @@ const App: React.FC = () => {
             <h3 className="text-sm font-black uppercase tracking-widest">Permissão Insuficiente</h3>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed">
-            Este mÃ³dulo requer permissões adicionais do Google. Autorize os escopos pendentes
+            Este módulo requer permissões adicionais do Google. Autorize os escopos pendentes
             e habilite o serviço/API correspondente na conta para desbloquear.
           </p>
         </div>
