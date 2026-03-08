@@ -66,7 +66,7 @@ export const siteService = {
         entityType: 'site',
         entityId: finalId,
         action: 'SITE_UPDATED',
-        after: siteData as any
+        after: siteData as Record<string, unknown>
       });
     } else {
       // Criar novo site
@@ -86,10 +86,10 @@ export const siteService = {
         entityType: 'site',
         entityId: finalId,
         action: 'SITE_PUBLISHED',
-        after: { ...siteData, id: finalId } as any
+        after: { ...siteData, id: finalId } as Record<string, unknown>
       });
     }
 
-    return { success: true, slug: siteData.slug as string, id: finalId };
+    return { success: true, slug: siteData.slug as string, id: finalId as string };
   }
 };

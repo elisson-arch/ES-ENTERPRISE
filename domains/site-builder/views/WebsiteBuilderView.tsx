@@ -78,8 +78,8 @@ const WebsiteBuilderView = () => {
             <h2 className="text-white font-black italic tracking-tighter uppercase text-xs">Architect SaaS</h2>
           </div>
           <div className="flex bg-slate-800 p-1 rounded-lg">
-            <button onClick={() => setActiveTab('visual')} className={`p-2 rounded-md transition-all ${activeTab === 'visual' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500'}`}><Palette size={14} /></button>
-            <button onClick={() => setActiveTab('code')} className={`p-2 rounded-md transition-all ${activeTab === 'code' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500'}`}><Code size={14} /></button>
+            <button title="Visualizar Visual" onClick={() => setActiveTab('visual')} className={`p-2 rounded-md transition-all ${activeTab === 'visual' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500'}`}><Palette size={14} /></button>
+            <button title="Visualizar Código" onClick={() => setActiveTab('code')} className={`p-2 rounded-md transition-all ${activeTab === 'code' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500'}`}><Code size={14} /></button>
           </div>
         </div>
 
@@ -99,6 +99,7 @@ const WebsiteBuilderView = () => {
                     onChange={(e) => setAiCommand(e.target.value)}
                   />
                   <button
+                    title="Gerar com IA"
                     onClick={handleAiAction}
                     disabled={isAiProcessing || !aiCommand}
                     className="absolute bottom-3 right-3 p-3 bg-indigo-600 text-white rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-30"
@@ -115,13 +116,13 @@ const WebsiteBuilderView = () => {
                   <div className="space-y-1.5">
                     <span className="text-[8px] font-bold text-slate-500 uppercase">Cor Primária</span>
                     <div className="flex items-center gap-2 bg-slate-800 p-2 rounded-xl border border-white/5">
-                      <input type="color" className="w-6 h-6 rounded bg-transparent border-0" value={dna.theme.primaryColor} onChange={(e) => setDna({ ...dna, theme: { ...dna.theme, primaryColor: e.target.value } })} />
+                      <input title="Cor Primária" type="color" className="w-6 h-6 rounded bg-transparent border-0" value={dna.theme.primaryColor} onChange={(e) => setDna({ ...dna, theme: { ...dna.theme, primaryColor: e.target.value } })} />
                       <span className="text-[9px] font-mono text-slate-300 uppercase">{dna.theme.primaryColor}</span>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <span className="text-[8px] font-bold text-slate-500 uppercase">Arredondamento</span>
-                    <select className="w-full bg-slate-800 border border-white/5 rounded-xl p-2 text-[9px] font-bold text-slate-300" value={dna.theme.borderRadius} onChange={(e) => setDna({ ...dna, theme: { ...dna.theme, borderRadius: e.target.value } })}>
+                    <select title="Arredondamento" className="w-full bg-slate-800 border border-white/5 rounded-xl p-2 text-[9px] font-bold text-slate-300" value={dna.theme.borderRadius} onChange={(e) => setDna({ ...dna, theme: { ...dna.theme, borderRadius: e.target.value } })}>
                       <option value="0px">Quadrado</option>
                       <option value="0.5rem">Suave</option>
                       <option value="1rem">Moderno</option>
@@ -138,6 +139,7 @@ const WebsiteBuilderView = () => {
                 <span className="text-[10px] font-black uppercase tracking-widest">DNA Code Editor</span>
               </div>
               <textarea
+                title="Editor JSON do DNA"
                 className="flex-1 bg-slate-950 border border-white/10 rounded-2xl p-6 font-mono text-[10px] text-emerald-400 leading-relaxed outline-none focus:ring-1 focus:ring-indigo-500 shadow-inner"
                 value={JSON.stringify(dna, null, 2)}
                 onChange={(e) => {
@@ -151,6 +153,7 @@ const WebsiteBuilderView = () => {
         {/* ACTIONS FOOTER */}
         <div className="p-6 border-t border-white/5 bg-slate-900/80">
           <button
+            title="Publicar Site"
             onClick={handleDeploy}
             disabled={isDeploying}
             className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/20 hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
@@ -170,8 +173,8 @@ const WebsiteBuilderView = () => {
       <main className="flex-1 bg-slate-100 flex flex-col relative">
         <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-2 bg-white/90 backdrop-blur rounded-full shadow-2xl border border-slate-200">
           <div className="flex gap-2 pr-4 border-r border-slate-200">
-            <button onClick={() => setPreviewMode('desktop')} className={`p-2 rounded-lg transition-all ${previewMode === 'desktop' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}><Monitor size={16} /></button>
-            <button onClick={() => setPreviewMode('mobile')} className={`p-2 rounded-lg transition-all ${previewMode === 'mobile' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}><Smartphone size={16} /></button>
+            <button title="Desktop Preview" onClick={() => setPreviewMode('desktop')} className={`p-2 rounded-lg transition-all ${previewMode === 'desktop' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}><Monitor size={16} /></button>
+            <button title="Mobile Preview" onClick={() => setPreviewMode('mobile')} className={`p-2 rounded-lg transition-all ${previewMode === 'mobile' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}><Smartphone size={16} /></button>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
