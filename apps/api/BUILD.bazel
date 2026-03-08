@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 
 ts_project(
     name = "api_lib",
-    srcs = ["server.ts", "google_apps_script_database.js"],
+    srcs = ["server.ts"],
     declaration = True,
     tsconfig = "//:apps/api/tsconfig.api.json",
     deps = [

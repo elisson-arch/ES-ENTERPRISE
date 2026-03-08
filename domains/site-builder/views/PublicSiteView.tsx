@@ -13,11 +13,14 @@ const PublicSiteView = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (slug) {
-      const data = siteService.getSiteBySlug(slug);
-      setSiteData(data);
+    async function fetchSite() {
+      if (slug) {
+        const data = await siteService.getSiteBySlug(slug);
+        setSiteData(data ? data.dna : null);
+      }
+      setLoading(false);
     }
-    setLoading(false);
+    fetchSite();
   }, [slug]);
 
   if (loading) {
@@ -37,7 +40,7 @@ const PublicSiteView = () => {
         </div>
         <h1 className="text-3xl font-black text-slate-800 italic uppercase tracking-tighter mb-4">404: Site Não Encontrado</h1>
         <p className="text-slate-500 max-w-sm mb-12 font-medium">O endereço solicitado não existe ou foi removido pelo proprietário.</p>
-        <button 
+        <button
           onClick={() => navigate('/')}
           className="flex items-center gap-3 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
         >
@@ -49,18 +52,18 @@ const PublicSiteView = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <Canvas 
-        siteData={siteData} 
-        sections={siteData.pages['Home'] || []} 
-        readOnly={true} 
+      <Canvas
+        siteData={siteData}
+        sections={siteData.pages['Home'] || []}
+        readOnly={true}
       />
-      
+
       {/* Badge de Créditos - Padrão SaaS */}
       <div className="fixed bottom-6 right-6 z-[999]">
-         <div className="bg-white/80 backdrop-blur-md border border-slate-200 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
-            <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Built with</span>
-            <span className="text-[10px] font-black italic uppercase text-indigo-600 tracking-tighter">SGC Pro Architect</span>
-         </div>
+        <div className="bg-white/80 backdrop-blur-md border border-slate-200 px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
+          <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Built with</span>
+          <span className="text-[10px] font-black italic uppercase text-indigo-600 tracking-tighter">SGC Pro Architect</span>
+        </div>
       </div>
     </div>
   );

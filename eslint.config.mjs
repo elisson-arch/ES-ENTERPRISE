@@ -11,7 +11,6 @@ export default tseslint.config(
             'dist/**',
             'infra/**',
             '.claude/**',
-            'apps/api/google_apps_script_database.js',
         ],
     },
 

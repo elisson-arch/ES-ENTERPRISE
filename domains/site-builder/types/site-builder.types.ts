@@ -21,3 +21,14 @@ export interface SiteDNA {
     theme: SiteTheme;
     pages: Record<string, SiteElement[]>;
 }
+
+export interface Site {
+    id?: string;
+    tenantId: string;
+    slug: string;
+    brandName: string;
+    dna: SiteDNA;
+    createdAt: string;
+    updatedAt?: string;
+    status: 'active' | 'suspended';
+}

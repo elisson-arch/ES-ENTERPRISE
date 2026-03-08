@@ -8,11 +8,14 @@ type AuditAction =
   | 'CLIENT_CONFLICT_RESOLVE'
   | 'ASSET_CREATE'
   | 'ASSET_UPDATE'
-  | 'ASSET_DELETE';
+  | 'ASSET_DELETE'
+  | 'SITE_PUBLISHED'
+  | 'SITE_UPDATED'
+  | 'SITE_SUSPENDED';
 
 interface AuditLogInput {
   organizationId: string;
-  entityType: 'client' | 'asset' | 'sync';
+  entityType: 'client' | 'asset' | 'sync' | 'site';
   entityId: string;
   action: AuditAction;
   actorId?: string;
