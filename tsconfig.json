@@ -1,5 +1,9 @@
 {
     "extends": "./apps/web/tsconfig.json",
+    "compilerOptions": {
+        "strict": true,
+        "forceConsistentCasingInFileNames": true
+    },
     "include": [
         "apps/**/*.ts",
         "apps/**/*.tsx",
