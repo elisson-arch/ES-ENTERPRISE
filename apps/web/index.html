@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0f172a">
@@ -12,53 +14,63 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Removing restrictive CSP if any was injected by server/helmet, adding basic structural styles -->
   <style>
-    :root { --app-height: 100%; }
-    html, body { 
-      height: 100%; 
-      margin: 0; 
-      padding: 0; 
-      /* Alterado para overflow-y-auto conforme Regras de Workspace para estabilidade de zoom */
-      overflow-y: auto; 
+    :root {
+      --app-height: 100%;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
       background-color: #f8fafc;
     }
+
     body {
       font-family: 'Inter', sans-serif;
       -webkit-tap-highlight-color: transparent;
       /* Suporte a áreas seguras (notches) */
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
-    #root { min-height: 100%; display: flex; flex-direction: column; }
-    ::-webkit-scrollbar { width: 0.25rem; height: 0.25rem; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 0.625rem; }
-    .custom-scrollbar::-webkit-scrollbar { width: 0.25rem; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 0.625rem; }
+
+    #root {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar {
+      width: 0.25rem;
+      height: 0.25rem;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 0.625rem;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0.25rem;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 0.625rem;
+    }
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.574.0",
-    "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "express": "https://esm.sh/express@^5.2.1",
-    "fs": "https://esm.sh/fs@^0.0.1-security",
-    "react-router": "https://esm.sh/react-router@^7.13.0"
-  }
-}
-</script>
+
 </head>
+
 <body>
   <div id="root"></div>
   <script type="module" src="./index.tsx"></script>
 </body>
+
 </html>
