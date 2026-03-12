@@ -1,7 +1,7 @@
 
 import { where } from 'firebase/firestore';
 import { firestoreService } from '@shared/services/firestoreService';
-import { Client } from '../types/clients.types';
+import { Client } from '@domains/clients/types/clients.types';
 
 export type { Client };
 

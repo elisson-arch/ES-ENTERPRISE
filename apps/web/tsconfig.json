@@ -19,70 +19,12 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
+    "baseUrl": "../..",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@domains/*": [
-        "../../domains/*"
-      ],
-      "@shared": [
-        "../../domains/shared/index.ts"
-      ],
-      "@shared/*": [
-        "../../domains/shared/*"
-      ],
-      "@auth": [
-        "../../domains/auth/index.ts"
-      ],
-      "@auth/*": [
-        "../../domains/auth/*"
-      ],
-      "@google-workspace": [
-        "../../domains/google-workspace/index.ts"
-      ],
-      "@google-workspace/*": [
-        "../../domains/google-workspace/*"
-      ],
-      "@whatsapp": [
-        "../../domains/whatsapp/index.ts"
-      ],
-      "@whatsapp/*": [
-        "../../domains/whatsapp/*"
-      ],
-      "@clients": [
-        "../../domains/clients/index.ts"
-      ],
-      "@clients/*": [
-        "../../domains/clients/*"
-      ],
-      "@inventory": [
-        "../../domains/inventory/index.ts"
-      ],
-      "@inventory/*": [
-        "../../domains/inventory/*"
-      ],
-      "@ai": [
-        "../../domains/ai/index.ts"
-      ],
-      "@ai/*": [
-        "../../domains/ai/*"
-      ],
-      "@site-builder": [
-        "../../domains/site-builder/index.ts"
-      ],
-      "@site-builder/*": [
-        "../../domains/site-builder/*"
-      ],
-      "@reports": [
-        "../../domains/reports/index.ts"
-      ],
-      "@reports/*": [
-        "../../domains/reports/*"
-      ],
-      "@infra/*": [
-        "../../infra/*"
-      ]
+      "@apps/*": ["apps/*"],
+      "@domains/*": ["domains/*"],
+      "@infra/*": ["infra/*"],
+      "@shared/*": ["domains/shared/*"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

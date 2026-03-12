@@ -1,10 +1,10 @@
-﻿
+
 import { firestoreService } from '@shared/services/firestoreService';
 import { Asset } from '@shared/types/common.types';
 import { collection, query, where, onSnapshot, runTransaction, doc, arrayUnion } from 'firebase/firestore';
 import { db } from '@shared/config/firebase';
 import { auditService } from '@shared/services/auditService';
-import { tenantService } from '@auth/services/tenantService';
+import { tenantService } from '@domains/auth/services/tenantService';
 
 const COLLECTION_NAME = 'assets';
 const resolveOrgId = (orgId?: string) => orgId || tenantService.getCurrentOrgId();

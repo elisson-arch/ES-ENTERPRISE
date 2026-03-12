@@ -1,8 +1,8 @@
 // domains/site-builder/services/siteService.ts
 import { firestoreService } from '@shared/services/firestoreService';
 import { auditService } from '@shared/services/auditService';
-import { tenantService } from '@auth/services/tenantService';
-import { Site, SiteDNA } from '../types/site-builder.types';
+import { tenantService } from '@domains/auth/services/tenantService';
+import { Site, SiteDNA } from '@domains/site-builder/types/site-builder.types';
 import { where } from 'firebase/firestore';
 
 const COLLECTION_NAME = 'sites';

@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
@@ -33,12 +33,12 @@ import {
 } from 'lucide-react';
 import type { SyncLog } from '@shared/types/common.types';
 import type { Asset } from '@shared/types/common.types';
-import { googleSyncService } from '@google-workspace/services/googleSyncService';
-import { clientService, Client } from '@clients/services/clientService';
-import { seedService } from '@inventory/services/seedService';
-import { inventoryService } from '@inventory/services/inventoryService';
+import { googleSyncService } from '@domains/google-workspace/services/googleSyncService';
+import { clientService, Client } from '@domains/clients/services/clientService';
+import { seedService } from '@domains/inventory/services/seedService';
+import { inventoryService } from '@domains/inventory/services/inventoryService';
 import { auditService } from '@shared/services/auditService';
-import { tenantService } from '@auth/services/tenantService';
+import { tenantService } from '@domains/auth/services/tenantService';
 
 // Mocks removidos para uso do Firestore real
 

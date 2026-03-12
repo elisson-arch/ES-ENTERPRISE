@@ -1,24 +1,24 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router';
 
 // ─── Views por domínio ───────────────────────────────────────────────────────
-import DashboardView from '@reports/views/DashboardView';
-import ReportsView from '@reports/views/ReportsView';
-import ClientsView from '@clients/views/ClientsView';
-import FunnelView from '@clients/views/FunnelView';
-import InventoryView from '@inventory/views/InventoryView';
+import DashboardView from '@domains/reports/views/DashboardView';
+import ReportsView from '@domains/reports/views/ReportsView';
+import ClientsView from '@domains/clients/views/ClientsView';
+import FunnelView from '@domains/clients/views/FunnelView';
+import InventoryView from '@domains/inventory/views/InventoryView';
 import DocumentsView from '@shared/views/DocumentsView';
-import AIView from '@ai/views/AIView';
-import AutomationView from '@ai/views/AutomationView';
-import WebsiteBuilderView from '@site-builder/views/WebsiteBuilderView';
-import PublicSiteView from '@site-builder/views/PublicSiteView';
-import DriveView from '@google-workspace/views/DriveView';
-import WhatsAppView from '@whatsapp/views/WhatsAppView';
+import AIView from '@domains/ai/views/AIView';
+import AutomationView from '@domains/ai/views/AutomationView';
+import WebsiteBuilderView from '@domains/site-builder/views/WebsiteBuilderView';
+import PublicSiteView from '@domains/site-builder/views/PublicSiteView';
+import DriveView from '@domains/google-workspace/views/DriveView';
+import WhatsAppView from '@domains/whatsapp/views/WhatsAppView';
 import IntegrationsView from '@shared/views/IntegrationsView';
-import SecurityView from '@auth/views/SecurityView';
-import LoginView from '@auth/views/LoginView';
-import PrivacyPolicyView from '@auth/views/PrivacyPolicyView';
+import SecurityView from '@domains/auth/views/SecurityView';
+import LoginView from '@domains/auth/views/LoginView';
+import PrivacyPolicyView from '@domains/auth/views/PrivacyPolicyView';
 import TermsOfServiceView from '@shared/views/TermsOfServiceView';
 import Settings from '@shared/views/Settings';
 
@@ -31,7 +31,7 @@ import { Navigation } from '@shared/components/UI/Navigation';
 import { useAppContext } from '@shared/hooks/useAppContext';
 
 // ─── Google Workspace ────────────────────────────────────────────────────────
-import { googleApiService } from '@google-workspace/services/googleApiService';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
 
 import { HelpCircle, Key, ShieldAlert } from 'lucide-react';
 

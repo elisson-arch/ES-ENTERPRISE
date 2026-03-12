@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Send, Bot, User, Sparkles, AlertTriangle, Lightbulb,
-  Cpu, Zap, Brain, ChevronDown, Mic, MicOff, Loader2,
-  Camera, Globe, Search, Link as LinkIcon, Image as ImageIcon,
-  CheckCircle2, AlertCircle, Wand2, Filter, Languages
+  Send, Bot, User,
+  Cpu, Zap, Brain, ChevronDown,
+  Camera, Globe, Link as LinkIcon,
+  Wand2, Languages
 } from 'lucide-react';
-import { geminiService } from '@ai/services/geminiService';
+import { geminiService } from '@domains/ai/services/geminiService';
 import { Message } from '@shared/types/common.types';
 import { useTranslation } from '@shared/hooks/useTranslation';
 import { t } from '@shared/services/i18nService';

@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
@@ -22,9 +22,9 @@ import {
 } from 'lucide-react';
 import type { Asset, PredictiveAlert } from '@shared/types/common.types';
 
-import { inventoryService } from '@inventory/services/inventoryService';
-import { predictiveService } from '@ai/services/predictiveService';
-import { tenantService } from '@auth/services/tenantService';
+import { inventoryService } from '@domains/inventory/services/inventoryService';
+import { predictiveService } from '@domains/ai/services/predictiveService';
+import { tenantService } from '@domains/auth/services/tenantService';
 
 const getAssetUI = (type: string) => {
   const t = type?.toLowerCase() || '';

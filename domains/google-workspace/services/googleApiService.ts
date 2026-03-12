@@ -1,6 +1,6 @@
-﻿import { GoogleToken, DriveFile, CalendarEvent, GmailMessage, SyncLog } from '@google-workspace/types/google-workspace.types';
+import { GoogleToken, DriveFile, CalendarEvent, GmailMessage, SyncLog } from '@domains/google-workspace/types/google-workspace.types';
 import { APP_CONFIG } from '@shared/config/config';
-import { organizationService } from '@auth/services/organizationService';
+import { organizationService } from '@domains/auth/services/organizationService';
 import { signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@shared/config/firebase';
 

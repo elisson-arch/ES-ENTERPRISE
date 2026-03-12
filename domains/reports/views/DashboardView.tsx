@@ -4,12 +4,12 @@ import {
 } from 'lucide-react';
 import { OnboardingChecklist } from '@shared/components/UI/OnboardingChecklist';
 import { OnboardingTask, CalendarEvent, Client, Asset, PredictiveAlert } from '@shared/types/common.types';
-import { googleApiService } from '@google-workspace/services/googleApiService';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
 import { firestoreService } from '@shared/services/firestoreService';
-import { predictiveService } from '@ai/services/predictiveService';
+import { predictiveService } from '@domains/ai/services/predictiveService';
 import { useAppContext } from '@shared/hooks/useAppContext';
 import { where } from 'firebase/firestore';
-import { tenantService } from '@auth/services/tenantService';
+import { tenantService } from '@domains/auth/services/tenantService';
 import { t } from '@shared/services/i18nService';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (

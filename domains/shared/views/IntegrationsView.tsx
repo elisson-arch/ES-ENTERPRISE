@@ -1,27 +1,16 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import {
   Globe,
   Calendar,
   Database,
-  RefreshCw,
-  ShieldCheck,
   Code2,
   Activity,
   MessageSquare,
-  Lock,
-  Link2,
-  ExternalLink,
-  HelpCircle,
-  Terminal,
-  Copy,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   FileSpreadsheet,
-  Settings,
-  ChevronRight,
-  Smartphone,
   MapPin,
   Bluetooth,
   Usb,
@@ -33,11 +22,11 @@ import {
   FolderOpen,
   Zap
 } from 'lucide-react';
-import { googleApiService } from '@google-workspace/services/googleApiService';
-import { googleSyncService } from '@google-workspace/services/googleSyncService';
-import { clientService } from '@clients/services/clientService';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { googleSyncService } from '@domains/google-workspace/services/googleSyncService';
+import { clientService } from '@domains/clients/services/clientService';
 import { auditLogService } from '@shared/services/auditLogService';
-import { whatsappApiService } from '@whatsapp/services/whatsappApiService';
+import { whatsappApiService } from '@domains/whatsapp/services/whatsappApiService';
 
 type OnboardingStep = 'idle' | 'authenticating' | 'syncing_contacts' | 'creating_folders' | 'done' | 'error';
 

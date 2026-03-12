@@ -1,5 +1,5 @@
 
-import { ptBR } from '../config/locales/pt-BR';
+import { ptBR } from '@shared/config/locales/pt-BR';
 
 type Dictionary = typeof ptBR;
 

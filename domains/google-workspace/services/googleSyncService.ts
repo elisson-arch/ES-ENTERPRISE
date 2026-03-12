@@ -1,7 +1,7 @@
-﻿
-import { Client } from '@clients/types/clients.types';
+
+import { Client } from '@domains/clients/types/clients.types';
 import { googleApiService } from './googleApiService';
-import { clientService } from '@clients/services/clientService';
+import { clientService } from '@domains/clients/services/clientService';
 import { auditLogService } from '@shared/services/auditLogService';
 
 /**

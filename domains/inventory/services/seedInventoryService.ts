@@ -1,5 +1,5 @@
 import { inventoryService } from './inventoryService';
-import { tenantService } from '@auth/services/tenantService';
+import { tenantService } from '@domains/auth/services/tenantService';
 
 const buildSeedAssets = (organizationId: string) => ([
     {

@@ -1,11 +1,11 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   X, Sparkles, Calendar, CalendarPlus, Upload, Check, Save,
   MessageSquare, FileText, Loader2, ShieldCheck, Clock, Globe,
   CheckCircle2, Users, ShoppingCart, Mail
 } from 'lucide-react';
 import { ChatSession, ChatTemplate } from '@shared/types/common.types';
-import { googleApiService } from '@google-workspace/services/googleApiService';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
 
 interface WhatsAppModalsProps {
   showAI: boolean;

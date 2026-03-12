@@ -1,5 +1,5 @@
-import { clientService } from '@clients/services/clientService';
-import { tenantService } from '@auth/services/tenantService';
+import { clientService } from '@domains/clients/services/clientService';
+import { tenantService } from '@domains/auth/services/tenantService';
 
 const buildSeedClients = (organizationId: string) => {
     const now = new Date().toISOString();

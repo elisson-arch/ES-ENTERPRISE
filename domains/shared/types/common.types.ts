@@ -73,8 +73,8 @@ export interface AuditLogDocV2 {
 }
 
 // ─── Domain type re-exports (backwards-compatibility) ────────────────────────
-export type { Client, Asset } from '@clients/types/clients.types';
-export type { GoogleToken, DriveFile, CalendarEvent, GmailMessage, SyncLog, TenantDriveFileDoc } from '@google-workspace/types/google-workspace.types';
-export type { ClientTask, ChatSession, Message, ChatTemplate } from '@whatsapp/types/whatsapp.types';
-export type { PredictiveAlert } from '@inventory/types/inventory.types';
-export type { SiteDNA, SiteElement } from '@site-builder/types/site-builder.types';
+export type { Client, Asset } from '@domains/clients/types/clients.types';
+export type { GoogleToken, DriveFile, CalendarEvent, GmailMessage, SyncLog, TenantDriveFileDoc } from '@domains/google-workspace/types/google-workspace.types';
+export type { ClientTask, ChatSession, Message, ChatTemplate } from '@domains/whatsapp/types/whatsapp.types';
+export type { PredictiveAlert } from '@domains/inventory/types/inventory.types';
+export type { SiteDNA, SiteElement } from '@domains/site-builder/types/site-builder.types';

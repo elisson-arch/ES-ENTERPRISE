@@ -1,14 +1,14 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { ChatSidebar } from '../components/ChatSidebar';
-import { ChatArea } from '../components/ChatArea';
-import { ClientCRMDetails } from '../components/ClientCRMDetails';
-import { WhatsAppModals } from '../components/WhatsAppModals';
-import { useWhatsAppState } from '@whatsapp/hooks/useWhatsAppState';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChatSidebar } from '@domains/whatsapp/components/ChatSidebar';
+import { ChatArea } from '@domains/whatsapp/components/ChatArea';
+import { ClientCRMDetails } from '@domains/whatsapp/components/ClientCRMDetails';
+import { WhatsAppModals } from '@domains/whatsapp/components/WhatsAppModals';
+import { useWhatsAppState } from '@domains/whatsapp/hooks/useWhatsAppState';
 import { DEFAULT_TEMPLATES } from '@shared/services/mockData';
 import { X, Sparkles } from 'lucide-react';
 import { ChatSession, ChatTemplate } from '@shared/types/common.types';
-import { chatService } from '@whatsapp/services/chatService';
-import { geminiService } from '@ai/services/geminiService';
+import { chatService } from '@domains/whatsapp/services/chatService';
+import { geminiService } from '@domains/ai/services/geminiService';
 
 const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
   const reader = new FileReader();

@@ -9,11 +9,11 @@ import {
   ArrowRight,
   Link2
 } from 'lucide-react';
-import { FileManager, FileData } from '../components/Drive/FileManager';
-import { googleApiService } from '@google-workspace/services/googleApiService';
-import { driveFileService } from '@google-workspace/services/driveFileService';
+import { FileManager, FileData } from '@domains/google-workspace/components/Drive/FileManager';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { driveFileService } from '@domains/google-workspace/services/driveFileService';
 import { TenantDriveFileDoc } from '@shared/types/common.types';
-import { tenantService } from '@auth/services/tenantService';
+import { tenantService } from '@domains/auth/services/tenantService';
 import { t } from '@shared/services/i18nService';
 
 const DriveView = () => {
