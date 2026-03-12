@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Users, TrendingUp, AlertCircle, Clock, MessageSquare, Target, Sparkles, Zap, Calendar, ListTodo, Globe, Database, Mail, CloudLightning, FileSpreadsheet, ShieldCheck, Server, Smartphone, Tablet, Monitor, ArrowRight, Play, CheckCircle2, LayoutDashboard, ClipboardList, Search, Wrench
 } from 'lucide-react';
@@ -10,6 +10,7 @@ import { predictiveService } from '@ai/services/predictiveService';
 import { useAppContext } from '@shared/hooks/useAppContext';
 import { where } from 'firebase/firestore';
 import { tenantService } from '@auth/services/tenantService';
+import { t } from '@shared/services/i18nService';
 
 const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: any) => (
   <button
@@ -140,11 +141,11 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             </h2>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 rounded-full text-white text-[0.5rem] font-black uppercase tracking-widest">
-                <Server size={10} className="text-blue-400" /> us-central1
+                <Server size={10} className="text-blue-400" /> {t('infrastructure.region')}: us-central1
               </div>
               <div className="w-1 h-1 bg-slate-300 rounded-full" />
               <div className="flex items-center gap-1 text-blue-600 text-[0.625rem] font-black uppercase tracking-tight italic">
-                {stats.clientsCount} Clientes | {stats.assetsCount} Ativos Reais
+                {stats.clientsCount} {t('infrastructure.active_clients')} | {stats.assetsCount} {t('infrastructure.managed_assets')}
               </div>
             </div>
           </div>
@@ -157,8 +158,8 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             <div className="w-11 h-11 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl"><Database size={18} /></div>
           </div>
           <div className="pr-6">
-            <p className="text-[0.5rem] font-black text-slate-400 uppercase tracking-widest mb-0.5">SGC Engine Status</p>
-            <p className="text-[0.75rem] font-black text-emerald-600 uppercase italic tracking-tighter">100% Operacional Cloud</p>
+            <p className="text-[0.5rem] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t('infrastructure.status_sgc')}</p>
+            <p className="text-[0.75rem] font-black text-emerald-600 uppercase italic tracking-tighter">{t('infrastructure.operational_cloud')}</p>
           </div>
         </div>
       </header>
@@ -170,8 +171,8 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-xl flex items-center justify-center"><Zap size={24} fill="currentColor" /></div>
                 <div>
-                  <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">Daily Agile Mission</h3>
-                  <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Ricardo IA Prioritized Stream</p>
+                  <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">{t('dashboard.daily_mission')}</h3>
+                  <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">{t('dashboard.ai_stream')}</p>
                 </div>
               </div>
               <button className="h-11 px-5 bg-slate-50 rounded-xl text-[0.5625rem] font-black text-blue-600 uppercase tracking-widest hover:bg-slate-100 transition-all">Otimizar Fila</button>
@@ -230,10 +231,10 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-white/10 mb-6">
                 <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></div>
-                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">SGC Engine Real-time</span>
+                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">{t('infrastructure.real_time_engine')}</span>
               </div>
               <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Dados em Tempo Real</h3>
-              <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Você tem {stats.clientsCount} clientes ativos e {stats.assetsCount} equipamentos sob gestão no Firestore.</p>
+              <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Você tem {stats.clientsCount} {t('infrastructure.active_clients').toLowerCase()} e {stats.assetsCount} {t('infrastructure.managed_assets').toLowerCase()} no Firestore.</p>
               {predictiveAlerts.length > 0 && (
                 <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-rose-500/20 border border-rose-500/30 rounded-2xl cursor-pointer" onClick={() => window.location.hash = '#/ativos'}>
                   <Wrench size={16} className="text-rose-400 shrink-0" />
@@ -246,7 +247,7 @@ const DashboardView: React.FC<{ onboardingTasks?: OnboardingTask[] }> = ({ onboa
           </div>
 
           <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">Status dos Robôs Regionais</h4>
+            <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">{t('infrastructure.robot_status')}</h4>
             <div className="space-y-6">
               {[
                 { name: 'Firestore Sync', status: 'Ativo', color: 'bg-emerald-500' },

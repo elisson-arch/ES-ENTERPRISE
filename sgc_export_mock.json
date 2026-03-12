@@ -1,0 +1,16 @@
+[
+    {
+        "ID_SITE": "SITE-MOCK-001",
+        "DATA_CRIACAO": "2026-03-10T20:59:47.000Z",
+        "SLUG": "meu-site-teste",
+        "MARCA": "Site Fictício 1",
+        "DNA_JSON": "{\"header\":{\"title\":\"Site de Teste\"},\"theme\":{\"primary\":\"#0055ff\"}}"
+    },
+    {
+        "ID_SITE": "SITE-MOCK-002",
+        "DATA_CRIACAO": "2026-03-10T21:00:00.000Z",
+        "SLUG": "climatizacao-pro",
+        "MARCA": "Climatização Pro",
+        "DNA_JSON": "{\"header\":{\"title\":\"Especialistas em HVAC\"},\"theme\":{\"primary\":\"#ff0000\"}}"
+    }
+]

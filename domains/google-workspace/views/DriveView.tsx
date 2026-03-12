@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Upload,
   Database,
@@ -14,6 +14,7 @@ import { googleApiService } from '@google-workspace/services/googleApiService';
 import { driveFileService } from '@google-workspace/services/driveFileService';
 import { TenantDriveFileDoc } from '@shared/types/common.types';
 import { tenantService } from '@auth/services/tenantService';
+import { t } from '@shared/services/i18nService';
 
 const DriveView = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -139,9 +140,9 @@ const DriveView = () => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3 italic tracking-tighter uppercase">
-            <Database className="text-blue-600" /> Google Drive Cloud
+            <Database className="text-blue-600" /> {t('drive.cloud_title')}
           </h2>
-          <p className="text-slate-500 text-sm font-medium">Arquivos no Drive do cliente + metadados leves no Firestore.</p>
+          <p className="text-slate-500 text-sm font-medium">{t('drive.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUploadFiles} />
@@ -171,9 +172,9 @@ const DriveView = () => {
               <ShieldAlert size={40} />
             </div>
             <div className="max-w-md mx-auto space-y-2">
-              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Falha na Sincronização</h3>
+              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">{t('drive.sync_failure')}</h3>
               <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                Não conseguimos acessar seus arquivos. Autorize os escopos de Drive e habilite o serviço/API correspondente.
+                {t('drive.sync_error_desc')}
               </p>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-[10px] font-mono text-slate-400 mt-4 break-all">
                 {error}
@@ -194,7 +195,7 @@ const DriveView = () => {
         ) : isLoading ? (
           <div className="h-64 flex flex-col items-center justify-center gap-4 text-slate-400 animate-pulse">
             <Loader2 size={40} className="animate-spin text-blue-600" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]">Escaneando Google Cloud...</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]">{t('drive.scanning_cloud')}</p>
           </div>
         ) : (
           <FileManager
@@ -211,9 +212,9 @@ const DriveView = () => {
       </div>
 
       <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest flex flex-wrap items-center gap-3">
-        <span className="flex items-center gap-1"><Link2 size={12} /> Metadados no Firestore</span>
+        <span className="flex items-center gap-1"><Link2 size={12} /> {t('drive.metadata_firestore')}</span>
         <span>•</span>
-        <span>Arquivos pesados no Drive do tenant</span>
+        <span>{t('drive.storage_info')}</span>
         <span>•</span>
         <span>Soft-delete habilitado</span>
         <span>•</span>

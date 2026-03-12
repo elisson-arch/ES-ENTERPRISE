@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Send, Bot, User, Sparkles, AlertTriangle, Lightbulb,
   Cpu, Zap, Brain, ChevronDown, Mic, MicOff, Loader2,
@@ -8,6 +8,7 @@ import {
 import { geminiService } from '@ai/services/geminiService';
 import { Message } from '@shared/types/common.types';
 import { useTranslation } from '@shared/hooks/useTranslation';
+import { t } from '@shared/services/i18nService';
 
 const AI_MODELS = [
   { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', desc: 'Raciocínio Técnico Profundo', icon: <Brain size={14} className="text-indigo-500" /> },
@@ -141,8 +142,8 @@ const AIView = () => {
             <Bot size={32} />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">ES Enterprise Technical Brain</h2>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Multi-Model Google Generative AI v5.0</p>
+            <h2 className="text-3xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">{t('ai.brain_title')}</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{t('ai.version_subtitle')}</p>
           </div>
         </div>
 
@@ -151,7 +152,7 @@ const AIView = () => {
             onClick={() => setThinkingMode(!thinkingMode)}
             className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${thinkingMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
           >
-            <Brain size={16} className={thinkingMode ? 'animate-pulse' : ''} /> Deep Thinking
+            <Brain size={16} className={thinkingMode ? 'animate-pulse' : ''} /> {t('ai.deep_thinking')}
           </button>
 
           <button
@@ -159,7 +160,7 @@ const AIView = () => {
             disabled={selectedModel.id !== 'gemini-3-flash-preview'}
             className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border disabled:opacity-20 ${useSearch ? 'bg-amber-500 text-white border-amber-400 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
           >
-            <Globe size={16} /> Search
+            <Globe size={16} /> {t('ai.search')}
           </button>
 
           <div className="relative">
@@ -238,7 +239,7 @@ const AIView = () => {
                   <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
-                  {thinkingMode ? 'Executando raciocínio profundo...' : 'Processando...'}
+                  {thinkingMode ? t('ai.typing_deep') : t('ai.typing_normal')}
                 </span>
               </div>
             </div>
@@ -249,7 +250,7 @@ const AIView = () => {
           <div className="px-10 py-4 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between animate-in slide-in-from-bottom-2">
             <div className="flex items-center gap-4">
               <div className="p-2 bg-indigo-600 text-white rounded-xl"><Wand2 size={16} /></div>
-              <p className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">Nano Banana: Modo Edição de Imagem Ativo</p>
+              <p className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">{t('ai.edit_mode_active')}</p>
             </div>
             <button onClick={() => { setIsEditingImage(false); setCurrentImageForEdit(null); }} className="text-[10px] font-black uppercase text-indigo-400 hover:text-indigo-600">Cancelar</button>
           </div>
@@ -263,7 +264,7 @@ const AIView = () => {
             </button>
             <input
               type="text"
-              placeholder={isEditingImage ? "Ex: 'Adicione um filtro retrô' ou 'Remova o fundo'..." : "Descreva uma falha técnica ou peça uma consultoria..."}
+              placeholder={isEditingImage ? t('ai.placeholder_edit') : t('ai.placeholder_normal')}
               className="flex-1 bg-transparent px-4 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
               value={input}
               onChange={e => setInput(e.target.value)}

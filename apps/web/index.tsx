@@ -27,10 +27,10 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
     render() {
         if (this.state.hasError) {
             return (
-                <div style={{ padding: '20px', background: '#ffebee', color: '#c62828', fontFamily: 'sans-serif' }}>
+                <div className="p-5 bg-red-50 text-red-800 font-sans">
                     <h2>Erro Fatal de Renderização do React</h2>
-                    <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>
-                    <pre style={{ whiteSpace: 'pre-wrap', fontSize: '11px' }}>{this.state.error?.stack}</pre>
+                    <pre className="whitespace-pre-wrap">{this.state.error?.toString()}</pre>
+                    <pre className="whitespace-pre-wrap text-[11px]">{this.state.error?.stack}</pre>
                 </div>
             );
         }
