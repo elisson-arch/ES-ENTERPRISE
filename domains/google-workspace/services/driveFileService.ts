@@ -1,8 +1,7 @@
 import { where } from 'firebase/firestore';
-import { firestoreService } from '@shared/services/firestoreService';
+import { firestoreService, auditService } from '@shared';
 import { googleApiService } from './googleApiService';
-import { auditService } from '@shared/services/auditService';
-import { TenantDriveFileDoc } from '@domains/google-workspace/types/google-workspace.types';
+import { TenantDriveFileDoc } from '@google-workspace/types/google-workspace.types';
 
 const collectionPath = (orgId: string) => `organizations/${orgId}/drive_files`;
 
@@ -18,7 +17,7 @@ export const driveFileService = {
     const uploaded = await googleApiService.uploadFileToDrive(file, folderId);
     const now = new Date().toISOString();
 
-    const payload: Omit<TenantDriveFileDoc, 'id'> = {
+    const payload: any = {
       organizationId: orgId,
       provider: 'google_drive',
       providerFileId: uploaded.id,
@@ -26,7 +25,6 @@ export const driveFileService = {
       name: uploaded.name,
       mimeType: uploaded.mimeType,
       webViewLink: uploaded.webViewLink,
-      sizeBytes: uploaded.size ? Number(uploaded.size) : undefined,
       category: context.category,
       status: 'active',
       linkedEntityType: context.linkedEntityType,
@@ -34,6 +32,10 @@ export const driveFileService = {
       createdAt: now,
       updatedAt: now
     };
+    if (uploaded.size) payload.sizeBytes = Number(uploaded.size);
+
+    // Remove undefined values
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
     const docId = await firestoreService.add(collectionPath(orgId), payload);
     await auditService.log({
@@ -54,6 +56,14 @@ export const driveFileService = {
     );
   },
 
+  async getFilesByClient(orgId: string, clientId: string): Promise<TenantDriveFileDoc[]> {
+    return firestoreService.query<TenantDriveFileDoc>(
+      collectionPath(orgId),
+      where('linkedEntityId', '==', clientId),
+      where('status', '==', 'active')
+    );
+  },
+
   async refreshFromDrive(orgId: string): Promise<number> {
     const remoteFiles = await googleApiService.listFiles();
     let upserted = 0;
@@ -64,32 +74,33 @@ export const driveFileService = {
         where('providerFileId', '==', file.id)
       );
 
-      const patch = {
+      const patch: any = {
         name: file.name,
         mimeType: file.mimeType,
         webViewLink: file.webViewLink,
-        sizeBytes: file.size ? Number(file.size) : undefined,
         updatedAt: new Date().toISOString(),
         status: 'active' as const
       };
+      if (file.size) patch.sizeBytes = Number(file.size);
 
       if (matches.length > 0) {
         await firestoreService.update(collectionPath(orgId), matches[0].id, patch);
       } else {
         const now = new Date().toISOString();
-        await firestoreService.add(collectionPath(orgId), {
+        const newDoc: any = {
           organizationId: orgId,
           provider: 'google_drive',
           providerFileId: file.id,
           name: file.name,
           mimeType: file.mimeType,
           webViewLink: file.webViewLink,
-          sizeBytes: file.size ? Number(file.size) : undefined,
           category: 'company',
           status: 'active',
           createdAt: now,
           updatedAt: now
-        });
+        };
+        if (file.size) newDoc.sizeBytes = Number(file.size);
+        await firestoreService.add(collectionPath(orgId), newDoc);
       }
       upserted += 1;
     }

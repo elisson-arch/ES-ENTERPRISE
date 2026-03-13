@@ -11,16 +11,19 @@ import {
   AlertCircle, 
   Sparkles,
   CheckCircle2,
-  FolderPlus,
   Wrench,
   User,
   MessageSquare,
-  DollarSign
+  DollarSign,
+  Zap
 } from 'lucide-react';
 import { ChatSession } from '@shared/types/common.types';
 import { useAppContext } from '@shared/hooks/useAppContext';
-import { chatService } from '@domains/whatsapp/services/chatService';
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { chatService } from '@whatsapp/services/chatService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
+import { googleSyncService } from '@google-workspace/services/googleSyncService';
+import confetti from 'canvas-confetti';
+import { theme2026 } from '@shared/config/theme';
 
 const FUNNEL_STAGES = [
   { id: 'Prospecção', color: 'bg-blue-500', label: 'Prospecção', icon: Search },
@@ -34,6 +37,7 @@ const FunnelView = () => {
   const [leads, setLeads] = useState<ChatSession[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const { addNotification } = useAppContext();
   const orgId = googleApiService.getUserProfile()?.organizationId || 'org-123';
   const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -74,12 +78,42 @@ const FunnelView = () => {
       });
 
       if (targetStage === 'Fechado') {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#10b981', '#6366f1', '#f59e0b']
+        });
         addNotification({
           type: 'success',
           title: 'Negócio Fechado! 🎉',
-          description: `Ricardo IA sugere criar pasta no Drive para ${lead.clientName}.`,
+          description: `Iniciando automação: Criando pasta no Drive para ${lead.clientName}...`,
           priority: 'high'
         });
+
+        try {
+          const userId = googleApiService.getUserProfile()?.email || 'user-123';
+          await googleSyncService.ensureDriveFolderStructure(
+            lead.clientId,
+            lead.clientName,
+            orgId,
+            userId
+          );
+          addNotification({
+            type: 'success',
+            title: 'Drive Sincronizado',
+            description: `Pasta mestre criada para ${lead.clientName} com sucesso.`,
+            priority: 'low'
+          });
+        } catch (err) {
+          console.error('Erro ao criar pasta no Drive:', err);
+          addNotification({
+            type: 'predictive',
+            title: 'Aviso de Automação',
+            description: `A pasta no Drive para ${lead.clientName} não pôde ser criada automaticamente.`,
+            priority: 'high'
+          });
+        }
       }
     } catch (error: unknown) {
       console.error('Erro ao mover lead:', error);
@@ -92,31 +126,10 @@ const FunnelView = () => {
     }
   };
 
-  const handleCreateFolder = async (clientName: string) => {
-    try {
-      const parentId = await googleApiService.ensureTenantDriveFolder(orgId);
-      await googleApiService.createDriveFolder(clientName, parentId);
-      addNotification({
-        type: 'success',
-        title: 'Pasta Criada',
-        description: `Pasta para ${clientName} criada com sucesso no Google Drive.`,
-        priority: 'medium'
-      });
-    } catch (error: unknown) {
-      console.error('Erro ao criar pasta:', error);
-      addNotification({
-        type: 'predictive',
-        title: 'Erro no Google Drive',
-        description: 'Não foi possível criar a pasta do cliente.',
-        priority: 'high'
-      });
-    }
-  };
-
-  const onDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number; y: number } }, leadId: string) => {
+  const onDragEnd = (_event: any, info: { point: { x: number; y: number } }, leadId: string) => {
+    setActiveDragId(null);
     const { x, y } = info.point;
     
-    // Find which column the drop happened in
     let targetStageId = null;
     for (const stage of FUNNEL_STAGES) {
       const rect = columnRefs.current[stage.id]?.getBoundingClientRect();
@@ -135,7 +148,7 @@ const FunnelView = () => {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Sincronizando Funil...</p>
         </div>
       </div>
@@ -143,51 +156,44 @@ const FunnelView = () => {
   }
 
   return (
-    <div className="h-full flex flex-col gap-6 overflow-hidden">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+    <div className="h-full flex flex-col gap-6 overflow-hidden p-6 bg-slate-50/30">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-[2.5rem] font-black text-slate-800 flex items-center gap-4 tracking-tighter italic uppercase leading-none">
-            <Trello className="text-blue-600 w-10 h-10" /> Funil de Vendas
+          <h2 className="text-[2.5rem] font-black text-slate-900 flex items-center gap-4 tracking-tighter italic uppercase leading-none">
+            <Trello className="text-indigo-600 w-10 h-10" /> Funil de Vendas
           </h2>
           <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Gestão Visual & Inteligência Preditiva</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex -space-x-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="w-10 h-10 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm">
-                T{i}
-              </div>
-            ))}
-          </div>
-          <button className="h-14 bg-slate-900 text-white px-8 rounded-[1.5rem] font-black text-[0.75rem] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-xl shadow-slate-200 group">
+          <button className={`${theme2026.gradients.primary} h-14 text-white px-8 rounded-[1.5rem] font-black text-[0.75rem] uppercase tracking-widest flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-xl shadow-indigo-500/20 group`}>
             <Plus size={18} className="group-hover:rotate-90 transition-transform" /> Novo Lead
           </button>
         </div>
       </header>
 
-      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 mx-2">
+      <div className={`${theme2026.glass} p-4 rounded-[2.5rem] border-white/40 shadow-mid flex flex-col md:flex-row gap-4`}>
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
             type="text" 
             placeholder="Buscar por cliente, empresa ou serviço..."
-            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.25rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-600"
+            className="w-full pl-12 pr-6 py-4 bg-white/50 border border-white/60 rounded-[1.25rem] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-slate-600 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center justify-center gap-3 px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.25rem] text-slate-600 hover:bg-white hover:shadow-md transition-all font-black text-[0.625rem] uppercase tracking-widest">
-            <Filter size={18} /> Filtros Avançados
+          <button className="flex items-center justify-center gap-3 px-6 py-4 bg-white/50 border border-white/60 rounded-[1.25rem] text-slate-600 hover:bg-white hover:shadow-md transition-all font-black text-[0.625rem] uppercase tracking-widest">
+            <Filter size={18} /> Filtros
           </button>
-          <div className="flex items-center gap-2 px-6 py-4 bg-blue-50 rounded-[1.25rem] border border-blue-100">
-            <Sparkles size={18} className="text-blue-600 animate-pulse" />
-            <span className="text-[0.625rem] font-black text-blue-600 uppercase tracking-widest italic">Ricardo IA Ativo</span>
+          <div className="flex items-center gap-2 px-6 py-4 bg-indigo-50 rounded-[1.25rem] border border-indigo-100">
+            <Sparkles size={18} className="text-indigo-600 animate-pulse" />
+            <span className="text-[0.625rem] font-black text-indigo-600 uppercase tracking-widest italic">Ricardo IA Ativo</span>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-8 px-2 no-scrollbar">
+      <div className="flex-1 flex gap-6 overflow-x-auto pb-8 no-scrollbar">
         {FUNNEL_STAGES.map(stage => {
           const stageLeads = filteredLeads.filter(l => l.funnelStage === stage.id);
           const totalValue = stageLeads.length * 3200;
@@ -196,7 +202,9 @@ const FunnelView = () => {
             <div 
               key={stage.id} 
               ref={el => columnRefs.current[stage.id] = el}
-              className="w-[22rem] flex-shrink-0 flex flex-col bg-slate-50/50 rounded-[3rem] border border-slate-200/40 p-4 h-full"
+              className={`w-[22rem] flex-shrink-0 flex flex-col rounded-[3rem] border p-4 h-full transition-all duration-300 ${
+                activeDragId ? 'bg-indigo-50/40 border-indigo-200/50 scale-[0.98]' : 'bg-slate-50/50 border-slate-200/40'
+              }`}
             >
               <div className="flex justify-between items-center px-4 mb-6">
                 <div className="flex items-center gap-3">
@@ -228,25 +236,30 @@ const FunnelView = () => {
                         key={lead.id}
                         drag
                         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                        dragElastic={0.7}
+                        dragElastic={1}
+                        onDragStart={() => setActiveDragId(lead.id!)}
                         onDragEnd={(e, info) => onDragEnd(e, info, lead.id!)}
-                        whileDrag={{ scale: 1.05, zIndex: 50, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+                        whileDrag={{ 
+                          scale: 1.1, 
+                          rotate: 2, 
+                          zIndex: 50, 
+                          boxShadow: "0 25px 50px -12px rgba(99, 102, 241, 0.25)" 
+                        }}
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                        className={`bg-white p-6 rounded-[2rem] shadow-sm border-2 transition-all cursor-grab active:cursor-grabbing group relative ${
-                          isStale ? 'border-rose-100 bg-rose-50/30' : 'border-white hover:border-blue-100 hover:shadow-xl'
+                        className={`bg-white p-6 rounded-[2.5rem] shadow-mid border-2 transition-all cursor-grab active:cursor-grabbing group relative ${
+                          isStale ? 'border-rose-100 bg-rose-50/30' : 'border-white hover:border-indigo-100 hover:shadow-xl'
                         }`}
                       >
                         <button className="absolute top-6 right-6 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
                           <MoreVertical size={18} />
                         </button>
 
-                        {/* Bento Grid Card Layout */}
                         <div className="grid grid-cols-2 gap-3">
                           <div className="col-span-2 flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${lead.clientType === 'Comercial' ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
+                              <div className={`w-2 h-2 rounded-full ${lead.clientType === 'Comercial' ? 'bg-indigo-500' : 'bg-amber-500'}`}></div>
                               <span className="text-[0.5rem] font-black uppercase text-slate-400 tracking-widest">{lead.clientType}</span>
                             </div>
                             {isStale && (
@@ -258,7 +271,7 @@ const FunnelView = () => {
                           </div>
                           
                           <div className="col-span-2">
-                            <h5 className="font-black text-slate-800 text-[1rem] leading-tight line-clamp-2 italic tracking-tighter uppercase">{lead.clientName}</h5>
+                            <h5 className="font-black text-slate-900 text-[1rem] leading-tight line-clamp-2 italic tracking-tighter uppercase">{lead.clientName}</h5>
                           </div>
 
                           <div className="bg-slate-50 p-3 rounded-2xl flex flex-col gap-1">
@@ -283,38 +296,11 @@ const FunnelView = () => {
                               {aging === 0 ? 'Hoje' : `${aging}d parado`}
                             </div>
                             <div className="flex -space-x-2">
-                              <div className="w-6 h-6 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600">
+                              <div className="w-6 h-6 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[8px] font-black text-indigo-600">
                                 <User size={10} />
                               </div>
                             </div>
                           </div>
-
-                          {lead.funnelStage === 'Fechado' && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="col-span-2 mt-2 p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col gap-2"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
-                                  <FolderPlus size={16} />
-                                </div>
-                                <div>
-                                  <p className="text-[0.5rem] font-black text-emerald-700 uppercase tracking-widest">Ricardo IA Sugere:</p>
-                                  <p className="text-[0.625rem] font-bold text-emerald-600">Criar pasta no Drive</p>
-                                </div>
-                              </div>
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCreateFolder(lead.clientName || 'Cliente Sem Nome');
-                                }}
-                                className="w-full py-2 bg-emerald-600 text-white rounded-xl text-[0.5rem] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
-                              >
-                                Executar Agora
-                              </button>
-                            </motion.div>
-                          )}
                         </div>
                       </motion.div>
                     );
@@ -322,11 +308,19 @@ const FunnelView = () => {
                 </AnimatePresence>
 
                 {stageLeads.length === 0 && (
-                  <div className="h-40 flex flex-col items-center justify-center border-4 border-dashed border-slate-200 rounded-[2.5rem] opacity-30 group hover:opacity-100 hover:border-blue-200 transition-all">
-                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-3 group-hover:scale-110 transition-transform">
-                      <Plus size={24} />
+                  <div className={`h-40 flex flex-col items-center justify-center border-4 border-dashed rounded-[2.5rem] transition-all duration-500 ${
+                    activeDragId ? 'border-indigo-400 bg-indigo-50/50 scale-105' : 'border-slate-200 opacity-30'
+                  }`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform ${
+                      activeDragId ? 'bg-indigo-500 text-white scale-110 animate-bounce' : 'bg-slate-100 text-slate-400'
+                    }`}>
+                      {activeDragId ? <Zap size={24} /> : <Plus size={24} />}
                     </div>
-                    <p className="text-[0.625rem] font-black uppercase tracking-[0.3em] text-slate-400">Arraste para cá</p>
+                    <p className={`text-[0.625rem] font-black uppercase tracking-[0.3em] ${
+                      activeDragId ? 'text-indigo-600' : 'text-slate-400'
+                    }`}>
+                      {activeDragId ? 'Solte aqui' : 'Arraste para cá'}
+                    </p>
                   </div>
                 )}
               </div>

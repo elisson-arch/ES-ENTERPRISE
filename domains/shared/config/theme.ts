@@ -1,4 +1,18 @@
 
+export const theme2026 = {
+  glass: "bg-white/70 backdrop-blur-xl border border-white/20 shadow-glass",
+  depth: {
+    low: "shadow-sm",
+    mid: "shadow-lg shadow-indigo-500/5",
+    high: "shadow-2xl shadow-slate-900/10",
+  },
+  gradients: {
+    primary: "bg-gradient-to-br from-indigo-600 to-violet-700",
+    success: "bg-gradient-to-br from-emerald-500 to-teal-600",
+    warning: "bg-gradient-to-br from-amber-400 to-orange-500",
+  }
+};
+
 export const theme = {
     colors: {
         primary: "#2563eb", // blue-600

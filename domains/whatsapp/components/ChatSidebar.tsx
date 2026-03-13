@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState } from 'react';
 import { Search, Filter, Calendar, Tag, Briefcase, Trash2, MailOpen, MessageSquare, Clock, CheckSquare, Layers, Archive, Check, Users, RefreshCw, Cloud } from 'lucide-react';
 import { ChatSession } from '@shared/types/common.types';
@@ -35,7 +35,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
-    <div className="w-80 border-r border-slate-200 flex flex-col bg-slate-50/50 h-full shrink-0">
+    <div className="w-full border-r border-slate-200 flex flex-col bg-slate-50/50 h-full shrink-0">
       <div className="p-4 bg-white border-b border-slate-200 space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-black text-slate-800 tracking-tighter uppercase text-[10px]">WhatsApp CRM</h2>

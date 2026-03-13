@@ -1,5 +1,6 @@
-﻿// index.ts — inventory barrel (auto-gerado)
-export * from './services/inventoryService';
-export * from './services/seedInventoryService';
+// index.ts — inventory barrel
+export { default as InventoryView } from './views/InventoryView';
+export { default as TaskManagementView } from './views/TaskManagementView';
+export * from './services/taskService';
 export * from './services/seedService';
-export * from './views/InventoryView';
+export * from './services/inventoryService';

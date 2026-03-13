@@ -5,7 +5,7 @@ import {
   CheckCircle2, Users, ShoppingCart, Mail
 } from 'lucide-react';
 import { ChatSession, ChatTemplate } from '@shared/types/common.types';
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { googleApiService } from '@google-workspace';
 
 interface WhatsAppModalsProps {
   showAI: boolean;
@@ -22,7 +22,7 @@ interface WhatsAppModalsProps {
   onFileUpload: (files: File[]) => void;
   showNewTemplate: boolean;
   onCloseNewTemplate: () => void;
-  onCreateTemplate: (t: { title: string, content: string, category: any, isApproved: boolean }) => void;
+  onCreateTemplate: (t: { title: string, content: string, category: string, isApproved: boolean }) => void;
   showEditTemplate: boolean;
   onCloseEditTemplate: () => void;
   templateToEdit: ChatTemplate | null;
@@ -37,6 +37,8 @@ interface WhatsAppModalsProps {
   onSendQuote: (quoteText: string) => void;
   lightboxImage: string | null;
   onCloseLightbox: () => void;
+  scheduleInitialTitle?: string;
+  scheduleInitialDesc?: string;
 }
 
 export const WhatsAppModals: React.FC<WhatsAppModalsProps> = ({
@@ -47,9 +49,15 @@ export const WhatsAppModals: React.FC<WhatsAppModalsProps> = ({
   showEditTemplate, onCloseEditTemplate, templateToEdit, onUpdateTemplate,
   showEditClient, onCloseEditClient, clientData, onSaveClient,
   onConfirmSchedule, showQuote, onCloseQuote, onSendQuote,
-  lightboxImage, onCloseLightbox
+  lightboxImage, onCloseLightbox,
+  scheduleInitialTitle, scheduleInitialDesc
 }) => {
-  const [newT, setNewT] = useState({ title: '', content: '', category: 'Saudação' as any, isApproved: false });
+  const [newT, setNewT] = useState<{
+    title: string;
+    content: string;
+    category: ChatTemplate['category'];
+    isApproved: boolean;
+  }>({ title: '', content: '', category: 'Saudação', isApproved: false });
   const [isScheduled, setIsScheduled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -68,11 +76,11 @@ export const WhatsAppModals: React.FC<WhatsAppModalsProps> = ({
 
   useEffect(() => {
     if (showSchedule && clientData) {
-      setScheduleTitle(`Visita Técnica: ${clientData.clientName}`);
-      setScheduleDesc(`Visita técnica agendada via CRM.\n\nEndereço: ${clientData.clientAddress || 'Não informado'}\nTelefone: ${clientData.clientPhone || 'Não informado'}\nServiço: ${clientData.serviceType || 'Geral'}`);
+      setScheduleTitle(scheduleInitialTitle || `Visita Técnica: ${clientData.clientName}`);
+      setScheduleDesc(scheduleInitialDesc || `Visita técnica agendada via CRM.\n\nEndereço: ${clientData.clientAddress || 'Não informado'}\nTelefone: ${clientData.clientPhone || 'Não informado'}\nServiço: ${clientData.serviceType || 'Geral'}`);
       setIsScheduled(false);
     }
-  }, [showSchedule, clientData]);
+  }, [showSchedule, clientData, scheduleInitialTitle, scheduleInitialDesc]);
 
   useEffect(() => {
     if (templateToEdit) {
@@ -333,7 +341,11 @@ export const WhatsAppModals: React.FC<WhatsAppModalsProps> = ({
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Categoria</label>
-                  <select className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700" value={newT.category} onChange={e => setNewT({ ...newT, category: e.target.value as any })}>
+                  <select 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700" 
+                    value={newT.category} 
+                    onChange={e => setNewT({ ...newT, category: e.target.value as ChatTemplate['category'] })}
+                  >
                     <option value="Saudação">Saudação</option>
                     <option value="Orçamento">Orçamento</option>
                     <option value="Manutenção">Manutenção</option>

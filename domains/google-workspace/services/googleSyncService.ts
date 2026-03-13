@@ -1,8 +1,8 @@
 
-import { Client } from '@domains/clients/types/clients.types';
+import { Client } from '@clients/types/clients.types';
 import { googleApiService } from './googleApiService';
-import { clientService } from '@domains/clients/services/clientService';
-import { auditLogService } from '@shared/services/auditLogService';
+import { clientService } from '@clients';
+import { auditLogService } from '@shared';
 
 /**
  * googleSyncService v3.0 - Professional Edition

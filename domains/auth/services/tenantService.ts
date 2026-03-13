@@ -1,4 +1,4 @@
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { googleApiService } from '@google-workspace';
 
 const STORAGE_KEY = 'es_active_org_id';
 const FALLBACK_ORG_ID = 'org_123';

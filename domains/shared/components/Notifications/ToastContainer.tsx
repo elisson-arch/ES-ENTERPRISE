@@ -1,10 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { X, MessageSquare, Trello, AlertCircle, CheckCircle, Upload, Wrench } from 'lucide-react';
-import { AppNotification, NotificationType } from '@shared/types/common.types';
+import { AppNotification, NotificationType, useAppContext } from '@shared';
 
 interface ToastContainerProps {
-  toasts: AppNotification[];
-  onDismiss: (id: string) => void;
+  toasts?: AppNotification[];
+  onDismiss?: (id: string) => void;
 }
 
 const getToastStyles = (type: NotificationType) => {
@@ -19,7 +19,12 @@ const getToastStyles = (type: NotificationType) => {
   }
 };
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) => {
+export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts: propToasts, onDismiss: propOnDismiss }) => {
+  const { notifications, markAsRead } = useAppContext();
+  
+  const toasts = propToasts ?? notifications.filter(n => !n.isRead);
+  const onDismiss = propOnDismiss ?? markAsRead;
+
   return (
     <div className="fixed bottom-6 right-6 z-[2000] flex flex-col gap-3 pointer-events-none">
       {toasts.map((toast) => {

@@ -27,14 +27,38 @@ interface AuditLogInput {
 
 const COLLECTION_NAME = 'audit_logs';
 
+const cleanUndefined = (obj: any): any => {
+  if (obj === undefined) return undefined;
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(cleanUndefined).filter(v => v !== undefined);
+  }
+  
+  const cleaned: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const val = cleanUndefined(obj[key]);
+      if (val !== undefined) {
+        cleaned[key] = val;
+      }
+    }
+  }
+  return cleaned;
+};
+
 export const auditService = {
   async log(input: AuditLogInput): Promise<string> {
-    const payload = {
+    const payload: any = {
       ...input,
       actorId: input.actorId || 'system',
       actorName: input.actorName || 'ES Enterprise',
       createdAt: new Date().toISOString()
     };
-    return firestoreService.add(COLLECTION_NAME, payload);
+    
+    // Remove undefined values recursively to prevent Firestore errors
+    const cleanedPayload = cleanUndefined(payload);
+
+    return firestoreService.add(COLLECTION_NAME, cleanedPayload);
   }
 };

@@ -23,7 +23,7 @@ interface GlobalSearchProps {
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const history = ['Condomínio Aurora', 'Orçamento #002', 'Limpeza AC'];
-  const [driveResults, setDriveResults] = useState<any[]>([]);
+  const [driveResults, setDriveResults] = useState<{ id: string; name: string; size: string; date: string }[]>([]);
   const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {

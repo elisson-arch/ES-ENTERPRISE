@@ -10,14 +10,14 @@ import {
   Server, ShieldCheck
 } from 'lucide-react';
 import { Client, Asset, PredictiveAlert } from '@shared/types/common.types';
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { googleApiService } from '@google-workspace/services/googleApiService';
 import { firestoreService } from '@shared/services/firestoreService';
-import { predictiveService } from '@domains/ai/services/predictiveService';
-import { taskService } from '@domains/inventory/services/taskService';
-import { OrderDocV2 } from '@domains/inventory/types/inventory.types';
+import { predictiveService } from '@ai/services/predictiveService';
+import { taskService } from '@inventory/services/taskService';
+import { OrderDocV2 } from '@inventory/types/inventory.types';
 import { useAppContext } from '@shared/hooks/useAppContext';
 import { where } from 'firebase/firestore';
-import { tenantService } from '@domains/auth/services/tenantService';
+import { tenantService } from '@auth/services/tenantService';
 
 // ─── DADOS DE SIMULAÇÃO (MOCK) ───────────────────────────────────────────────
 const revenueDataMock = [

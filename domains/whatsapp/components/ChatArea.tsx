@@ -1,4 +1,4 @@
-﻿
+
 import React from 'react';
 import { Bot, PanelRightOpen } from 'lucide-react';
 import { ChatSession } from '@shared/types/common.types';
@@ -19,7 +19,6 @@ interface ChatAreaProps {
   onOpenUpload: () => void;
   onToggleAI: (chat: ChatSession) => void;
   onArchiveConversation: (chat: ChatSession) => void;
-  onImageClick: (url: string) => void;
   onBack: () => void;
   isMobileView: boolean;
   showChatOnMobile: boolean;
@@ -38,7 +37,7 @@ interface ChatAreaProps {
 export const ChatArea: React.FC<ChatAreaProps> = ({
   selectedChat, onSendMessage, inputText, onInputTextChange, isTyping, isSending,
   isCallActive, callTimer, onStartCall, onStopCall, onExport, onOpenUpload,
-  onToggleAI, onArchiveConversation, onImageClick, onBack, isMobileView, showChatOnMobile,
+  onToggleAI, onArchiveConversation, onBack, isMobileView, showChatOnMobile,
   pendingSuggestion, onDiscardSuggestion, onEditSuggestion, onSendSuggestion,
   internalSearchTerm, onInternalSearchChange, onOpenDetails,
   isRecording, onStartRecording, onStopRecording
@@ -71,7 +70,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             onInternalSearch={() => {}}
             internalSearchTerm={internalSearchTerm}
             onInternalSearchChange={onInternalSearchChange}
-            onImageClick={onImageClick}
             onBack={onBack}
             showBackButton={isMobileView}
             pendingSuggestion={pendingSuggestion}

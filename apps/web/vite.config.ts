@@ -73,6 +73,14 @@ export default defineConfig(({ mode }) => {
         '@domains': path.resolve(__dirname, '../../domains'),
         '@infra': path.resolve(__dirname, '../../infra'),
         '@shared': path.resolve(__dirname, '../../domains/shared'),
+        '@whatsapp': path.resolve(__dirname, '../../domains/whatsapp'),
+        '@inventory': path.resolve(__dirname, '../../domains/inventory'),
+        '@reports': path.resolve(__dirname, '../../domains/reports'),
+        '@clients': path.resolve(__dirname, '../../domains/clients'),
+        '@auth': path.resolve(__dirname, '../../domains/auth'),
+        '@ai': path.resolve(__dirname, '../../domains/ai'),
+        '@google-workspace': path.resolve(__dirname, '../../domains/google-workspace'),
+        '@site-builder': path.resolve(__dirname, '../../domains/site-builder'),
       }
     },
     build: {

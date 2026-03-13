@@ -7,24 +7,22 @@ import {
   Loader2,
   Lock,
   ArrowRight,
-  Terminal,
   Database,
   CheckCircle2,
   UserPlus,
-  LogIn,
   AlertTriangle
 } from 'lucide-react';
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
+import { googleApiService } from '@google-workspace';
 
 type AuthStatus = 'idle' | 'loading' | 'registering' | 'connecting' | 'done_new' | 'done_returning' | 'error';
 
-const LoginView: React.FC<{ onLoginSuccess: () => void }> = ({ onLoginSuccess }) => {
+const LoginView: React.FC<{ onLoginSuccess?: () => void }> = ({ onLoginSuccess }) => {
   const [status, setStatus] = useState<AuthStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: CustomEvent) => {
       if (e.detail?.error) {
         setError(e.detail.error);
         setStatus('error');

@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState } from 'react';
 import { MoreVertical, Bot, PhoneCall, FileDown, Archive, Search, X, ChevronLeft, Sparkles } from 'lucide-react';
 import { ChatSession } from '@shared/types/common.types';
@@ -26,7 +26,6 @@ interface MessageWindowProps {
   setShowOptions: (val: boolean) => void;
   onInternalSearch: (val: string) => void;
   internalSearchTerm: string;
-  onImageClick: (url: string) => void;
   onBack?: () => void;
   showBackButton?: boolean;
   pendingSuggestion: string | null;
@@ -44,7 +43,7 @@ export const MessageWindow: React.FC<MessageWindowProps> = ({
   isCallActive, callTimer, onStartCall, onStopCall, onExport, onOpenUpload,
   onToggleAI, onArchiveConversation, showOptions, setShowOptions, 
   internalSearchTerm, 
-  onImageClick, onBack, showBackButton,
+  onBack, showBackButton,
   pendingSuggestion, onDiscardSuggestion, onEditSuggestion, onSendSuggestion,
   onInternalSearchChange,
   isRecording,
@@ -162,7 +161,7 @@ export const MessageWindow: React.FC<MessageWindowProps> = ({
         </div>
       </div>
 
-      <MessageList messages={filteredMessages} isTyping={isTyping} onImageClick={onImageClick} />
+      <MessageList messages={filteredMessages} isTyping={isTyping} />
 
       <div className="relative">
         <SuggestionBox 

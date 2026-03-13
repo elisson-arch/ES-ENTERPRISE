@@ -22,11 +22,10 @@ import {
   FolderOpen,
   Zap
 } from 'lucide-react';
-import { googleApiService } from '@domains/google-workspace/services/googleApiService';
-import { googleSyncService } from '@domains/google-workspace/services/googleSyncService';
-import { clientService } from '@domains/clients/services/clientService';
-import { auditLogService } from '@shared/services/auditLogService';
-import { whatsappApiService } from '@domains/whatsapp/services/whatsappApiService';
+import { googleApiService, googleSyncService } from '@google-workspace';
+import { clientService } from '@clients';
+import { auditLogService } from '@shared';
+import { whatsappApiService } from '@whatsapp';
 
 type OnboardingStep = 'idle' | 'authenticating' | 'syncing_contacts' | 'creating_folders' | 'done' | 'error';
 

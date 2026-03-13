@@ -32,6 +32,26 @@ export const chatService = {
         });
     },
 
+    // Obter chat de um cliente específico
+    async getChatByClient(orgId: string, clientId: string): Promise<ChatSession | null> {
+        const q = query(
+            collection(db, CHATS_COLLECTION),
+            where('organizationId', '==', orgId),
+            where('clientId', '==', clientId)
+        );
+        return new Promise((resolve) => {
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                unsubscribe();
+                if (snapshot.empty) {
+                    resolve(null);
+                } else {
+                    const doc = snapshot.docs[0];
+                    resolve({ id: doc.id, ...doc.data() } as ChatSession);
+                }
+            });
+        });
+    },
+
     // Obter mensagens de um chat específico em tempo real
     subscribeToMessages(chatId: string, callback: (messages: Message[]) => void) {
         const q = query(

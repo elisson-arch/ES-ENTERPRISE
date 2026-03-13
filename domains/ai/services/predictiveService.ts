@@ -1,5 +1,5 @@
 import { Asset, PredictiveAlert } from '@shared/types/common.types';
-import { geminiService } from '@domains/ai/services/geminiService';
+import { geminiService } from '@ai';
 import { APP_CONFIG } from '@shared/config/config';
 
 // Thresholds (em dias) entre manutenções por tipo de equipamento HVAC

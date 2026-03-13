@@ -6,10 +6,9 @@ import {
   Terminal, Globe, Zap, MessageSquare, Mic, Loader2
 } from 'lucide-react';
 import { SiteDNA, SiteElement } from '@shared/types/common.types';
-import { INITIAL_SITE_DATA } from '@domains/whatsapp/services/mockTemplates';
-import { WebsiteEngine } from '@domains/site-builder/components/WebsiteEngine';
-import { siteService } from '@domains/site-builder/services/siteService';
-import { geminiService } from '@domains/ai/services/geminiService';
+import { INITIAL_SITE_DATA } from '@whatsapp';
+import { WebsiteEngine, siteService } from '@site-builder';
+import { geminiService } from '@ai';
 
 const WebsiteBuilderView = () => {
   const [dna, setDna] = useState<SiteDNA>({

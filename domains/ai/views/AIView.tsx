@@ -5,7 +5,7 @@ import {
   Camera, Globe, Link as LinkIcon,
   Wand2, Languages
 } from 'lucide-react';
-import { geminiService } from '@domains/ai/services/geminiService';
+import { geminiService } from '@ai';
 import { Message } from '@shared/types/common.types';
 import { useTranslation } from '@shared/hooks/useTranslation';
 import { t } from '@shared/services/i18nService';

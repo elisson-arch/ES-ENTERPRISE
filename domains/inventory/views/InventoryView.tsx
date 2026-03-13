@@ -22,9 +22,9 @@ import {
 } from 'lucide-react';
 import type { Asset, PredictiveAlert } from '@shared/types/common.types';
 
-import { inventoryService } from '@domains/inventory/services/inventoryService';
-import { predictiveService } from '@domains/ai/services/predictiveService';
-import { tenantService } from '@domains/auth/services/tenantService';
+import { inventoryService } from '@inventory';
+import { predictiveService } from '@ai';
+import { tenantService } from '@auth';
 
 const getAssetUI = (type: string) => {
   const t = type?.toLowerCase() || '';
@@ -109,6 +109,7 @@ const InventoryView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
+  const [showPredictiveVision, setShowPredictiveVision] = useState(false);
 
   useEffect(() => {
     const unsubscribe = inventoryService.subscribeToAssets(orgId, (data) => {
@@ -157,11 +158,91 @@ const InventoryView = () => {
             <span className="uppercase tracking-widest text-[9px] md:text-[10px]">Agilidade Cross-Platform v5.5</span>
           </div>
         </div>
-        <button className="bg-blue-600 text-white px-8 py-4 rounded-2xl md:rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 w-full md:w-auto">
-          <Plus size={18} />
-          Cadastrar Novo Ativo
-        </button>
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => setShowPredictiveVision(!showPredictiveVision)}
+            className={`w-full md:w-auto px-6 py-4 rounded-2xl md:rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95 ${showPredictiveVision ? 'bg-indigo-600 text-white shadow-indigo-500/20' : 'bg-white text-indigo-600 border border-indigo-100 hover:bg-indigo-50'}`}
+          >
+            <Zap size={18} className={showPredictiveVision ? "text-amber-400" : ""} fill={showPredictiveVision ? "currentColor" : "none"} />
+            Visão Preditiva IA
+          </button>
+          <button className="bg-blue-600 text-white px-8 py-4 rounded-2xl md:rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 w-full md:w-auto">
+            <Plus size={18} />
+            Cadastrar Novo Ativo
+          </button>
+        </div>
       </header>
+
+      {/* Visão Preditiva IA (Ricardo IA) */}
+      {showPredictiveVision && (
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl border border-indigo-500/30 relative overflow-hidden animate-in slide-in-from-top-4 duration-500">
+          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            <Zap size={150} fill="currentColor" className="text-indigo-400" />
+          </div>
+          
+          <div className="flex items-center gap-4 mb-8 relative z-10">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 backdrop-blur-md">
+              <Zap size={28} fill="currentColor" className="text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter">Radar Preditivo</h3>
+              <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">Ricardo IA • Análise de Risco a 30 Dias</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+            {Array.from(riskMap.values()).filter(alert => alert.severity === 'critical' || alert.severity === 'warning').sort((a, b) => b.daysOverdue - a.daysOverdue).map((alert, idx) => {
+              const isCritical = alert.severity === 'critical';
+              return (
+                <div key={`${alert.assetId}-${idx}`} className={`bg-white/10 backdrop-blur-md border ${isCritical ? 'border-rose-500/50' : 'border-amber-500/50'} p-5 rounded-[2rem] hover:bg-white/15 transition-all cursor-pointer group`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="text-white font-black uppercase tracking-tighter text-lg leading-none mb-1">{alert.brand}</h4>
+                      <p className="text-indigo-200 text-[9px] font-bold uppercase tracking-widest">{alert.model}</p>
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${isCritical ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                      {isCritical ? 'Risco Alto' : 'Atenção'}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-3 mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-1.5 rounded-lg ${isCritical ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                        <History size={14} />
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-indigo-300/70 font-bold uppercase tracking-widest">Atraso Manutenção</p>
+                        <p className="text-white text-xs font-black">{alert.daysOverdue} dias</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                        <Calendar size={14} />
+                      </div>
+                      <div>
+                        <p className="text-[8px] text-indigo-300/70 font-bold uppercase tracking-widest">Sugestão IA</p>
+                        <p className="text-white text-xs font-black">{new Date(alert.suggestedMaintenanceDate).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isCritical ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20' : 'bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20'}`}>
+                    Gerar Proposta Up-Sell
+                  </button>
+                </div>
+              );
+            })}
+            
+            {Array.from(riskMap.values()).filter(alert => alert.severity === 'critical' || alert.severity === 'warning').length === 0 && (
+              <div className="col-span-full py-12 flex flex-col items-center justify-center text-indigo-300/50">
+                <CheckCircle2 size={48} className="mb-4 opacity-50" />
+                <p className="text-sm font-black uppercase tracking-widest">Nenhum risco detectado</p>
+                <p className="text-[10px] font-bold mt-1">Todos os ativos estão saudáveis para os próximos 30 dias.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4 md:space-y-6">
         <div className="relative w-full">

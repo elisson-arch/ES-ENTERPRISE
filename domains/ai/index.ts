@@ -1,5 +1,5 @@
-﻿// index.ts — ai barrel (auto-gerado)
+// index.ts — ai barrel
+export { default as AIView } from './views/AIView';
+export { default as AutomationView } from './views/AutomationView';
 export * from './services/geminiService';
 export * from './services/predictiveService';
-export * from './views/AIView';
-export * from './views/AutomationView';

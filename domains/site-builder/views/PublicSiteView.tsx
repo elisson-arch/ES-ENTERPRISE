@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // Fix: Import hooks from react-router to resolve export errors
 import { useParams, useNavigate } from 'react-router';
-import { siteService } from '@domains/site-builder/services/siteService';
-import { Canvas } from '@domains/site-builder/components/Canvas';
+import { siteService, Canvas } from '@site-builder';
 import { SiteDNA } from '@shared/types/common.types';
 import { Loader2, AlertCircle, Home } from 'lucide-react';
 
