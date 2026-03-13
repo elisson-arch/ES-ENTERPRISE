@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Users, Clock, MessageSquare, Sparkles, Zap, Calendar, Globe, Database, ShieldCheck, Server, ArrowRight, Wrench, Smartphone, Star, TrendingUp
+import { motion } from 'framer-motion';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
+import { 
+  TrendingUp, Users, AlertTriangle, CheckCircle, 
+  Activity, Wind, Zap, ArrowUpRight, ArrowDownRight,
+  Server, ShieldCheck
 } from 'lucide-react';
 import { Client, Asset, PredictiveAlert } from '@shared/types/common.types';
 import { googleApiService } from '@domains/google-workspace/services/googleApiService';
@@ -11,62 +18,77 @@ import { OrderDocV2 } from '@domains/inventory/types/inventory.types';
 import { useAppContext } from '@shared/hooks/useAppContext';
 import { where } from 'firebase/firestore';
 import { tenantService } from '@domains/auth/services/tenantService';
-import { t } from '@shared/services/i18nService';
 
-const QuickActionCard = ({ title, desc, icon: Icon, color, onClick }: { title: string, desc: string, icon: React.ElementType, color: string, onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className="flex flex-col items-start p-8 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left w-full min-h-[10rem]"
-  >
-    <div className={`w-12 h-12 rounded-2xl ${color} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center`}>
-      <Icon size={24} />
-    </div>
-    <h4 className="text-[0.875rem] font-black text-slate-800 uppercase tracking-tighter italic mb-1">{title}</h4>
-    <p className="text-[0.625rem] text-slate-400 font-bold uppercase leading-tight">{desc}</p>
-  </button>
-);
+// ─── DADOS DE SIMULAÇÃO (MOCK) ───────────────────────────────────────────────
+const revenueDataMock = [
+  { name: 'Seg', leads: 40, fechamentos: 24 },
+  { name: 'Ter', leads: 30, fechamentos: 13 },
+  { name: 'Qua', leads: 20, fechamentos: 58 },
+  { name: 'Qui', leads: 27, fechamentos: 39 },
+  { name: 'Sex', leads: 18, fechamentos: 48 },
+  { name: 'Sáb', leads: 23, fechamentos: 38 },
+  { name: 'Dom', leads: 34, fechamentos: 43 },
+];
 
-interface Mission {
-  title: string;
-  status: string;
-  time: string;
-  type: string;
-}
+const predictiveDataMock = [
+  { name: 'Compressores', risco: 65, prevencao: 85 },
+  { name: 'Filtros', risco: 90, prevencao: 20 },
+  { name: 'Gás (Fugas)', risco: 40, prevencao: 60 },
+  { name: 'Placas', risco: 25, prevencao: 75 },
+];
 
-const PriorityMission = ({ title, status, time, type }: Mission) => (
-  <div className="flex items-center justify-between p-6 bg-slate-50/50 hover:bg-white rounded-[2rem] border border-transparent hover:border-slate-100 transition-all group cursor-pointer min-h-[5.5rem]">
-    <div className="flex items-center gap-4">
-      <div className={`w-2 h-12 rounded-full ${type === 'urgent' ? 'bg-rose-500' : type === 'lead' ? 'bg-blue-500' : 'bg-emerald-500'
-        }`} />
+// ─── ANIMAÇÕES ───────────────────────────────────────────────────────────────
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+};
+
+// ─── COMPONENTES ─────────────────────────────────────────────────────────────
+const StatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, colorClass }: { 
+  title: string; 
+  value: string | number; 
+  subtitle: string; 
+  icon: React.ElementType; 
+  trend: 'up' | 'down'; 
+  trendValue: string; 
+  colorClass: string; 
+}) => (
+  <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex justify-between items-start">
       <div>
-        <h4 className="text-[0.875rem] font-black text-slate-800 line-clamp-1 italic uppercase tracking-tighter">{title}</h4>
-        <div className="flex items-center gap-3 mt-0.5">
-          <span className="text-[0.5625rem] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-            <Clock size={10} /> {time}
-          </span>
-          <span className="text-[0.5625rem] font-black text-indigo-500 uppercase tracking-widest">{status}</span>
-        </div>
+        <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+        <h3 className="text-3xl font-bold text-slate-800">{value}</h3>
+      </div>
+      <div className={`p-3 rounded-xl ${colorClass} bg-opacity-10`}>
+        <Icon size={24} className={colorClass.replace('bg-', 'text-')} />
       </div>
     </div>
-    <div className="w-11 h-11 flex items-center justify-center bg-white rounded-xl shadow-sm text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all">
-      <ArrowRight size={20} />
+    <div className="mt-4 flex items-center text-sm">
+      {trend === 'up' ? (
+        <ArrowUpRight size={16} className="text-emerald-500 mr-1" />
+      ) : (
+        <ArrowDownRight size={16} className="text-rose-500 mr-1" />
+      )}
+      <span className={trend === 'up' ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'}>
+        {trendValue}
+      </span>
+      <span className="text-slate-400 ml-2">{subtitle}</span>
     </div>
-  </div>
+  </motion.div>
 );
 
-interface TechPerformance {
-  id: string;
-  total: number;
-  completed: number;
-  satisfaction: number;
-  avgTime: number; // em minutos
-}
-
-const DashboardView: React.FC = () => {
+const DashboardView = () => {
+  const [timeRange, setTimeRange] = useState('7d');
   const [stats, setStats] = useState({ clientsCount: 0, assetsCount: 0, totalTasks: 0, completedTasks: 0 });
-  const [recentMissions, setRecentMissions] = useState<Mission[]>([]);
   const [predictiveAlerts, setPredictiveAlerts] = useState<PredictiveAlert[]>([]);
-  const [techPerformance, setTechPerformance] = useState<TechPerformance[]>([]);
   const [orgId, setOrgId] = useState(tenantService.getCurrentOrgId());
   const notifiedAssetsRef = useRef<Set<string>>(new Set());
   const { addNotification } = useAppContext();
@@ -82,14 +104,6 @@ const DashboardView: React.FC = () => {
       // 2. Subscrição para Métricas Reais (Firestore)
       const unsubClients = firestoreService.subscribe<Client>('clients', (data) => {
         setStats(prev => ({ ...prev, clientsCount: data.length }));
-
-        const missions: Mission[] = data.slice(0, 3).map(c => ({
-          title: `Atender ${c.name}`,
-          time: 'Novo Lead',
-          status: 'Sincronizado via Firestore',
-          type: 'lead'
-        }));
-        setRecentMissions(missions);
       }, where('organizationId', '==', orgId));
 
       const unsubAssets = firestoreService.subscribe<Asset>('assets', (data) => {
@@ -118,49 +132,6 @@ const DashboardView: React.FC = () => {
           totalTasks: data.length, 
           completedTasks: completed.length 
         }));
-
-        // Calcular performance por técnico
-        const techStats: Record<string, { total: number; completed: number; totalMinutes: number; satisfaction: number }> = {};
-        
-        data.forEach(task => {
-          const techId = task.technicianId || 'Sem Técnico';
-          if (!techStats[techId]) {
-            techStats[techId] = { 
-              total: 0, 
-              completed: 0, 
-              totalMinutes: 0, 
-              satisfaction: 4.5 + Math.random() * 0.5 // Mock satisfaction
-            };
-          }
-          
-          techStats[techId].total++;
-          if (task.status === 'completed') {
-            techStats[techId].completed++;
-            
-            // Calcular tempo se houver checkIn e checkOut
-            if (task.checkIn?.time && task.checkOut?.time) {
-              const start = new Date(task.checkIn.time).getTime();
-              const end = new Date(task.checkOut.time).getTime();
-              const diffMinutes = Math.floor((end - start) / 60000);
-              if (diffMinutes > 0) {
-                techStats[techId].totalMinutes += diffMinutes;
-              }
-            } else {
-              // Mock time if missing (45-120 min)
-              techStats[techId].totalMinutes += Math.floor(45 + Math.random() * 75);
-            }
-          }
-        });
-
-        const performance: TechPerformance[] = Object.entries(techStats).map(([id, stats]) => ({
-          id,
-          total: stats.total,
-          completed: stats.completed,
-          satisfaction: stats.satisfaction,
-          avgTime: stats.completed > 0 ? Math.floor(stats.totalMinutes / stats.completed) : 0
-        }));
-
-        setTechPerformance(performance);
       });
 
       return () => {
@@ -182,208 +153,194 @@ const DashboardView: React.FC = () => {
     return () => window.removeEventListener('google_auth_change', handleAuthChange);
   }, []);
 
+  // Calcular dados reais para o gráfico de saúde
+  const healthyCount = stats.assetsCount - predictiveAlerts.length;
+  const warningCount = predictiveAlerts.filter(a => a.severity === 'warning').length;
+  const criticalCount = predictiveAlerts.filter(a => a.severity === 'critical').length;
+
+  const healthData = [
+    { name: 'Saudáveis', value: healthyCount > 0 ? healthyCount : 0, color: '#10b981' },
+    { name: 'Alerta Preventivo', value: warningCount, color: '#f59e0b' },
+    { name: 'Falha Crítica', value: criticalCount, color: '#ef4444' },
+  ];
+
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            {userProfile?.picture ? (
-              <img src={userProfile.picture} alt="Perfil" className="w-16 h-16 lg:w-24 lg:h-24 rounded-[2.5rem] shadow-xl border-4 border-white" />
-            ) : (
-              <div className="w-16 h-16 lg:w-24 lg:h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center text-white text-3xl font-black shadow-xl">
-                {userProfile?.name?.charAt(0) || 'U'}
-              </div>
+    <div className="min-h-full bg-slate-50 p-8 overflow-y-auto">
+      <motion.div 
+        initial="hidden" 
+        animate="visible" 
+        variants={containerVariants}
+        className="max-w-7xl mx-auto space-y-8"
+      >
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            {userProfile?.picture && (
+              <img src={userProfile.picture} alt="Perfil" className="w-16 h-16 rounded-2xl shadow-lg border-2 border-white" />
             )}
-            <div className="absolute -bottom-2 -right-2 w-11 h-11 bg-emerald-500 text-white rounded-full border-4 border-white shadow-lg animate-pulse flex items-center justify-center">
-              <ShieldCheck size={18} />
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                Centro de Comando <Zap className="text-indigo-500" fill="currentColor" />
+              </h1>
+              <p className="text-slate-500 mt-1">Olá, {userProfile?.name?.split(' ')[0] || 'Gestor'}. Panorama da operação HVAC hoje.</p>
             </div>
           </div>
-          <div className="space-y-1">
-            <h2 className="text-[2rem] lg:text-[2.5rem] font-black text-slate-800 tracking-tighter italic leading-none uppercase">
-              Olá, {userProfile?.name?.split(' ')[0] || 'Gestor'}!
-            </h2>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 rounded-full text-white text-[0.5rem] font-black uppercase tracking-widest">
-                <Server size={10} className="text-blue-400" /> {t('infrastructure.region')}: us-central1
-              </div>
-              <div className="w-1 h-1 bg-slate-300 rounded-full" />
-              <div className="flex items-center gap-1 text-blue-600 text-[0.625rem] font-black uppercase tracking-tight italic">
-                {stats.clientsCount} {t('infrastructure.active_clients')} | {stats.assetsCount} {t('infrastructure.managed_assets')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden lg:flex items-center gap-6 bg-white p-3 rounded-[2rem] border border-slate-100 shadow-sm">
-          <div className="flex gap-2 px-3 border-r border-slate-100">
-            <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl"><Globe size={18} /></div>
-            <div className="w-11 h-11 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-xl"><Calendar size={18} /></div>
-            <div className="w-11 h-11 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl"><Database size={18} /></div>
-          </div>
-          <div className="pr-6">
-            <p className="text-[0.5rem] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t('infrastructure.status_sgc')}</p>
-            <p className="text-[0.75rem] font-black text-emerald-600 uppercase italic tracking-tighter">{t('infrastructure.operational_cloud')}</p>
+          <div className="flex bg-slate-200/50 p-1 rounded-lg">
+            {['7d', '30d', '90d'].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  timeRange === range ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {range.toUpperCase()}
+              </button>
+            ))}
           </div>
         </div>
-      </header>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-        <div className="xl:col-span-2 space-y-8">
-          <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden">
-            <div className="flex justify-between items-center mb-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-xl flex items-center justify-center"><Zap size={24} fill="currentColor" /></div>
-                <div>
-                  <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">{t('dashboard.daily_mission')}</h3>
-                  <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">{t('dashboard.ai_stream')}</p>
-                </div>
-              </div>
-              <button className="h-11 px-5 bg-slate-50 rounded-xl text-[0.5625rem] font-black text-blue-600 uppercase tracking-widest hover:bg-slate-100 transition-all">Otimizar Fila</button>
-            </div>
+        {/* STATS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard 
+            title="Receita Estimada" value="€ 45.2K" subtitle="vs semana passada" 
+            icon={TrendingUp} trend="up" trendValue="+12.5%" colorClass="bg-indigo-500" 
+          />
+          <StatCard 
+            title="Novos Leads (Real)" value={stats.clientsCount} subtitle="clientes na base" 
+            icon={Users} trend="up" trendValue="+8.2%" colorClass="bg-blue-500" 
+          />
+          <StatCard 
+            title="Ativos Geridos" value={stats.assetsCount} subtitle="da base instalada" 
+            icon={CheckCircle} trend="up" trendValue="+2.1%" colorClass="bg-emerald-500" 
+          />
+          <StatCard 
+            title="Alertas Preditivos (IA)" value={predictiveAlerts.length} subtitle="falhas iminentes" 
+            icon={AlertTriangle} trend={predictiveAlerts.length > 5 ? 'up' : 'down'} trendValue={predictiveAlerts.length.toString()} colorClass="bg-rose-500" 
+          />
+        </div>
 
-            <div className="space-y-4">
-              {/* Missões preditivas: ativos críticos aparecem primeiro */}
-              {predictiveAlerts.filter(a => a.severity === 'critical').map((alert) => (
-                <PriorityMission
-                  key={`pred-${alert.assetId}`}
-                  title={`${alert.brand} ${alert.model} — Manutenção Atrasada`}
-                  time={`${alert.daysOverdue}d em atraso`}
-                  status="Manutenção Preditiva"
-                  type="urgent"
-                />
-              ))}
-              {predictiveAlerts.filter(a => a.severity === 'warning').map((alert) => (
-                <PriorityMission
-                  key={`pred-${alert.assetId}`}
-                  title={`${alert.brand} ${alert.model} — Manutenção Próxima`}
-                  time={`${alert.daysSinceLastMaintenance}d sem manutenção`}
-                  status="Atenção Preventiva"
-                  type="lead"
-                />
-              ))}
-              {recentMissions.length > 0 ? (
-                recentMissions.map((mission, idx) => (
-                  <PriorityMission key={idx} {...mission} />
-                ))
-              ) : predictiveAlerts.length === 0 ? (
-                <div className="p-8 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                  <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-widest italic">Nenhuma missão prioritária no momento</p>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-10 pt-10 border-t border-slate-100 flex items-center justify-between text-slate-400">
-              <div className="flex items-center gap-3">
-                <Sparkles size={18} className="text-amber-400 animate-pulse" />
-                <span className="text-[0.625rem] font-black uppercase tracking-widest italic">Dashboard Conectado ao Cloud Firestore</span>
+        {/* CHARTS GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* MAIN CHART - FUNIL & ATENDIMENTOS */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Evolução de Atendimentos</h3>
+                <p className="text-sm text-slate-500">Leads recebidos vs Contratos fechados (Simulação)</p>
               </div>
             </div>
-          </div>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueDataMock} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorFechamentos" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="leads" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorLeads)" />
+                  <Area type="monotone" dataKey="fechamentos" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorFechamentos)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
 
-          {/* Technician Performance Analysis */}
-          <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-            <div className="flex justify-between items-center mb-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-emerald-600 rounded-2xl text-white shadow-xl flex items-center justify-center"><TrendingUp size={24} /></div>
-                <div>
-                  <h3 className="text-[1rem] font-black text-slate-800 uppercase tracking-widest italic">Performance de Campo</h3>
-                  <p className="text-[0.625rem] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Métricas de Eficiência Técnica</p>
-                </div>
+          {/* DONUT CHART - SAÚDE DOS ATIVOS */}
+          <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+            <div className="mb-2">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Activity size={18} className="text-slate-400" /> Saúde dos Ativos (Real)
+              </h3>
+            </div>
+            <div className="flex-1 min-h-[250px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={healthData} cx="50%" cy="50%" innerRadius={70} outerRadius={90} paddingAngle={5}
+                    dataKey="value" stroke="none"
+                  >
+                    {healthData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-3xl font-black text-slate-800">{stats.assetsCount}</span>
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Máquinas</span>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {techPerformance.map((tech) => (
-                <div key={tech.id} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="font-bold text-slate-800 uppercase italic tracking-tighter">{tech.id}</h4>
-                      <p className="text-[0.625rem] text-slate-400 font-bold uppercase">Técnico de Climatização</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star size={12} fill="currentColor" />
-                      <span className="text-xs font-black">{tech.satisfaction.toFixed(1)}</span>
-                    </div>
+            <div className="mt-4 space-y-3">
+              {healthData.map((item, i) => (
+                <div key={i} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-600">{item.name}</span>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-[0.625rem] font-black uppercase tracking-widest">
-                      <span className="text-slate-400">Taxa de Conclusão</span>
-                      <span className="text-emerald-600">{((tech.completed / tech.total) * 100).toFixed(0)}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 transition-all duration-1000" 
-                        style={{ width: `${(tech.completed / tech.total) * 100}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between items-center text-[0.5rem] font-bold text-slate-400 uppercase">
-                      <div className="flex items-center gap-2">
-                        <Clock size={10} />
-                        <span>{tech.avgTime} min / tarefa</span>
-                      </div>
-                      <span>{tech.completed}/{tech.total} Tarefas</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {techPerformance.length === 0 && (
-                <div className="col-span-2 py-10 text-center text-slate-400 uppercase text-[0.625rem] font-black italic">
-                  Aguardando dados de tarefas de campo...
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <QuickActionCard title="WhatsApp" desc="Abrir Conversas" icon={MessageSquare} color="bg-blue-600" onClick={() => window.location.hash = '#/whatsapp'} />
-            <QuickActionCard title="Agenda" desc="Rotas de Campo" icon={Calendar} color="bg-emerald-600" onClick={() => window.location.hash = '#/calendar'} />
-            <QuickActionCard title="Clientes" desc="Base Unificada" icon={Users} color="bg-indigo-600" onClick={() => window.location.hash = '#/clientes'} />
-            <QuickActionCard title="Inventário" desc="Ativos Reais" icon={Database} color="bg-amber-500" onClick={() => window.location.hash = '#/inventory'} />
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group min-h-[17.5rem] flex flex-col justify-between">
-            <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:scale-110 transition-transform group-hover:rotate-12 duration-1000"><Smartphone size={200} /></div>
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/20 rounded-full border border-white/10 mb-6">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping"></div>
-                <span className="text-[0.5625rem] font-black uppercase tracking-widest text-blue-400 italic">{t('infrastructure.real_time_engine')}</span>
-              </div>
-              <h3 className="text-[1.875rem] font-black italic mb-3 tracking-tighter uppercase leading-none">Dados em Tempo Real</h3>
-              <p className="text-slate-400 text-[0.875rem] font-medium leading-relaxed">Você tem {stats.clientsCount} {t('infrastructure.active_clients').toLowerCase()} e {stats.assetsCount} {t('infrastructure.managed_assets').toLowerCase()} no Firestore.</p>
-              {predictiveAlerts.length > 0 && (
-                <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-rose-500/20 border border-rose-500/30 rounded-2xl cursor-pointer" onClick={() => window.location.hash = '#/ativos'}>
-                  <Wrench size={16} className="text-rose-400 shrink-0" />
-                  <span className="text-[0.75rem] font-black text-rose-300 uppercase tracking-tight">
-                    {predictiveAlerts.filter(a => a.severity === 'critical').length} crítico(s) · {predictiveAlerts.filter(a => a.severity === 'warning').length} alerta(s) de manutenção
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <h4 className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b pb-4">{t('infrastructure.robot_status')}</h4>
-            <div className="space-y-6">
-              {[
-                { name: 'Firestore Sync', status: 'Ativo', color: 'bg-emerald-500' },
-                { name: 'Google Cloud Sync', status: 'Online', color: 'bg-emerald-500' },
-                { name: 'Ricardo AI Logic', status: 'Processando', color: 'bg-amber-500', pulse: true }
-              ].map((bot, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2.5 h-2.5 rounded-full ${bot.color} ${bot.pulse ? 'animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]' : ''}`} />
-                    <span className="text-[0.75rem] font-black text-slate-700 uppercase tracking-tighter">{bot.name}</span>
-                  </div>
-                  <span className={`text-[0.5625rem] font-black uppercase tracking-widest ${bot.color.replace('bg-', 'text-')}`}>{bot.status}</span>
+                  <span className="font-semibold text-slate-800">{item.value}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
+
         </div>
-      </div>
+
+        {/* BOTTOM SECTION - IA PREDITIVA */}
+        <motion.div variants={itemVariants} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Wind size={20} className="text-indigo-500" /> Radar de Previsão de Falhas (Ricardo IA)
+              </h3>
+              <p className="text-sm text-slate-500">Probabilidade de falha vs Intervenções agendadas (Simulação)</p>
+            </div>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={predictiveDataMock} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontWeight: 500 }} />
+                <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none' }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                <Bar dataKey="risco" name="Risco de Falha (%)" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={12} />
+                <Bar dataKey="prevencao" name="Manutenção Agendada (%)" fill="#10b981" radius={[0, 4, 4, 0]} barSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* INFRASTRUCTURE STATUS */}
+        <motion.div variants={itemVariants} className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <Server size={14} className="text-indigo-500" />
+            <span className="text-[0.625rem] font-black text-slate-600 uppercase tracking-widest">Região: us-central1</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <ShieldCheck size={14} className="text-emerald-500" />
+            <span className="text-[0.625rem] font-black text-slate-600 uppercase tracking-widest">Cloud Operational</span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border border-slate-100 shadow-sm">
+            <Activity size={14} className="text-amber-500 animate-pulse" />
+            <span className="text-[0.625rem] font-black text-slate-600 uppercase tracking-widest">Ricardo IA: Online</span>
+          </div>
+        </motion.div>
+
+      </motion.div>
     </div>
   );
 };
