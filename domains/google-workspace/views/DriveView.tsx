@@ -43,9 +43,10 @@ const DriveView = () => {
       }
       const files = await driveFileService.listTenantFiles(orgId);
       setDriveFiles(files.map(mapFile));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar arquivos:', err);
-      setError(err.message || 'Erro desconhecido ao carregar arquivos.');
+      const message = err instanceof Error ? err.message : 'Erro desconhecido ao carregar arquivos.';
+      setError(message);
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -91,9 +92,10 @@ const DriveView = () => {
         });
       }
       await fetchFiles(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no upload:', err);
-      setError(err.message || 'Falha no upload para Google Drive.');
+      const message = err instanceof Error ? err.message : 'Falha no upload para Google Drive.';
+      setError(message);
     } finally {
       setIsRefreshing(false);
       event.target.value = '';
@@ -127,9 +129,10 @@ const DriveView = () => {
     try {
       await driveFileService.softDeleteTenantFile(orgId, file.id, false);
       await fetchFiles(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao remover arquivo:', err);
-      setError(err.message || 'Falha ao remover arquivo.');
+      const message = err instanceof Error ? err.message : 'Falha ao remover arquivo.';
+      setError(message);
     }
   };
 
@@ -143,11 +146,12 @@ const DriveView = () => {
           <p className="text-slate-500 text-sm font-medium">{t('drive.subtitle')}</p>
         </div>
         <div className="flex gap-3">
-          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUploadFiles} />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleUploadFiles} title={t('drive.file_selector')} />
           <button
             onClick={() => fetchFiles(true)}
             disabled={isRefreshing}
             className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-blue-600 transition-all shadow-sm group disabled:opacity-50"
+            title={t('drive.refresh')}
           >
             <RefreshCw size={20} className={isRefreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'} />
           </button>

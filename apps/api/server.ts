@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 
 // Cloud Run injeta a porta dinamicamente
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 const API_KEY = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
 // dist/ fica dois níveis acima (raiz do projeto)
