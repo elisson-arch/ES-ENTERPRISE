@@ -1,5 +1,6 @@
-﻿
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Trello, 
   Plus, 
@@ -8,72 +9,42 @@ import {
   MoreVertical, 
   Clock, 
   AlertCircle, 
-  ArrowRight,
-  Calendar,
-  ChevronRight,
-  ChevronLeft
+  Sparkles,
+  CheckCircle2,
+  FolderPlus,
+  Wrench,
+  User,
+  MessageSquare,
+  DollarSign
 } from 'lucide-react';
 import { ChatSession } from '@shared/types/common.types';
+import { useAppContext } from '@shared/hooks/useAppContext';
+import { chatService } from '@domains/whatsapp/services/chatService';
+import { googleApiService } from '@domains/google-workspace/services/googleApiService';
 
 const FUNNEL_STAGES = [
-  { id: 'Prospecção', color: 'bg-blue-500', label: 'Prospecção' },
-  { id: 'Diagnóstico', color: 'bg-purple-500', label: 'Diagnóstico' },
-  { id: 'Orçamento Enviado', color: 'bg-amber-500', label: 'Orçamento' },
-  { id: 'Negociação', color: 'bg-indigo-500', label: 'Negociação' },
-  { id: 'Fechado', color: 'bg-emerald-500', label: 'Fechado' }
-];
-
-const mockLeads: Partial<ChatSession>[] = [
-  {
-    id: 'c1',
-    clientName: 'Condomínio Residencial Aurora',
-    funnelStage: 'Diagnóstico',
-    lastMessage: 'Aguardando visita técnica.',
-    unreadCount: 2,
-    clientType: 'Comercial',
-    lastStageChange: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'c2',
-    clientName: 'Padaria Pão de Mel',
-    funnelStage: 'Orçamento Enviado',
-    lastMessage: 'Orçamento enviado há 2 dias.',
-    unreadCount: 0,
-    clientType: 'Comercial',
-    lastStageChange: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'c3',
-    clientName: 'Hospital São Luiz',
-    funnelStage: 'Prospecção',
-    lastMessage: 'Novo lead via site.',
-    unreadCount: 1,
-    clientType: 'Comercial',
-    lastStageChange: new Date().toISOString(),
-  },
-  {
-    id: 'c4',
-    clientName: 'Dra. Helena Souza',
-    funnelStage: 'Negociação',
-    lastMessage: 'Pediu desconto de 10%.',
-    unreadCount: 0,
-    clientType: 'Residencial',
-    lastStageChange: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'c5',
-    clientName: 'Indústrias Metalúrgicas S.A.',
-    funnelStage: 'Fechado',
-    lastMessage: 'Contrato assinado.',
-    unreadCount: 0,
-    clientType: 'Comercial',
-    lastStageChange: new Date().toISOString(),
-  }
+  { id: 'Prospecção', color: 'bg-blue-500', label: 'Prospecção', icon: Search },
+  { id: 'Diagnóstico', color: 'bg-purple-500', label: 'Diagnóstico', icon: Wrench },
+  { id: 'Orçamento Enviado', color: 'bg-amber-500', label: 'Orçamento', icon: Clock },
+  { id: 'Negociação', color: 'bg-indigo-500', label: 'Negociação', icon: Filter },
+  { id: 'Fechado', color: 'bg-emerald-500', label: 'Fechado', icon: CheckCircle2 }
 ];
 
 const FunnelView = () => {
-  const [leads, setLeads] = useState(mockLeads);
+  const [leads, setLeads] = useState<ChatSession[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const { addNotification } = useAppContext();
+  const orgId = googleApiService.getUserProfile()?.organizationId || 'org-123';
+  const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    const unsubscribe = chatService.subscribeToChats(orgId, (chats) => {
+      setLeads(chats);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [orgId]);
 
   const filteredLeads = useMemo(() => {
     return leads.filter(l => 
@@ -87,131 +58,275 @@ const FunnelView = () => {
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 
-  const handleMoveStage = (leadId: string, direction: 'forward' | 'backward') => {
-    setLeads(prev => prev.map(l => {
-      if (l.id !== leadId) return l;
-      const currentIndex = FUNNEL_STAGES.findIndex(s => s.id === l.funnelStage);
-      const nextIndex = direction === 'forward' ? currentIndex + 1 : currentIndex - 1;
-      
-      if (nextIndex >= 0 && nextIndex < FUNNEL_STAGES.length) {
-        return { 
-          ...l, 
-          funnelStage: FUNNEL_STAGES[nextIndex].id as any, 
-          lastStageChange: new Date().toISOString() 
-        };
+  const handleMoveStage = async (leadId: string, targetStage: string) => {
+    const lead = leads.find(l => l.id === leadId);
+    if (!lead || lead.funnelStage === targetStage) return;
+
+    // Optimistic update
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, funnelStage: targetStage as ChatSession['funnelStage'] } : l));
+
+    try {
+      await chatService.upsertChat({
+        id: leadId,
+        organizationId: orgId,
+        funnelStage: targetStage as ChatSession['funnelStage'],
+        lastStageChange: new Date().toISOString()
+      });
+
+      if (targetStage === 'Fechado') {
+        addNotification({
+          type: 'success',
+          title: 'Negócio Fechado! 🎉',
+          description: `Ricardo IA sugere criar pasta no Drive para ${lead.clientName}.`,
+          priority: 'high'
+        });
       }
-      return l;
-    }));
+    } catch (error: unknown) {
+      console.error('Erro ao mover lead:', error);
+      addNotification({
+        type: 'predictive',
+        title: 'Erro na Sincronização',
+        description: 'Não foi possível atualizar o estágio do lead no servidor.',
+        priority: 'high'
+      });
+    }
   };
 
-  return (
-    <div className="h-full flex flex-col gap-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-            <Trello className="text-blue-600" /> Funil de Vendas CRM
-          </h2>
-          <p className="text-slate-500">Gestão visual da jornada de conversão dos seus clientes.</p>
+  const handleCreateFolder = async (clientName: string) => {
+    try {
+      const parentId = await googleApiService.ensureTenantDriveFolder(orgId);
+      await googleApiService.createDriveFolder(clientName, parentId);
+      addNotification({
+        type: 'success',
+        title: 'Pasta Criada',
+        description: `Pasta para ${clientName} criada com sucesso no Google Drive.`,
+        priority: 'medium'
+      });
+    } catch (error: unknown) {
+      console.error('Erro ao criar pasta:', error);
+      addNotification({
+        type: 'predictive',
+        title: 'Erro no Google Drive',
+        description: 'Não foi possível criar a pasta do cliente.',
+        priority: 'high'
+      });
+    }
+  };
+
+  const onDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: { point: { x: number; y: number } }, leadId: string) => {
+    const { x, y } = info.point;
+    
+    // Find which column the drop happened in
+    let targetStageId = null;
+    for (const stage of FUNNEL_STAGES) {
+      const rect = columnRefs.current[stage.id]?.getBoundingClientRect();
+      if (rect && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        targetStageId = stage.id;
+        break;
+      }
+    }
+
+    if (targetStageId) {
+      handleMoveStage(leadId, targetStageId);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Sincronizando Funil...</p>
         </div>
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
-          <Plus size={20} /> Adicionar Lead
-        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col gap-6 overflow-hidden">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+        <div>
+          <h2 className="text-[2.5rem] font-black text-slate-800 flex items-center gap-4 tracking-tighter italic uppercase leading-none">
+            <Trello className="text-blue-600 w-10 h-10" /> Funil de Vendas
+          </h2>
+          <p className="text-[0.625rem] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">Gestão Visual & Inteligência Preditiva</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="w-10 h-10 rounded-full border-4 border-white bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shadow-sm">
+                T{i}
+              </div>
+            ))}
+          </div>
+          <button className="h-14 bg-slate-900 text-white px-8 rounded-[1.5rem] font-black text-[0.75rem] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-xl shadow-slate-200 group">
+            <Plus size={18} className="group-hover:rotate-90 transition-transform" /> Novo Lead
+          </button>
+        </div>
       </header>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex gap-4">
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 mx-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
           <input 
             type="text" 
             placeholder="Buscar por cliente, empresa ou serviço..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.25rem] focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-medium text-slate-600"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors font-medium">
-          <Filter size={18} /> Etapas
-        </button>
+        <div className="flex gap-3">
+          <button className="flex items-center justify-center gap-3 px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.25rem] text-slate-600 hover:bg-white hover:shadow-md transition-all font-black text-[0.625rem] uppercase tracking-widest">
+            <Filter size={18} /> Filtros Avançados
+          </button>
+          <div className="flex items-center gap-2 px-6 py-4 bg-blue-50 rounded-[1.25rem] border border-blue-100">
+            <Sparkles size={18} className="text-blue-600 animate-pulse" />
+            <span className="text-[0.625rem] font-black text-blue-600 uppercase tracking-widest italic">Ricardo IA Ativo</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+      <div className="flex-1 flex gap-6 overflow-x-auto pb-8 px-2 no-scrollbar">
         {FUNNEL_STAGES.map(stage => {
           const stageLeads = filteredLeads.filter(l => l.funnelStage === stage.id);
-          const totalValue = stageLeads.length * 3200; // Valor médio estimado
+          const totalValue = stageLeads.length * 3200;
 
           return (
-            <div key={stage.id} className="w-80 flex-shrink-0 flex flex-col bg-slate-100/30 rounded-3xl border border-slate-200/50 p-3 h-full">
-              <div className="flex justify-between items-center px-2 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-6 rounded-full ${stage.color}`}></div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-600">{stage.label}</h4>
-                  <span className="bg-white px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-400 border border-slate-200">{stageLeads.length}</span>
+            <div 
+              key={stage.id} 
+              ref={el => columnRefs.current[stage.id] = el}
+              className="w-[22rem] flex-shrink-0 flex flex-col bg-slate-50/50 rounded-[3rem] border border-slate-200/40 p-4 h-full"
+            >
+              <div className="flex justify-between items-center px-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-8 rounded-full ${stage.color} shadow-lg shadow-${stage.color.split('-')[1]}-200`}></div>
+                  <div>
+                    <h4 className="text-[0.625rem] font-black uppercase tracking-[0.2em] text-slate-400">{stage.label}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[1.25rem] font-black text-slate-800 tracking-tighter italic">{stageLeads.length}</span>
+                      <span className="text-[0.5rem] font-bold text-slate-300 uppercase">Leads</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-[10px] font-black text-slate-400">Est. R$ {totalValue.toLocaleString('pt-BR')}</div>
+                <div className="text-right">
+                  <p className="text-[0.5rem] font-black text-slate-300 uppercase tracking-widest mb-0.5">Valor Est.</p>
+                  <p className="text-[0.875rem] font-black text-slate-800 italic tracking-tighter">R$ {totalValue.toLocaleString('pt-BR')}</p>
+                </div>
               </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto no-scrollbar pr-1">
-                {stageLeads.map(lead => {
-                  const aging = getAgingDays(lead.lastStageChange);
-                  const isStale = aging >= 4;
+              <div className="flex-1 space-y-4 overflow-y-auto no-scrollbar pr-1">
+                <AnimatePresence mode="popLayout">
+                  {stageLeads.map(lead => {
+                    const aging = getAgingDays(lead.lastStageChange);
+                    const isStale = aging >= 4;
 
-                  return (
-                    <div 
-                      key={lead.id}
-                      className={`bg-white p-4 rounded-2xl shadow-sm border transition-all hover:shadow-md cursor-pointer group relative ${
-                        isStale ? 'border-red-200 shadow-red-50' : 'border-slate-100'
-                      }`}
-                    >
-                      <button className="absolute top-4 right-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical size={16} />
-                      </button>
+                    return (
+                      <motion.div 
+                        layout
+                        layoutId={lead.id}
+                        key={lead.id}
+                        drag
+                        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                        dragElastic={0.7}
+                        onDragEnd={(e, info) => onDragEnd(e, info, lead.id!)}
+                        whileDrag={{ scale: 1.05, zIndex: 50, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                        className={`bg-white p-6 rounded-[2rem] shadow-sm border-2 transition-all cursor-grab active:cursor-grabbing group relative ${
+                          isStale ? 'border-rose-100 bg-rose-50/30' : 'border-white hover:border-blue-100 hover:shadow-xl'
+                        }`}
+                      >
+                        <button className="absolute top-6 right-6 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreVertical size={18} />
+                        </button>
 
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-1.5 h-1.5 rounded-full ${lead.clientType === 'Comercial' ? 'bg-blue-500' : 'bg-orange-500'}`}></span>
-                          <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">{lead.clientType}</span>
-                        </div>
-                        
-                        <h5 className="font-bold text-slate-800 text-sm leading-tight line-clamp-1">{lead.clientName}</h5>
-                        
-                        <p className="text-[10px] text-slate-500 line-clamp-1 italic">"{lead.lastMessage}"</p>
-
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-50">
-                          <div className={`flex items-center gap-1.5 text-[9px] font-bold ${isStale ? 'text-red-500' : 'text-slate-400'}`}>
-                            <Clock size={12} />
-                            {aging === 0 ? 'Hoje' : `${aging}d parado`}
+                        {/* Bento Grid Card Layout */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="col-span-2 flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${lead.clientType === 'Comercial' ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
+                              <span className="text-[0.5rem] font-black uppercase text-slate-400 tracking-widest">{lead.clientType}</span>
+                            </div>
+                            {isStale && (
+                              <div className="flex items-center gap-1.5 px-2 py-1 bg-rose-100 rounded-full">
+                                <AlertCircle size={10} className="text-rose-600 animate-pulse" />
+                                <span className="text-[0.5rem] font-black text-rose-600 uppercase">Crítico</span>
+                              </div>
+                            )}
                           </div>
                           
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button 
-                              onClick={() => handleMoveStage(lead.id!, 'backward')}
-                              className="p-1.5 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-200"
-                            >
-                              <ChevronLeft size={12} />
-                            </button>
-                            <button 
-                              onClick={() => handleMoveStage(lead.id!, 'forward')}
-                              className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white"
-                            >
-                              <ChevronRight size={12} />
-                            </button>
+                          <div className="col-span-2">
+                            <h5 className="font-black text-slate-800 text-[1rem] leading-tight line-clamp-2 italic tracking-tighter uppercase">{lead.clientName}</h5>
                           </div>
-                        </div>
 
-                        {isStale && (
-                          <div className="mt-2 flex items-center gap-1.5 text-[8px] font-black uppercase text-red-500 bg-red-50 p-1.5 rounded-lg border border-red-100">
-                            <AlertCircle size={10} className="animate-pulse" /> Atenção: Lead parado!
+                          <div className="bg-slate-50 p-3 rounded-2xl flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <MessageSquare size={12} />
+                              <span className="text-[0.5rem] font-black uppercase tracking-widest">Última</span>
+                            </div>
+                            <p className="text-[0.625rem] text-slate-600 font-bold line-clamp-1">"{lead.lastMessage}"</p>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+
+                          <div className="bg-slate-50 p-3 rounded-2xl flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <DollarSign size={12} />
+                              <span className="text-[0.5rem] font-black uppercase tracking-widest">Valor</span>
+                            </div>
+                            <p className="text-[0.625rem] text-slate-600 font-bold">R$ 3.200</p>
+                          </div>
+
+                          <div className="col-span-2 flex items-center justify-between pt-2">
+                            <div className={`flex items-center gap-2 text-[0.5625rem] font-black uppercase tracking-widest ${isStale ? 'text-rose-500' : 'text-slate-400'}`}>
+                              <Clock size={14} />
+                              {aging === 0 ? 'Hoje' : `${aging}d parado`}
+                            </div>
+                            <div className="flex -space-x-2">
+                              <div className="w-6 h-6 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[8px] font-black text-blue-600">
+                                <User size={10} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {lead.funnelStage === 'Fechado' && (
+                            <motion.div 
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="col-span-2 mt-2 p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col gap-2"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
+                                  <FolderPlus size={16} />
+                                </div>
+                                <div>
+                                  <p className="text-[0.5rem] font-black text-emerald-700 uppercase tracking-widest">Ricardo IA Sugere:</p>
+                                  <p className="text-[0.625rem] font-bold text-emerald-600">Criar pasta no Drive</p>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateFolder(lead.clientName || 'Cliente Sem Nome');
+                                }}
+                                className="w-full py-2 bg-emerald-600 text-white rounded-xl text-[0.5rem] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                              >
+                                Executar Agora
+                              </button>
+                            </motion.div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
 
                 {stageLeads.length === 0 && (
-                  <div className="h-24 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl opacity-40">
-                    <Plus size={20} className="text-slate-400 mb-1" />
-                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Arraste para cá</p>
+                  <div className="h-40 flex flex-col items-center justify-center border-4 border-dashed border-slate-200 rounded-[2.5rem] opacity-30 group hover:opacity-100 hover:border-blue-200 transition-all">
+                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 mb-3 group-hover:scale-110 transition-transform">
+                      <Plus size={24} />
+                    </div>
+                    <p className="text-[0.625rem] font-black uppercase tracking-[0.3em] text-slate-400">Arraste para cá</p>
                   </div>
                 )}
               </div>

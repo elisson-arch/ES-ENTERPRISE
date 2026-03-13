@@ -28,27 +28,62 @@ export default tseslint.config(
                 {
                     zones: [
                         // Shared Kernel: zero deps on other domains
-                        { target: './domains/shared', from: './domains/auth', message: '[@shared] Cannot import from @auth.' },
-                        { target: './domains/shared', from: './domains/google-workspace', message: '[@shared] Cannot import from @google-workspace.' },
-                        { target: './domains/shared', from: './domains/whatsapp', message: '[@shared] Cannot import from @whatsapp.' },
-                        { target: './domains/shared', from: './domains/clients', message: '[@shared] Cannot import from @clients.' },
-                        { target: './domains/shared', from: './domains/inventory', message: '[@shared] Cannot import from @inventory.' },
-                        { target: './domains/shared', from: './domains/ai', message: '[@shared] Cannot import from @ai.' },
-                        { target: './domains/shared', from: './domains/site-builder', message: '[@shared] Cannot import from @site-builder.' },
-                        { target: './domains/shared', from: './domains/reports', message: '[@shared] Cannot import from @reports.' },
-                        // Cross-domain imports forbidden
-                        { target: './domains/whatsapp', from: './domains/auth', message: 'Cross-domain import forbidden: use @shared.' },
-                        { target: './domains/whatsapp', from: './domains/google-workspace', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/whatsapp', from: './domains/clients', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/whatsapp', from: './domains/ai', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/google-workspace', from: './domains/whatsapp', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/google-workspace', from: './domains/ai', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/ai', from: './domains/whatsapp', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/ai', from: './domains/clients', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/clients', from: './domains/whatsapp', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/clients', from: './domains/inventory', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/inventory', from: './domains/clients', message: 'Cross-domain import forbidden.' },
-                        { target: './domains/reports', from: './domains/whatsapp', message: 'Cross-domain import forbidden.' },
+                        { 
+                            target: './domains/shared', 
+                            from: './domains', 
+                            except: ['./domains/shared'], 
+                            message: '[@shared] Shared kernel cannot depend on other domains.' 
+                        },
+                        
+                        // Domain Isolation: each domain can only import from itself and @shared
+                        { 
+                            target: './domains/ai', 
+                            from: './domains', 
+                            except: ['./domains/ai', './domains/shared'], 
+                            message: '[@ai] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/auth', 
+                            from: './domains', 
+                            except: ['./domains/auth', './domains/shared'], 
+                            message: '[@auth] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/clients', 
+                            from: './domains', 
+                            except: ['./domains/clients', './domains/shared'], 
+                            message: '[@clients] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/google-workspace', 
+                            from: './domains', 
+                            except: ['./domains/google-workspace', './domains/shared'], 
+                            message: '[@google-workspace] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/inventory', 
+                            from: './domains', 
+                            except: ['./domains/inventory', './domains/shared'], 
+                            message: '[@inventory] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/reports', 
+                            from: './domains', 
+                            except: ['./domains/reports', './domains/shared'], 
+                            message: '[@reports] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/site-builder', 
+                            from: './domains', 
+                            except: ['./domains/site-builder', './domains/shared'], 
+                            message: '[@site-builder] Cross-domain import forbidden. Use @shared or API.' 
+                        },
+                        { 
+                            target: './domains/whatsapp', 
+                            from: './domains', 
+                            except: ['./domains/whatsapp', './domains/shared'], 
+                            message: '[@whatsapp] Cross-domain import forbidden. Use @shared or API.' 
+                        },
                     ],
                 },
             ],

@@ -1,5 +1,4 @@
-﻿
-import { firestoreService } from '@shared/services/firestoreService';
+
 import { ChatSession, Message } from '@shared/types/common.types';
 import { collection, query, where, onSnapshot, orderBy, Timestamp, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '@shared/config/firebase';
@@ -12,8 +11,8 @@ export const chatService = {
     subscribeToChats(orgId: string, callback: (chats: ChatSession[]) => void) {
         const q = query(
             collection(db, CHATS_COLLECTION),
-            where('organizationId', '==', orgId),
-            orderBy('updatedAt', 'desc')
+            where('organizationId', '==', orgId)
+            // orderBy('updatedAt', 'desc') -> Removido para evitar erro de índice ausente no Firebase
         );
 
         return onSnapshot(q, (snapshot) => {
@@ -21,7 +20,15 @@ export const chatService = {
                 id: doc.id,
                 ...doc.data()
             })) as ChatSession[];
-            callback(chats);
+
+            // Ordenação em memória para evitar a necessidade de índice composto no Firestore
+            const sortedChats = chats.sort((a, b) => {
+                const dateA = new Date(a.updatedAt || 0).getTime();
+                const dateB = new Date(b.updatedAt || 0).getTime();
+                return dateB - dateA;
+            });
+
+            callback(sortedChats);
         });
     },
 

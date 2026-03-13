@@ -15,6 +15,7 @@ import WebsiteBuilderView from '@domains/site-builder/views/WebsiteBuilderView';
 import PublicSiteView from '@domains/site-builder/views/PublicSiteView';
 import DriveView from '@domains/google-workspace/views/DriveView';
 import WhatsAppView from '@domains/whatsapp/views/WhatsAppView';
+import TaskManagementView from '@domains/inventory/views/TaskManagementView';
 import IntegrationsView from '@shared/views/IntegrationsView';
 import SecurityView from '@domains/auth/views/SecurityView';
 import LoginView from '@domains/auth/views/LoginView';
@@ -166,6 +167,7 @@ const App: React.FC = () => {
                     <Route path="/documentos" element={guardRoute('documents', <div className="p-4 md:p-6 lg:p-10"><DocumentsView /></div>)} />
                     <Route path="/drive" element={guardRoute('drive', <div className="p-4 md:p-6 lg:p-10"><DriveView /></div>)} />
                     <Route path="/ia" element={guardRoute('ia', <div className="p-4 md:p-6 lg:p-10"><AIView /></div>)} />
+                    <Route path="/tarefas" element={<TaskManagementView />} />
                     <Route path="/site" element={guardRoute('site', <div className="p-4 md:p-6 lg:p-10"><WebsiteBuilderView /></div>)} />
                     <Route path="/settings" element={<div className="p-4 md:p-6 lg:p-10"><Settings /></div>} />
                   </Routes>

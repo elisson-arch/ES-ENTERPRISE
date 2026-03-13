@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
 import { 
-  Zap, Play, Plus, Code2, FileSpreadsheet, Braces, Terminal, 
-  Database, FormInput, Wand2, CheckCircle2, AlertTriangle, Copy, 
-  Trash2, Settings, Smartphone, Monitor, MessageSquare
+  Zap, FileSpreadsheet, Braces, AlertTriangle, MessageSquare
 } from 'lucide-react';
 
 const AutomationView = () => {

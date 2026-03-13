@@ -14,9 +14,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const SEED_ASSETS = [
+interface SeedAsset {
+    clientId: string;
+    type: string;
+    brand: string;
+    model: string;
+    serialNumber: string;
+    installationDate: string;
+    lastMaintenance: string;
+    organizationId: string;
+    updatedAt: string;
+}
+
+const SEED_ASSETS: SeedAsset[] = [
     {
-        clientId: '3CLilZuSaryJiUJh9FQ6', // Condomínio Aurora (ID real do teste anterior)
+        clientId: '3CLilZuSaryJiUJh9FQ6', // Condomínio Aurora
         type: 'Split Hi-Wall Inverter 12k BTU',
         brand: 'Daikin',
         model: 'FTKC12',
@@ -27,7 +39,7 @@ const SEED_ASSETS = [
         updatedAt: new Date().toISOString()
     },
     {
-        clientId: 'K1cu01b4ud6wYsKdgclL', // Hospital São Luiz (ID real do teste anterior)
+        clientId: 'K1cu01b4ud6wYsKdgclL', // Hospital São Luiz
         type: 'Chiller Industrial Parafuso',
         brand: 'Carrier',
         model: '30XW',
@@ -56,7 +68,7 @@ async function seed() {
         try {
             const docRef = await addDoc(collection(db, "assets"), asset);
             console.log(`✅ Ativo ${asset.brand} adicionado (ID: ${docRef.id})`);
-        } catch (e) {
+        } catch (e: any) {
             console.error(`❌ Erro em ${asset.brand}:`, e.message);
         }
     }

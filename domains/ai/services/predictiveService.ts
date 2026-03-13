@@ -1,4 +1,6 @@
-﻿import { Asset, PredictiveAlert } from '@shared/types/common.types';
+import { Asset, PredictiveAlert } from '@shared/types/common.types';
+import { geminiService } from '@domains/ai/services/geminiService';
+import { APP_CONFIG } from '@shared/config/config';
 
 // Thresholds (em dias) entre manutenções por tipo de equipamento HVAC
 const MAINTENANCE_THRESHOLDS: Record<string, number> = {
@@ -38,6 +40,40 @@ export const predictiveService = {
     };
   },
 
+  /**
+   * Proactive AI Analysis of Telemetry and History
+   */
+  async analyzeTelemetryWithAI(asset: Asset, telemetry: Record<string, unknown>[]): Promise<{ riskLevel: string; summary: string; anomalies: string[] }> {
+    const prompt = `
+      Analise os dados técnicos e de telemetria do seguinte ativo HVAC:
+      Ativo: ${asset.brand} ${asset.model} (${asset.type})
+      Última Manutenção: ${asset.lastMaintenance || 'Nenhuma registrada'}
+      Telemetria Recente: ${JSON.stringify(telemetry)}
+
+      Identifique anomalias (ex: vibração excessiva, temperatura fora do range, consumo de corrente elevado).
+      Retorne um JSON com:
+      - riskLevel: 'low', 'medium', 'high', 'critical'
+      - summary: um resumo técnico curto do diagnóstico
+      - anomalies: lista de strings com as anomalias detectadas
+    `;
+
+    try {
+      const response = await geminiService.callProxy(APP_CONFIG.AI.MODELS.FAST, { parts: [{ text: prompt }] }, {
+        responseMimeType: "application/json",
+        systemInstruction: "Você é um sistema especialista em manutenção preditiva de HVAC. Analise dados de sensores e histórico para prever falhas."
+      });
+
+      return JSON.parse(response.text);
+    } catch (error) {
+      console.error('[PredictiveService] AI Analysis failed:', error);
+      return {
+        riskLevel: 'medium',
+        summary: 'Falha na análise de IA. Baseado apenas no tempo de uso.',
+        anomalies: ['Análise de telemetria indisponível']
+      };
+    }
+  },
+
   analyzeAssetsRisk(assets: Asset[]): PredictiveAlert[] {
     return assets
       .map((a) => this.calculateRiskScore(a))
@@ -45,3 +81,4 @@ export const predictiveService = {
       .sort((a, b) => b.daysOverdue - a.daysOverdue); // mais críticos primeiro
   },
 };
+

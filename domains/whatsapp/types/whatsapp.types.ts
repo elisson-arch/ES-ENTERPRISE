@@ -25,6 +25,7 @@ export interface ChatSession {
     lastStageChange?: string;
     assignedTo?: string;
     createdAt: string;
+    updatedAt?: string;
     tasks?: ClientTask[];
     internalNotes?: string;
     billingData?: {

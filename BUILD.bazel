@@ -5,24 +5,6 @@ npm_link_all_packages(name = "node_modules")
 
 package(default_visibility = ["//visibility:public"])
 
-# Root types barrel (backward compat re-exports)
-ts_project(
-    name = "types",
-    srcs = ["types.ts"],
-    declaration = True,
-    tsconfig = "//:tsconfig.json",
-    deps = [
-        "//domains/auth",
-        "//domains/google-workspace",
-        "//domains/clients",
-        "//domains/whatsapp",
-        "//domains/inventory",
-        "//domains/site-builder",
-        "//domains/reports",
-        "//domains/shared",
-    ],
-)
-
 # Aggregate target — build everything
 alias(
     name = "all_domains",

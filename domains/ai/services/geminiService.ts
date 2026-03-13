@@ -1,4 +1,3 @@
-﻿import { GoogleGenAI, Type } from "@google/genai";
 import { APP_CONFIG } from '@shared/config/config';
 
 const HVAC_SYSTEM_INSTRUCTION = APP_CONFIG.AI.SYSTEM_INSTRUCTIONS.RICARDO_IA;
@@ -6,7 +5,7 @@ const HVAC_SYSTEM_INSTRUCTION = APP_CONFIG.AI.SYSTEM_INSTRUCTIONS.RICARDO_IA;
 /**
  * Helper to handle specific Gemini API errors and notify the UI
  */
-const handleApiError = (err: any) => {
+export const handleApiError = (err: Error | Record<string, any>) => {
   if (err?.message?.includes("Requested entity was not found.")) {
     window.dispatchEvent(new CustomEvent('aistudio_key_reset'));
   }
@@ -17,7 +16,7 @@ export const geminiService = {
   /**
    * Helper unificado para chamadas ao Proxy do Backend
    */
-  async callProxy(model: string, contents: any, config: any = {}) {
+  async callProxy(model: string, contents: Record<string, unknown>, config: Record<string, unknown> = {}) {
     try {
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
