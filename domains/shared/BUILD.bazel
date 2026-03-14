@@ -1,0 +1,25 @@
+# domains/shared BUILD.bazel
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "shared",
+    srcs = glob([
+        "**/*.ts",
+        "**/*.tsx",
+    ], exclude = ["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [
+        "//:node_modules/react",
+        "//:node_modules/firebase",
+        "//:node_modules/lucide-react",
+    ],
+    declaration = True,
+)
+
+ts_project(
+    name = "shared_tests",
+    srcs = glob(["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [":shared"],
+    testonly = True,
+)

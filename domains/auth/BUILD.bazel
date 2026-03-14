@@ -1,0 +1,23 @@
+﻿# domains/auth BUILD.bazel
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "auth",
+    srcs = glob([
+        "**/*.ts",
+        "**/*.tsx",
+    ], exclude = ["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [
+        "//domains/shared",
+    ],
+    declaration = True,
+)
+
+ts_project(
+    name = "auth_tests",
+    srcs = glob(["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [":auth"],
+    testonly = True,
+)

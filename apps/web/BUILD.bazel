@@ -1,0 +1,25 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "web",
+    srcs = glob(["**/*.ts", "**/*.tsx"]),
+    declaration = True,
+    tsconfig = ":tsconfig.json",
+    deps = [
+        "//:node_modules/react",
+        "//:node_modules/react-dom",
+        "//:node_modules/react-router-dom",
+        "//domains/shared",
+        "//domains/auth",
+        "//domains/google-workspace",
+        "//domains/whatsapp",
+        "//domains/clients",
+        "//domains/inventory",
+        "//domains/ai",
+        "//domains/site-builder",
+        "//domains/reports",
+    ],
+)

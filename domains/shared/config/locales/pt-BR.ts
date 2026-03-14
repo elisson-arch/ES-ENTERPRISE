@@ -36,10 +36,7 @@ export const ptBR = {
         typing_normal: "Processando...",
         edit_mode_active: "Modo Edição de Imagem Ativo",
         placeholder_normal: "Descreva uma falha técnica ou peça uma consultoria...",
-        placeholder_edit: "Ex: 'Adicione um filtro retrô' ou 'Remova o fundo'...",
-        edit_image: "Editar imagem",
-        upload_image: "Fazer upload de imagem",
-        send_message: "Enviar mensagem"
+        placeholder_edit: "Ex: 'Adicione um filtro retrô' ou 'Remova o fundo'..."
     },
     infrastructure: {
         status_sgc: "Status do Motor SGC",
@@ -57,8 +54,6 @@ export const ptBR = {
         sync_error_desc: "Não conseguimos acessar seus arquivos. Autorize os escopos de Drive e habilite o serviço/API correspondente.",
         scanning_cloud: "Escaneando Google Cloud...",
         metadata_firestore: "Metadados no Firestore",
-        storage_info: "Arquivos pesados no Drive do cliente",
-        refresh: "Atualizar arquivos",
-        file_selector: "Seletor de arquivos"
+        storage_info: "Arquivos pesados no Drive do cliente"
     }
 };

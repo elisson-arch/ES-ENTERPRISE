@@ -201,11 +201,7 @@ const AIView = () => {
                     <div className="relative group mb-6">
                       <img src={msg.imageUrl} className="w-full max-h-[400px] object-contain rounded-3xl shadow-2xl border-4 border-white" alt="Anexo" />
                       <div className="absolute top-4 right-4 flex gap-2">
-                        <button 
-                          onClick={() => { setIsEditingImage(true); setCurrentImageForEdit(msg.imageUrl || null); }} 
-                          className="p-3 bg-white/90 backdrop-blur rounded-2xl text-indigo-600 shadow-xl hover:scale-110 transition-transform"
-                          title={t('ai.edit_image')}
-                        >
+                        <button onClick={() => { setIsEditingImage(true); setCurrentImageForEdit(msg.imageUrl || null); }} className="p-3 bg-white/90 backdrop-blur rounded-2xl text-indigo-600 shadow-xl hover:scale-110 transition-transform">
                           <Wand2 size={20} />
                         </button>
                       </div>
@@ -262,19 +258,8 @@ const AIView = () => {
 
         <div className="p-10 border-t border-slate-50 bg-white">
           <div className="max-w-5xl mx-auto flex gap-6 bg-slate-50 p-4 rounded-[3rem] border border-slate-200 focus-within:ring-8 focus-within:ring-indigo-500/5 focus-within:border-indigo-500 transition-all shadow-inner">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleImageUpload} 
-              title={t('ai.upload_image')}
-            />
-            <button 
-              onClick={() => fileInputRef.current?.click()} 
-              className="p-5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-[1.5rem] transition-all shadow-sm"
-              title={t('ai.upload_image')}
-            >
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+            <button onClick={() => fileInputRef.current?.click()} className="p-5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-[1.5rem] transition-all shadow-sm">
               <Camera size={24} />
             </button>
             <input
@@ -289,7 +274,6 @@ const AIView = () => {
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
               className="p-5 bg-slate-950 text-white rounded-[1.5rem] shadow-2xl hover:bg-black active:scale-95 transition-all disabled:opacity-30"
-              title={t('ai.send_message')}
             >
               <Send size={24} />
             </button>

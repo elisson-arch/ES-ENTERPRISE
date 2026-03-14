@@ -14,8 +14,6 @@ export interface AppConfig {
         SCOPES: string[];
     };
     AI: {
-        /** Provedor ativo: 'gemini' | 'openai' | 'claude' */
-        PROVIDER: string;
         MODELS: {
             PRIMARY: string;
             FAST: string;
@@ -41,13 +39,9 @@ export interface AppConfig {
 }
 
 /**
- * Configuração da aplicação carregada diretamente das variáveis de ambiente
- * do Vite (VITE_*) definidas em tempo de build.
- *
- * As chaves do Firebase são públicas por design e seguras no bundle —
- * a segurança real é feita via Firebase Security Rules.
+ * Configurações Estáticas e Padronizadas
  */
-export const APP_CONFIG: AppConfig = {
+const BASE_CONFIG: any = {
     METADATA: {
         NAME: "ES Enterprise",
         DESCRIPTION: "CRM Inteligente para Climatização",
@@ -70,7 +64,6 @@ export const APP_CONFIG: AppConfig = {
         ]
     },
     AI: {
-        PROVIDER: import.meta.env.VITE_AI_PROVIDER || 'gemini',
         MODELS: {
             PRIMARY: 'gemini-3-pro-preview',
             FAST: 'gemini-3-flash-preview',
@@ -100,3 +93,39 @@ Ao responder:
         APP_ID: import.meta.env.VITE_FIREBASE_APP_ID || ""
     }
 };
+
+/**
+ * Singleton da Configuração
+ */
+export let APP_CONFIG: AppConfig = BASE_CONFIG;
+
+/**
+ * Função de Bootstrap: Carrega as chaves seguras do backend
+ */
+export async function loadSecureConfig(): Promise<AppConfig> {
+    try {
+        const response = await fetch('/api/config-secure');
+        if (!response.ok) throw new Error('Falha ao carregar configurações seguras');
+
+        const secureData = await response.json();
+
+        // Merge das configurações seguras
+        APP_CONFIG = {
+            ...BASE_CONFIG,
+            FIREBASE: {
+                ...BASE_CONFIG.FIREBASE,
+                ...secureData.firebase
+            },
+            GOOGLE: {
+                ...BASE_CONFIG.GOOGLE,
+                CLIENT_ID: secureData.googleClientId || BASE_CONFIG.GOOGLE.CLIENT_ID
+            }
+        };
+
+        console.log('[CONFIG] "O Cofre" foi aberto com sucesso via Backend. 🔐');
+        return APP_CONFIG;
+    } catch (error) {
+        console.warn('[CONFIG] Falha ao acessar "O Cofre". Usando chaves de ambiente fallback.', error);
+        return APP_CONFIG;
+    }
+}

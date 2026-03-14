@@ -179,7 +179,20 @@ export const ClientCRMDetails: React.FC<ClientCRMDetailsProps> = ({
             <button onClick={onEditClient} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-2 transition-colors">
                <Pencil size={12} /> Editar Perfil
             </button>
-            <button onClick={onShareClient} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 transition-colors">
+            <button 
+              onClick={() => {
+                const textToCopy = `Nome: ${chat.clientName}\nTelefone: ${chat.clientPhone || 'Não informado'}\nEndereço: ${chat.clientAddress || 'Não informado'}`;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                  // Optional: Add a brief visual feedback here if needed
+                  console.log('Copiado para a área de transferência');
+                }).catch(err => {
+                  console.error('Erro ao copiar: ', err);
+                });
+                if (onShareClient) onShareClient();
+              }} 
+              className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-2 transition-colors"
+              title="Copiar detalhes de contato"
+            >
                <Share2 size={12} /> Compartilhar
             </button>
           </div>

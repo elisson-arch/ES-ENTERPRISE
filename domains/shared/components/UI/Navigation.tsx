@@ -10,7 +10,8 @@ import {
   Moon,
   Sun,
   Plus,
-  LayoutGrid
+  LayoutGrid,
+  ChevronRight
 } from 'lucide-react';
 import { googleApiService } from '@google-workspace';
 import { NAVIGATION_ROUTES, t } from '@shared';
@@ -21,29 +22,75 @@ interface SidebarItemProps {
   to: string;
   active: boolean;
   onClick?: () => void;
+  subItems?: { path: string; label: string }[];
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, to, active, onClick }) => (
-  <Link
-    to={to}
-    onClick={onClick}
-    className={`flex items-center px-4 py-3 rounded-2xl transition-all duration-200 mx-2 ${active
-      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-      }`}
-  >
-    <div className="shrink-0 flex items-center justify-center w-6 h-6">
-      <Icon size={20} />
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, to, active, onClick, subItems }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const hasSubItems = subItems && subItems.length > 0;
+
+  return (
+    <div 
+      className="relative mx-2 my-1"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link
+        to={to}
+        onClick={onClick}
+        className={`flex items-center px-4 py-3 rounded-2xl transition-all duration-200 ${active || isHovered
+          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+          }`}
+      >
+        <div className="shrink-0 flex items-center justify-center w-6 h-6">
+          <Icon size={20} />
+        </div>
+        <span className="font-bold text-[0.75rem] uppercase tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300
+          lg:opacity-0 lg:w-0 lg:ml-0
+          lg:group-hover:opacity-100 lg:group-hover:w-auto lg:group-hover:ml-3
+          opacity-100 w-auto ml-3 flex-1
+        ">
+          {label}
+        </span>
+        {hasSubItems && (
+          <ChevronRight 
+            size={14} 
+            className={`shrink-0 transition-transform duration-300 
+              lg:opacity-0 lg:w-0 lg:ml-0
+              lg:group-hover:opacity-100 lg:group-hover:w-auto lg:group-hover:ml-2
+              opacity-100 w-auto ml-2
+              ${isHovered ? 'rotate-90' : ''}
+            `} 
+          />
+        )}
+      </Link>
+      
+      {hasSubItems && (
+        <div 
+          className={`overflow-hidden transition-all duration-300 ease-in-out ${isHovered ? 'max-h-48 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}
+        >
+          <div className="flex flex-col gap-1 pl-12 pr-4 py-1">
+            {subItems.map(sub => (
+              <Link
+                key={sub.path}
+                to={sub.path}
+                onClick={onClick}
+                className="text-[0.65rem] font-bold uppercase tracking-wider text-slate-400 hover:text-blue-600 py-1.5 transition-colors whitespace-nowrap overflow-hidden
+                  lg:opacity-0 lg:w-0
+                  lg:group-hover:opacity-100 lg:group-hover:w-auto
+                  opacity-100 w-auto
+                "
+              >
+                {sub.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-    <span className="font-bold text-[0.75rem] uppercase tracking-tight whitespace-nowrap overflow-hidden transition-all duration-300
-      lg:opacity-0 lg:w-0 lg:ml-0
-      lg:group-hover:opacity-100 lg:group-hover:w-auto lg:group-hover:ml-3
-      opacity-100 w-auto ml-3
-    ">
-      {label}
-    </span>
-  </Link>
-);
+  );
+};
 
 import { useAppContext } from '@shared';
 
@@ -75,7 +122,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   const onToggleNotifications = propOnToggle || (() => window.dispatchEvent(new CustomEvent('toggle_notifications')));
   const onOpenSearch = propOnOpenSearch || (() => window.dispatchEvent(new CustomEvent('open_search')));
 
-  const allowedRoutes = NAVIGATION_ROUTES.filter((route) => googleApiService.canAccessRoute(route.id));
+  const allowedRoutes = NAVIGATION_ROUTES;
 
   const isPublicSite = location.pathname.startsWith('/v/');
   if (isPublicSite) return null;
@@ -127,15 +174,16 @@ export const Navigation: React.FC<NavigationProps> = ({
             </button>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar flex flex-col justify-end pb-4">
+          <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar flex flex-col pb-4">
             {allowedRoutes.map((item) => (
               <SidebarItem
                 key={item.path}
                 icon={item.icon}
                 label={item.label}
                 to={item.path}
-                active={location.pathname === item.path}
+                active={location.pathname === item.path || (item.subItems && item.subItems.some(sub => location.pathname.startsWith(sub.path)))}
                 onClick={() => setIsOpen(false)}
+                subItems={item.subItems}
               />
             ))}
           </nav>

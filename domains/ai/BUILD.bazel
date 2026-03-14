@@ -1,0 +1,23 @@
+﻿# domains/ai BUILD.bazel
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+ts_project(
+    name = "ai",
+    srcs = glob([
+        "**/*.ts",
+        "**/*.tsx",
+    ], exclude = ["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [
+        "//domains/shared",
+    ],
+    declaration = True,
+)
+
+ts_project(
+    name = "ai_tests",
+    srcs = glob(["**/*.test.ts", "**/*.test.tsx"]),
+    deps = [":ai"],
+    testonly = True,
+)

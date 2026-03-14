@@ -222,13 +222,13 @@ class GoogleApiService {
   }
 
   canAccessRoute(routeId: string): boolean {
+    const required = ROUTE_SCOPE_REQUIREMENTS[routeId] || [];
+    if (required.length === 0) return true;
+
     if (!this.isAuthenticated()) return false;
 
     const profile = this.getAccessProfile();
     if (profile.fullAccess) return true;
-
-    const required = ROUTE_SCOPE_REQUIREMENTS[routeId] || [];
-    if (required.length === 0) return true;
 
     return required.every((scope) => this.isAuthenticated(scope));
   }

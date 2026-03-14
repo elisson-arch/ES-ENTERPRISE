@@ -1,19 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import * as Sentry from '@sentry/react';
 import App from '@shared/views/App';
 import { AppProvider } from '@shared/hooks/useAppContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// ---------------------------------------------------------------------------
-// Sentry — monitoramento de erros em produção
-// ---------------------------------------------------------------------------
-Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    environment: import.meta.env.MODE, // 'development' | 'production'
-    enabled: import.meta.env.PROD,    // Apenas ativo em produção
-    tracesSampleRate: 0.2,            // 20% das transações para performance
-});
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -33,10 +22,7 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
         return { hasError: true, error };
     }
     componentDidCatch(error: Error, info: React.ErrorInfo) {
-        Sentry.captureException(error, {
-            contexts: { react: { componentStack: info.componentStack } },
-        });
-        console.error('[ErrorBoundary] Erro fatal de renderização:', error, info);
+        console.error("DIAGNOSTICO ROOT CATCH:", error, info);
     }
     render() {
         if (this.state.hasError) {
@@ -52,11 +38,18 @@ class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode },
     }
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Could not find root element to mount to');
+console.log("DIAGNOSTICO: index.tsx executando...");
 
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+    console.error("DIAGNOSTICO: rootElement não encontrado!");
+    throw new Error('Could not find root element to mount to');
+}
+
+console.log("DIAGNOSTICO: Criando React Root...");
 const root = ReactDOM.createRoot(rootElement);
 
+console.log("DIAGNOSTICO: Renderizando aplicação...");
 root.render(
     <React.StrictMode>
         <GlobalErrorBoundary>
