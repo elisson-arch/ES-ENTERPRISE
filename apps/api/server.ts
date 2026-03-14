@@ -1,7 +1,9 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
+import admin from 'firebase-admin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,7 +15,68 @@ app.use(express.json({ limit: '50mb' }));
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 const API_KEY = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
+// ---------------------------------------------------------------------------
+// Firebase Admin SDK — inicializa uma única vez (gracefully)
+// ---------------------------------------------------------------------------
+if (!admin.apps.length) {
+    try {
+        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+        if (serviceAccountJson) {
+            admin.initializeApp({
+                credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+            });
+        } else {
+            // Fallback: usa Application Default Credentials (GOOGLE_APPLICATION_CREDENTIALS)
+            admin.initializeApp({
+                credential: admin.credential.applicationDefault(),
+            });
+        }
+        console.log('[AUTH] Firebase Admin SDK inicializado com sucesso.');
+    } catch (err) {
+        console.warn('[AUTH] Firebase Admin SDK não pôde ser inicializado. Auth middleware desabilitado.', err);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Middleware: verifica token Firebase Auth no header Authorization
+// ---------------------------------------------------------------------------
+async function requireFirebaseAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+    if (!admin.apps.length) {
+        // Se o Admin SDK não foi inicializado, deixa passar com aviso
+        console.warn('[AUTH] SDK não disponível — requisição permitida sem autenticação.');
+        next();
+        return;
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ error: 'Não autorizado. Token de autenticação ausente.' });
+        return;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+        await admin.auth().verifyIdToken(idToken);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Não autorizado. Token inválido ou expirado.' });
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiter: máximo 20 req/min por IP no endpoint de IA
+// ---------------------------------------------------------------------------
+const aiRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minuto
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Muitas requisições. Aguarde um momento antes de tentar novamente.' },
+});
+
+// ---------------------------------------------------------------------------
 // dist/ fica dois níveis acima (raiz do projeto)
+// ---------------------------------------------------------------------------
 const distPath = path.resolve(__dirname, '../../dist');
 
 // Serve arquivos estáticos gerados pelo Vite build
@@ -28,27 +91,10 @@ app.use(express.static(distPath, {
 app.get('/healthz', (_req: Request, res: Response) => res.status(200).send('OK'));
 
 /**
- * Configuração segura: entrega Firebase config ao frontend
- * sem expor em variáveis de build estáticas.
- */
-app.get('/api/config-secure', (_req: Request, res: Response) => {
-    res.json({
-        firebase: {
-            apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY,
-            authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN,
-            projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-            storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID,
-            appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID,
-        },
-        googleClientId: process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
-    });
-});
-
-/**
  * Proxy Gemini: mantém API_KEY no backend, nunca exposta ao cliente.
+ * Protegido por autenticação Firebase e rate limit.
  */
-app.post('/api/ai/generate', async (req: Request, res: Response) => {
+app.post('/api/ai/generate', aiRateLimiter, requireFirebaseAuth, async (req: Request, res: Response) => {
     try {
         const { model, contents, config } = req.body;
 

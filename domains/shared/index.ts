@@ -10,7 +10,7 @@ export { OnboardingModal } from './components/UI/OnboardingModal';
 // ─── CONFIGURAÇÕES E TEMAS ───────────────────────────────────────────────────
 export { theme, theme2026 } from './config/theme';
 export { db, auth, getDb } from './config/firebase';
-export { APP_CONFIG, loadSecureConfig } from './config/config';
+export { APP_CONFIG } from './config/config';
 export { NAVIGATION_ROUTES } from './config/navigation';
 
 // ─── HOOKS GLOBAIS ───────────────────────────────────────────────────────────
