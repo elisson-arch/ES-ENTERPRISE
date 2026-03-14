@@ -67,7 +67,26 @@ Removidos todos os 13 arquivos `.bazel` que não eram usados pelo pipeline de bu
 ## Arquivo Atualizado: [.env.example](file:///home/lucas/ES-ENTERPRISE/.env.example)
 
 Adicionadas duas novas variáveis:
-```bash
-VITE_SENTRY_DSN=        # DSN do Sentry (frontend)
-FIREBASE_SERVICE_ACCOUNT_JSON=  # Credenciais Admin SDK (backend)
-```
+---
+
+## 5. ✅ Agente de IA Universal (Alpha)
+
+Implementada a base para um sistema de IA agnóstico a provedor e capaz de auto-gerenciamento.
+
+### Arquitetura (Adapter Pattern)
+
+- **`AIProvider` ([AIProvider.ts](file:///home/lucas/ES-ENTERPRISE/domains/ai/core/AIProvider.ts))**: Interface universal para qualquer LLM. Permite trocar entre Gemini, OpenAI ou Claude sem alterar a lógica do negócio.
+- **`AgentRunner` ([AgentRunner.ts](file:///home/lucas/ES-ENTERPRISE/domains/ai/core/AgentRunner.ts))**: Orquestrador do loop autônomo. Ele gerencia o histórico, as chamadas de ferramentas e as iterações até atingir o objetivo do usuário.
+- **`ToolRegistry` ([ToolRegistry.ts](file:///home/lucas/ES-ENTERPRISE/domains/ai/core/ToolRegistry.ts))**: Registro centralizado de ferramentas que a IA pode "aprender" a usar.
+
+### Ferramentas de Auto-Gerenciamento (Introspecção)
+O agente agora possui ferramentas para interagir diretamente com o sistema:
+- `listDomains`: Lista os domínios do projeto para entender a estrutura.
+- `readFile`: Lê o conteúdo de arquivos específicos.
+- `searchCode`: Realiza buscas textuais em todo o repositório.
+
+### Provedores Implementados
+- **Gemini Adapter**: Integração nativa com Google AI SDK.
+- **OpenAI Adapter**: Base para modelos GPT-4.
+
+> **Status:** O sistema está pronto para ser usado por interfaces de chat ou processos automatizados que requeiram raciocínio sobre o próprio código.
