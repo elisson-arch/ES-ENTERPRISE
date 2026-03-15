@@ -1,24 +1,49 @@
-# Plano de Correção: Erro Fatal Firebase (collection() argument)
+# AI-Native Platform Refactoring
 
-O erro ocorre porque o `db` (Firestore instance) está sendo exportado como `null`, pois as variáveis de ambiente `VITE_FIREBASE_*` não estão sendo carregadas corretamente no frontend. Isso acontece porque o Vite está procurando o arquivo `.env` dentro de `apps/web/`, mas ele reside na raiz do projeto.
+Transform the AI domain into a true AI-Native platform, moving beyond chat to predictive intelligence and autonomous automation.
 
-## Mudanças Propostas
+## Architectural Advice
 
-### Web App
+Seguiremos os pilares da "Inteligência Imersiva":
+- `AIView.tsx`: Radar Preditivo (Insights e Saúde).
+- `AutomationView.tsx`: Construtor de Regras (Automação).
+- `RicardoCommandPalette.tsx`: Busca Global Ubíqua.
 
-#### [MODIFY] [vite.config.ts](file:///home/lucas/ES-ENTERPRISE/apps/web/vite.config.ts)
+## User Review Required
 
-- Alterar o carregamento de variáveis de ambiente para apontar para a raiz do projeto.
-- Adicionar `envDir: '../../'` na configuração do Vite para garantir que o cliente também veja as variáveis da raiz.
+> [!IMPORTANT]
+> A `AIView` deixará de ser um chat tradicional para se tornar um Dashboard Preditivo. O chat principal será acessível via `/ia/chat` ou pelo Command Palette.
 
-#### [MODIFY] [firebase.ts](file:///home/lucas/ES-ENTERPRISE/domains/shared/config/firebase.ts)
+## Proposed Changes
 
-- Melhorar a exportação do `db` para ser uma função ou garantir que ele não quebre o `collection()` se for `null` (embora carregar o `.env` deva resolver a causa raiz).
-- Manter o `db` como uma referência direta, mas garantir que a inicialização ocorra corretamente se os envs estiverem presentes.
+### AI Domain
 
-## Plano de Verificação
+#### [MODIFY] [AIView.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/views/AIView.tsx)
+- Refatorar para "Centro de Inteligência Preditiva".
+- Adicionar Score de Saúde Global e Cards de Risco (Predictive Insights).
+- Integrar com `predictiveService.ts`.
 
-### Verificação Manual
-1. Reiniciar o servidor de desenvolvimento: `npm run dev`.
-2. Verificar se o erro "FirebaseError: Expected first argument..." desapareceu no console do navegador.
-3. Confirmar se os dados do Firestore (Inventário, Documentos) estão sendo carregados.
+#### [MODIFY] [AutomationView.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/views/AutomationView.tsx)
+- Criar interface de "Rule Builder" (Gatilho -> Condição -> Ação).
+- Usar Framer Motion para animações de fluxo.
+
+#### [NEW] [RicardoCommandPalette.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/components/RicardoCommandPalette.tsx)
+- Modal global Cmd+K para busca e execução de comandos via IA.
+
+#### [MODIFY] [index.ts](file:///home/lucas/ES-ENTERPRISE/domains/ai/index.ts)
+- Exportar o novo componente Command Palette.
+
+### Shared Domain
+
+#### [MODIFY] [App.tsx](file:///home/lucas/ES-ENTERPRISE/domains/shared/views/App.tsx)
+- Integrar `RicardoCommandPalette` na raiz do layout para acesso global.
+
+## Verification Plan
+
+### Manual Verification
+- Validar Radar Preditivo na `AIView`.
+- Testar criação de regras na `AutomationView`.
+- Pressionar Ctrl+K e validar abertura do Command Palette.
+
+
+

@@ -24,3 +24,11 @@
 - [x] Corrigir Erro de Inicialização do Firebase (db is null)
   - [x] Ajustar `vite.config.ts` para carregar `.env` da raiz
   - [x] Validar inicialização no `firebase.ts`
+
+## 7. Visualização e Dashboard de IA
+- [x] Implementar Centro de Comando da IA (AITrainingCenterView)
+- [x] Refatorar `AIView.tsx` para Radar de Inteligência Preditiva
+- [x] Refatorar `AutomationView.tsx` para Rule Builder (Automação Autônoma)
+- [x] Criar `RicardoCommandPalette.tsx` (Global Cmd+K)
+- [x] Integrar Command Palette no layout global (`App.tsx`)
+- [x] Atualizar repositório Git

@@ -1,5 +1,7 @@
 export { default as AIView } from './views/AIView';
+export { default as AITrainingCenterView } from './views/AITrainingCenterView';
 export { default as AutomationView } from './views/AutomationView';
+export { default as RicardoCommandPalette } from './components/RicardoCommandPalette';
 export * from './services/aiService';
 export * from './services/geminiService';
 export * from './services/predictiveService';

@@ -1,6 +1,6 @@
 
 import {
-    Users, LayoutDashboard, MessageSquare, Calendar,
+    Users, LayoutDashboard, MessageSquare,
     Database, Zap, Target, BarChart3, Shield,
     Settings, Bot, Globe, FileText, HardDrive
 } from 'lucide-react';
@@ -50,7 +50,13 @@ export const NAVIGATION_ROUTES = [
             { path: '/reports/financial', label: 'Financeiro' }
         ]
     },
-    { id: 'ia', path: '/ia', label: 'Ricardo IA', icon: Bot },
+    { 
+        id: 'ia', path: '/ia', label: 'Ricardo IA', icon: Bot,
+        subItems: [
+            { path: '/ia/chat', label: 'Cérebro (Chat)' },
+            { path: '/ia/treinamento', label: 'Centro de Treinamento' }
+        ]
+    },
     { id: 'site', path: '/site', label: 'Criador de Site', icon: Globe },
     { id: 'security', path: '/security', label: 'Segurança', icon: Shield },
     { id: 'integrations', path: '/integrations', label: 'Integrações', icon: Settings }

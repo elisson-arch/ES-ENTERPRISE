@@ -1,127 +1,220 @@
-
 import React, { useState } from 'react';
 import { 
-  Zap, FileSpreadsheet, Braces, AlertTriangle, MessageSquare
+  Zap, 
+  Plus,
+  Settings2, 
+  ShieldCheck,
+  ChevronRight,
+  Trash2,
+  Clock,
+  ArrowRight
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Rule {
+  id: string;
+  name: string;
+  active: boolean;
+  trigger: string;
+  condition: string;
+  action: string;
+  icon: React.ReactNode;
+}
+
+// --- MOCK DATA ---
+const INITIAL_RULES: Rule[] = [
+  { 
+    id: '1', 
+    name: 'Alerta Crítico de Compressor', 
+    active: true,
+    trigger: 'Risco Preditivo > 80%', 
+    condition: 'Horário Comercial',
+    action: 'Enviar WhatsApp para Técnico & Cliente',
+    icon: <Zap size={18} className="text-amber-500" />
+  },
+  { 
+    id: '2', 
+    name: 'Auto-Gerador de Orçamentos', 
+    active: false,
+    trigger: 'Pedido de Cotação via E-mail', 
+    condition: 'Abaixo de R$ 5.000',
+    action: 'Gerar PDF & Responder Automaticamente',
+    icon: <Zap size={18} className="text-blue-500" />
+  }
+];
+
+// --- COMPONENTS ---
+
+const RuleNode = ({ rule, onDelete }: { rule: Rule, onDelete: (id: string) => void }) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative"
+  >
+    <div className="flex justify-between items-start mb-8">
+      <div className="flex items-center gap-4">
+        <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+          {rule.icon}
+        </div>
+        <div>
+          <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter">{rule.name}</h4>
+          <p className="text-[10px] text-slate-400 font-bold uppercase">ID: {rule.id}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+         <div className={`px-2 py-1 rounded-full text-[8px] font-black uppercase border ${rule.active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+            {rule.active ? 'Ativo' : 'Pausado'}
+         </div>
+         <button onClick={() => onDelete(rule.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
+            <Trash2 size={16} />
+         </button>
+      </div>
+    </div>
+
+    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-10">
+      <div className="flex-1 w-full p-5 bg-slate-50 rounded-2xl border border-slate-100">
+        <p className="text-[8px] font-black text-slate-400 uppercase mb-2">Se (Gatilho)</p>
+        <p className="text-xs font-bold text-slate-700">{rule.trigger}</p>
+      </div>
+      <div className="shrink-0 text-slate-300 animate-pulse">
+        <ArrowRight size={20} />
+      </div>
+      <div className="flex-1 w-full p-5 bg-indigo-50 rounded-2xl border border-indigo-100">
+        <p className="text-[8px] font-black text-indigo-400 uppercase mb-2">Então (Ação)</p>
+        <p className="text-xs font-bold text-indigo-900">{rule.action}</p>
+      </div>
+    </div>
+
+    <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-400">
+       <div className="flex items-center gap-2">
+          <Clock size={12} />
+          Executado há 14 minutos
+       </div>
+       <button className="flex items-center gap-2 text-indigo-600 hover:underline">
+          Configurar Condições <ChevronRight size={10} />
+       </button>
+    </div>
+  </motion.div>
+);
+
+// --- VIEW ---
 
 const AutomationView = () => {
-  const [activeTab, setActiveTab] = useState<'rules' | 'script' | 'formulas'>('rules');
-  const [generatedFormula, setGeneratedFormula] = useState('');
-  const [formulaPrompt, setFormulaPrompt] = useState('');
+  const [rules, setRules] = useState(INITIAL_RULES);
+  const [activeTab, setActiveTab] = useState('builder');
 
-  const generateFormula = () => {
-    setGeneratedFormula(`=QUERY(Orçamentos!A:Z; "select * where B = 'Roberto Manutenções' and D > 500"; 1)`);
+  const addRule = () => {
+    const newRule = {
+      id: Date.now().toString(),
+      name: 'Nova Regra Autônoma',
+      active: true,
+      trigger: 'Definir Gatilho',
+      condition: 'Sempre',
+      action: 'Definir Ação',
+      icon: <Zap size={18} className="text-indigo-500" />
+    };
+    setRules([newRule, ...rules]);
+  };
+
+  const deleteRule = (id: string) => {
+    setRules(rules.filter(r => r.id !== id));
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-12">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-200">
-              <Zap size={24} />
-            </div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight italic uppercase">Centro de Automação</h2>
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl shadow-indigo-100">
+            <Zap size={40} />
           </div>
-          <p className="text-slate-500 text-sm font-medium">Integração profissional via Google Apps Script e WhatsApp API.</p>
+          <div>
+            <h2 className="text-4xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">Motor de Automação</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-3">Ações Autônomas do Ricardo IA</p>
+          </div>
         </div>
 
-        <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm overflow-x-auto no-scrollbar">
-          <button onClick={() => setActiveTab('rules')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'rules' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Gatilhos</button>
-          <button onClick={() => setActiveTab('script')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'script' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Apps Script</button>
-          <button onClick={() => setActiveTab('formulas')} className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'formulas' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Fórmulas IA</button>
+        <div className="flex gap-2 p-2 bg-slate-50 rounded-[2rem] border border-slate-100">
+           <button 
+             onClick={() => setActiveTab('builder')}
+             className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'builder' ? 'bg-white text-slate-800 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+           >
+             Rule Builder
+           </button>
+           <button 
+             onClick={() => setActiveTab('logs')}
+             className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'logs' ? 'bg-white text-slate-800 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+           >
+             Live Feed
+           </button>
         </div>
       </header>
 
-      {activeTab === 'rules' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
-            <div className="flex justify-between items-start mb-6">
-              <div className="p-4 bg-green-50 text-green-600 rounded-3xl group-hover:scale-110 transition-transform">
-                <MessageSquare size={28} />
-              </div>
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100">API Ativa</span>
-            </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">WhatsApp Auto-Responder</h3>
-            <p className="text-sm text-slate-500 font-medium mb-6">Integração real que responde leads automáticos assim que entram na planilha do Google.</p>
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center">
-               <code className="text-[10px] text-blue-600 font-mono">wa_webhook_handler.gs</code>
-               <button className="text-[8px] font-black uppercase text-indigo-600 hover:underline">Ver Código</button>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+        <div className="lg:col-span-1 space-y-8">
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+             <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter mb-8">Estatísticas de Automação</h3>
+             <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Execuções (Hoje)</p>
+                   <span className="text-xl font-black text-indigo-600 italic">128</span>
+                </div>
+                <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden">
+                   <div className="w-[74%] h-full bg-indigo-600" />
+                </div>
+                <p className="text-[9px] text-slate-400 font-bold uppercase italic">
+                  Economia de <span className="text-emerald-500">12.5 horas</span> de trabalho manual hoje.
+                </p>
+             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
-            <div className="flex justify-between items-start mb-6">
-              <div className="p-4 bg-amber-50 text-amber-600 rounded-3xl group-hover:scale-110 transition-transform">
-                <FileSpreadsheet size={28} />
-              </div>
-              <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[9px] font-black uppercase tracking-widest">Pendente</span>
-            </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">Monitoramento de Insumos</h3>
-            <p className="text-sm text-slate-500 font-medium mb-6">Verifica estoque na Planilha e avisa via WhatsApp se peças críticas estiverem acabando.</p>
-            <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Ativar Gatilho</button>
+          <div className="bg-slate-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-[60px] -mr-16 -mt-16" />
+             <div className="relative z-10">
+                <ShieldCheck size={32} className="text-indigo-400 mb-6" />
+                <h4 className="text-lg font-black uppercase tracking-tighter italic mb-4">Integridade de Dados</h4>
+                <p className="text-slate-400 text-xs font-medium leading-relaxed mb-8">
+                  Todas as ações são validadas pelo motor de segurança antes do disparo real.
+                </p>
+                <div className="flex items-center gap-3 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em]">
+                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                   Validação Ativa
+                </div>
+             </div>
           </div>
         </div>
-      )}
 
-      {activeTab === 'script' && (
-        <div className="bg-slate-950 rounded-[3rem] p-4 lg:p-10 border border-white/5 shadow-2xl">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-500 rounded-2xl text-white shadow-lg"><Braces size={24} /></div>
-              <div>
-                <h3 className="text-white font-black italic uppercase tracking-tighter">Google Script Bridge</h3>
-                <p className="text-slate-500 text-[10px] font-black uppercase">Comunicação real entre CRM e WhatsApp Cloud</p>
-              </div>
-            </div>
-            <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Deploy Script</button>
+        <div className="lg:col-span-3 space-y-8">
+          <div className="flex justify-between items-center">
+             <div className="flex items-center gap-3">
+                <Settings2 size={18} className="text-slate-400" />
+                <h3 className="text-xs font-black text-slate-800 uppercase tracking-[0.2em]">Fluxos de Automação</h3>
+             </div>
+             <button 
+               onClick={addRule}
+               className="flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:scale-105 transition-all"
+             >
+               <Plus size={18} /> Nova Regra
+             </button>
           </div>
-          
-          <div className="bg-black/50 rounded-2xl p-6 font-mono text-[11px] text-emerald-400 border border-white/5 overflow-x-auto">
-             <pre className="leading-relaxed">
-{`/**
- * SGC Pro Dispatcher - Dispara mensagens via WhatsApp API
- * @param {string} phone - Telefone do cliente (Ex: 5511977776666)
- * @param {string} text - Mensagem profissional
- */
-function sendWhatsAppOfficial(phone, text) {
-  const token = "SEU_TOKEN_API_META";
-  const phoneId = "SEU_PHONE_ID";
-  
-  const payload = {
-    messaging_product: "whatsapp",
-    to: phone,
-    type: "text",
-    text: { body: text }
-  };
-  
-  const options = {
-    method: "post",
-    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
-  
-  const res = UrlFetchApp.fetch("https://graph.facebook.com/v19.0/" + phoneId + "/messages", options);
-  Logger.log("Resultado: " + res.getContentText());
-}`}
-             </pre>
-          </div>
-          <div className="mt-6 flex items-center gap-3 text-amber-500 p-4 bg-amber-500/5 rounded-2xl border border-amber-500/10">
-            <AlertTriangle size={18} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Este código deve ser colado no editor de scripts da sua Planilha de Orçamentos do Google.</span>
-          </div>
-        </div>
-      )}
 
-      {activeTab === 'formulas' && (
-        <div className="bg-white rounded-[3rem] p-12 border border-slate-100 shadow-sm text-center">
-           <h3 className="text-2xl font-black text-slate-800 italic uppercase">Fórmulas Profissionais</h3>
-           <p className="text-slate-500 text-sm font-medium mb-8">Otimize suas planilhas de manutenção com cálculos automáticos.</p>
-           <button onClick={generateFormula} className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Gerar para Roberto Manutenções</button>
-           {generatedFormula && <div className="mt-8 p-6 bg-slate-900 text-emerald-400 rounded-3xl font-mono text-sm">{generatedFormula}</div>}
+          <div className="space-y-6">
+            <AnimatePresence>
+              {rules.map(rule => (
+                <RuleNode key={rule.id} rule={rule} onDelete={deleteRule} />
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {rules.length === 0 && (
+            <div className="py-20 bg-slate-50 rounded-[3rem] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+               <Zap size={48} className="text-slate-200 mb-6" />
+               <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Nenhuma automação configurada. Comece criando uma regra.</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

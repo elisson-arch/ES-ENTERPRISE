@@ -17,11 +17,13 @@ const AutomationView = lazy(() => import('@ai').then(m => ({ default: m.Automati
 const DocumentsView = lazy(() => import('@shared').then(m => ({ default: m.DocumentsView })));
 const DriveView = lazy(() => import('@google-workspace').then(m => ({ default: m.DriveView })));
 const AIView = lazy(() => import('@ai').then(m => ({ default: m.AIView })));
+const AITrainingCenterView = lazy(() => import('@ai').then(m => ({ default: m.AITrainingCenterView })));
 const TaskManagementView = lazy(() => import('@inventory').then(m => ({ default: m.TaskManagementView })));
 const WebsiteBuilderView = lazy(() => import('@site-builder').then(m => ({ default: m.WebsiteBuilderView })));
 const PublicSiteView = lazy(() => import('@site-builder').then(m => ({ default: m.PublicSiteView })));
 const PrivacyPolicyView = lazy(() => import('@auth').then(m => ({ default: m.PrivacyPolicyView })));
 const TermsOfServiceView = lazy(() => import('@shared').then(m => ({ default: m.TermsOfServiceView })));
+const RicardoCommandPalette = lazy(() => import('@ai').then(m => ({ default: m.RicardoCommandPalette })));
 
 // Componente de Skeleton para transições suaves
 const PageLoader = () => (
@@ -63,6 +65,8 @@ const App = () => {
             <Route path="/documentos" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><DocumentsView /></div>} />
             <Route path="/drive" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><DriveView /></div>} />
             <Route path="/ia" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><AIView /></div>} />
+            <Route path="/ia/chat" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><AIView /></div>} />
+            <Route path="/ia/treinamento" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><AITrainingCenterView /></div>} />
             <Route path="/tarefas" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><TaskManagementView /></div>} />
             <Route path="/site" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><WebsiteBuilderView /></div>} />
             <Route path="/configuracoes" element={<div className="p-4 md:p-6 lg:p-10 overflow-y-auto h-full custom-scrollbar"><SettingsView /></div>} />
@@ -73,6 +77,7 @@ const App = () => {
           <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
         </Routes>
       </Suspense>
+      <RicardoCommandPalette />
       <ToastContainer />
     </BrowserRouter>
   );

@@ -1,294 +1,301 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Send, Bot, User,
-  Cpu, Zap, Brain, ChevronDown,
-  Camera, Globe, Link as LinkIcon,
-  Wand2, Languages
+  Zap, Brain, Activity, ShieldAlert,
+  ChevronRight, ArrowUpRight, Thermometer,
+  Gauge, TrendingUp, Bot,
+  RefreshCw
 } from 'lucide-react';
-import { aiService, geminiService } from '@ai';
-import { Message } from '@shared/types/common.types';
-import { useTranslation } from '@shared/hooks/useTranslation';
-import { t } from '@shared/services/i18nService';
+import { motion, AnimatePresence } from 'framer-motion';
+import { predictiveService } from '@ai';
+import { Asset, PredictiveAlert } from '@shared/types/common.types';
 
-const AI_MODELS = [
-  { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro', desc: 'Raciocínio Técnico Profundo', icon: <Brain size={14} className="text-indigo-500" /> },
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', desc: 'Respostas Rápidas com Search', icon: <Zap size={14} className="text-amber-500" /> },
-  // Fix: Use correct standardized model name for flash lite
-  { id: 'gemini-flash-lite-latest', name: 'Flash Lite', desc: 'Performance e Economia', icon: <Cpu size={14} className="text-emerald-500" /> }
+// --- MOCK DATA FOR DEMO ---
+const MOCK_ASSETS: Asset[] = [
+  { id: '1', clientId: 'c1', brand: 'Daikin', model: 'SkyAir RZQ', type: 'Industrial', lastMaintenance: '2025-12-01', installationDate: '2024-01-01', serialNumber: 'DK-99221' },
+  { id: '2', clientId: 'c2', brand: 'Carrier', model: 'Infinity 26', type: 'Cassete', lastMaintenance: '2026-01-15', installationDate: '2024-02-01', serialNumber: 'CR-88112' },
+  { id: '3', clientId: 'c3', brand: 'LG', model: 'Multi V S', type: 'Split', lastMaintenance: '2026-02-10', installationDate: '2024-03-01', serialNumber: 'LG-77663' },
+  { id: '4', clientId: 'c1', brand: 'York', model: 'YVAA Chiller', type: 'Industrial', lastMaintenance: '2025-10-20', installationDate: '2024-04-01', serialNumber: 'YK-55441' },
 ];
 
-const AIView = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'ai', text: 'Olá! Sou o Ricardo, o assistente da ES Enterprise. Como posso agilizar sua operação técnica hoje?', timestamp: 'Agora' }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]);
-  const [showModelMenu, setShowModelMenu] = useState(false);
-  const [thinkingMode, setThinkingMode] = useState(true);
-  const [useSearch, setUseSearch] = useState(false);
-  const [isEditingImage, setIsEditingImage] = useState(false);
-  const [currentImageForEdit, setCurrentImageForEdit] = useState<string | null>(null);
+// --- COMPONENTS ---
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isAutoTranslateEnabled, translateMessage } = useTranslation();
-  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (isAutoTranslateEnabled) {
-      messages.forEach(async (msg) => {
-        if (!translatedMessages[msg.id]) {
-          const translated = await translateMessage(msg);
-          if (translated !== msg.text) {
-            setTranslatedMessages(prev => ({ ...prev, [msg.id]: translated }));
-          }
-        }
-      });
-    }
-  }, [messages, isAutoTranslateEnabled]);
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, isTyping]);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMsg = input;
-    setInput('');
-
-    if (isEditingImage && currentImageForEdit) {
-      handleEditImage(userMsg);
-      return;
-    }
-
-    setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'agent', text: userMsg, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    setIsTyping(true);
-
-    try {
-      let responseText = "";
-      let groundingSources = [];
-
-      if (useSearch && selectedModel.id === 'gemini-3-flash-preview') {
-        const res = await geminiService.searchWeb(userMsg);
-        responseText = res.text;
-        groundingSources = res.sources;
-      } else {
-        // Chat Universal usando aiService
-        responseText = await aiService.chat(userMsg, {
-          model: selectedModel.id,
-          systemPrompt: thinkingMode && selectedModel.id === 'gemini-3-pro-preview' 
-            ? "Você é um sistema de raciocínio profundo. Analise cuidadosamente antes de responder."
-            : "Você é o assistente técnico da ES Enterprise. Seja ágil e preciso.",
-          // Passamos o histórico se necessário (limitado para performance)
-          history: messages.slice(-5).map(m => ({
-            role: m.sender === 'ai' ? 'assistant' : 'user',
-            content: m.text
-          }))
-        });
-      }
-
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        sender: 'ai',
-        text: responseText || "Tive um problema ao processar. Tente novamente.",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        groundingSources
-      }]);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleEditImage = async (prompt: string) => {
-    if (!currentImageForEdit) return;
-    setIsTyping(true);
-    setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'agent', text: `Aplicando edição: ${prompt}`, timestamp: 'Agora' }]);
-
-    try {
-      const editedUrl = await geminiService.editImage(currentImageForEdit, "image/png", prompt);
-      if (editedUrl) {
-        setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: "Edição via Nano Banana concluída com sucesso.", imageUrl: editedUrl, timestamp: 'Agora' }]);
-        setCurrentImageForEdit(editedUrl);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      setCurrentImageForEdit(base64);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        sender: 'agent',
-        text: `[Foto de campo enviada: ${file.name}]`,
-        timestamp: 'Agora',
-        imageUrl: base64
-      }]);
-
-      setIsTyping(true);
-      const analysis = await geminiService.analyzeFile(base64, file.type, "Identifique possíveis falhas nesta imagem técnica e sugira uma solução.");
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), sender: 'ai', text: analysis || "Erro na análise vision.", timestamp: 'Agora' }]);
-      setIsTyping(false);
-    };
-    reader.readAsDataURL(file);
-  };
+const InsightCard = ({ alert, onDetail }: { alert: PredictiveAlert, onDetail: (id: string) => void }) => {
+  const isCritical = alert.severity === 'critical';
+  const isWarning = alert.severity === 'warning';
 
   return (
-    <div className="h-full flex flex-col gap-6 animate-in fade-in duration-500">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center text-white shadow-2xl">
-            <Bot size={32} />
+    <motion.div
+      whileHover={{ y: -5, scale: 1.01 }}
+      className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden"
+    >
+      {isCritical && (
+        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[50px] -mr-16 -mt-16 animate-pulse" />
+      )}
+
+      <div className="flex justify-between items-start mb-6">
+        <div className={`p-3 rounded-2xl ${
+          isCritical ? 'bg-rose-50 text-rose-600' : isWarning ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+        }`}>
+          <ShieldAlert size={20} />
+        </div>
+        <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+          isCritical ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+        }`}>
+          {isCritical ? 'Risco Crítico' : 'Atenção'}
+        </div>
+      </div>
+
+      <div className="space-y-1 mb-6">
+        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter truncate">{alert.brand} {alert.model}</h4>
+        <p className="text-[10px] text-slate-400 font-bold uppercase">{alert.assetType} • S/N: {alert.assetId}</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="p-3 bg-slate-50 rounded-2xl">
+          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Duração do Atraso</p>
+          <p className={`text-sm font-black italic ${isCritical ? 'text-rose-600' : 'text-slate-800'}`}>
+            {alert.daysOverdue} dias
+          </p>
+        </div>
+        <div className="p-3 bg-slate-50 rounded-2xl">
+          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Última Ref.</p>
+          <p className="text-sm font-black italic text-slate-800">{alert.daysSinceLastMaintenance}d atrás</p>
+        </div>
+      </div>
+
+      <button 
+        onClick={() => onDetail(alert.assetId)}
+        className="w-full flex items-center justify-between p-4 bg-slate-950 text-white rounded-2xl group-hover:bg-indigo-600 transition-all"
+      >
+        <span className="text-[9px] font-black uppercase tracking-widest">Ver Inteligência</span>
+        <ArrowUpRight size={16} />
+      </button>
+    </motion.div>
+  );
+};
+
+const ExplainSidePanel = ({ assetId, onClose }: { assetId: string | null, onClose: () => void }) => {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  
+  useEffect(() => {
+    if (assetId) {
+      setIsAnalyzing(true);
+      const timer = setTimeout(() => setIsAnalyzing(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [assetId]);
+
+  return (
+    <AnimatePresence>
+      {assetId && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[100]" 
+          />
+          <motion.div
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-[-20px_0_50px_rgba(0,0,0,0.1)] z-[101] p-10 overflow-y-auto"
+          >
+            <div className="flex justify-between items-center mb-10">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-600 text-white rounded-2xl"><Bot size={24} /></div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Explainable AI</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Motor de Raciocínio Ricardo</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="p-3 hover:bg-slate-50 rounded-xl transition-all text-slate-400">
+                <ChevronRight size={24} />
+              </button>
+            </div>
+
+            {isAnalyzing ? (
+              <div className="space-y-8 py-20 text-center">
+                <RefreshCw size={48} className="mx-auto text-indigo-500 animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 italic">Decompondo variáveis técnicas...</p>
+              </div>
+            ) : (
+              <div className="space-y-10">
+                <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Diagnóstico do Ricardo</h4>
+                  <p className="text-sm font-bold text-slate-700 leading-relaxed italic">
+                    "Identifiquei uma correlação crítica entre o histórico de manutenção atrasado (45 dias) e o padrão de operação sob carga máxima detectado na telemetria. 
+                    O risco de falha do compressor é iminente devido ao desgaste acumulado sem lubrificação preventiva."
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Variáveis de Cálculo</h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <Thermometer size={18} className="text-rose-500" />
+                        <span className="text-[10px] font-black uppercase text-slate-800 tracking-tighter">Stress Térmico</span>
+                      </div>
+                      <span className="text-[10px] font-black text-rose-600 uppercase">+28% vs normal</span>
+                    </div>
+                    <div className="flex items-center justify-between p-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <Gauge size={18} className="text-amber-500" />
+                        <span className="text-[10px] font-black uppercase text-slate-800 tracking-tighter">Ciclo de Degradação</span>
+                        {/* Fix: Added missing closing div tag */}
+                      </div>
+                      <span className="text-[10px] font-black text-amber-600 uppercase">92% de Limite</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-10 border-t border-slate-100">
+                  <button className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-100 hover:scale-[1.02] transition-all">
+                    Gerar Ordem de Serviço
+                  </button>
+                  <p className="text-center mt-6 text-[9px] font-bold text-slate-400 uppercase italic">
+                    Ação automatizada disponível via Automation Center.
+                  </p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// --- VIEW ---
+
+const AIView = () => {
+  const [alerts, setAlerts] = useState<PredictiveAlert[]>([]);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [globalHealth] = useState(84);
+
+  useEffect(() => {
+    const riskAlerts = predictiveService.analyzeAssetsRisk(MOCK_ASSETS);
+    setAlerts(riskAlerts);
+  }, []);
+
+  return (
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 overflow-hidden">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <div className="w-20 h-20 bg-slate-950 rounded-[2.5rem] flex items-center justify-center text-white shadow-2xl overflow-hidden">
+              <Zap size={40} className="relative z-10" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/40 to-violet-500/40 opacity-50" />
+            </div>
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+              className="absolute -inset-1 bg-indigo-500/10 blur-xl rounded-[2.5rem] -z-10" 
+            />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">{t('ai.brain_title')}</h2>
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1">{t('ai.version_subtitle')}</p>
+            <h2 className="text-4xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">Radar Preditivo</h2>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mt-3">Inteligência Operacional Ativa</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setThinkingMode(!thinkingMode)}
-            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${thinkingMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
-          >
-            <Brain size={16} className={thinkingMode ? 'animate-pulse' : ''} /> {t('ai.deep_thinking')}
-          </button>
-
-          <button
-            onClick={() => setUseSearch(!useSearch)}
-            disabled={selectedModel.id !== 'gemini-3-flash-preview'}
-            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border disabled:opacity-20 ${useSearch ? 'bg-amber-500 text-white border-amber-400 shadow-xl' : 'bg-white text-slate-400 border-slate-100'}`}
-          >
-            <Globe size={16} /> {t('ai.search')}
-          </button>
-
-          <div className="relative">
-            <button onClick={() => setShowModelMenu(!showModelMenu)} className="flex items-center gap-4 px-6 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-indigo-300 transition-all">
-              {selectedModel.icon}
-              <span className="text-[10px] font-black uppercase text-slate-800">{selectedModel.name}</span>
-              <ChevronDown size={14} className={`text-slate-300 transition-transform ${showModelMenu ? 'rotate-180' : ''}`} />
-            </button>
-            {showModelMenu && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-slate-100 rounded-3xl shadow-2xl z-[100] py-3 overflow-hidden animate-in fade-in zoom-in-95">
-                {AI_MODELS.map(m => (
-                  <button key={m.id} onClick={() => { setSelectedModel(m); setShowModelMenu(false); }} className={`w-full px-6 py-4 flex items-center gap-5 hover:bg-slate-50 text-left transition-colors ${selectedModel.id === m.id ? 'bg-indigo-50/50' : ''}`}>
-                    <div className={`p-2.5 rounded-xl ${selectedModel.id === m.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                      {m.icon}
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-black text-slate-800 uppercase">{m.name}</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase leading-tight">{m.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="flex items-center gap-10 bg-white/50 backdrop-blur p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-100" />
+                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray={150} strokeDashoffset={150 - (150 * globalHealth) / 100} className="text-indigo-600 transition-all duration-1000" />
+              </svg>
+              <span className="absolute text-sm font-black text-slate-800 italic">{globalHealth}%</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase">Saúde Global</p>
+              <p className="text-xs font-black text-slate-800 uppercase italic">Base Instalada</p>
+            </div>
+          </div>
+          <div className="h-10 w-px bg-slate-200" />
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-black text-slate-800 italic tracking-tighter">{alerts.length}</span>
+            <span className="text-[9px] font-black text-rose-500 uppercase">Alertas</span>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 bg-white rounded-[3.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden relative">
-        <div className="flex-1 p-10 overflow-y-auto space-y-10 custom-scrollbar" ref={scrollRef}>
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex gap-5 ${msg.sender === 'agent' ? 'flex-row-reverse' : ''}`}>
-              <div className={`w-12 h-12 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-lg ${msg.sender === 'agent' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                {msg.sender === 'ai' ? <Bot size={24} /> : <User size={24} />}
-              </div>
-              <div className={`max-w-[80%] space-y-4`}>
-                <div className={`p-8 rounded-[2.5rem] shadow-sm leading-relaxed ${msg.sender === 'agent' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'}`}>
-                  {msg.imageUrl && (
-                    <div className="relative group mb-6">
-                      <img src={msg.imageUrl} className="w-full max-h-[400px] object-contain rounded-3xl shadow-2xl border-4 border-white" alt="Anexo" />
-                      <div className="absolute top-4 right-4 flex gap-2">
-                        <button onClick={() => { setIsEditingImage(true); setCurrentImageForEdit(msg.imageUrl || null); }} className="p-3 bg-white/90 backdrop-blur rounded-2xl text-indigo-600 shadow-xl hover:scale-110 transition-transform">
-                          <Wand2 size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <p className="text-sm font-semibold whitespace-pre-wrap">{translatedMessages[msg.id] || msg.text}</p>
-                  {translatedMessages[msg.id] && translatedMessages[msg.id] !== msg.text && (
-                    <div className="flex items-center gap-1 opacity-40 text-[9px] font-black uppercase tracking-tighter mt-2 border-t border-current/10 pt-1">
-                      <Languages size={10} /> Traduzido
-                    </div>
-                  )}
-                </div>
-
-                {msg.groundingSources && msg.groundingSources.length > 0 && (
-                  <div className="flex flex-wrap gap-2 px-2">
-                    {msg.groundingSources.map((s, i) => (
-                      <a key={i} href={s.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-[9px] font-black uppercase text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
-                        <LinkIcon size={12} /> {s.title}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="flex gap-5 animate-pulse">
-              <div className="w-12 h-12 rounded-[1.25rem] bg-slate-100 flex items-center justify-center border border-slate-200">
-                <Bot size={24} className="text-slate-300" />
-              </div>
-              <div className="bg-slate-50 p-8 rounded-[2.5rem] rounded-tl-none border border-slate-100 flex items-center gap-6">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
-                  {thinkingMode ? t('ai.typing_deep') : t('ai.typing_normal')}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {isEditingImage && (
-          <div className="px-10 py-4 bg-indigo-50 border-t border-indigo-100 flex items-center justify-between animate-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-indigo-600 text-white rounded-xl"><Wand2 size={16} /></div>
-              <p className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">{t('ai.edit_mode_active')}</p>
-            </div>
-            <button onClick={() => { setIsEditingImage(false); setCurrentImageForEdit(null); }} className="text-[10px] font-black uppercase text-indigo-400 hover:text-indigo-600">Cancelar</button>
+      {/* Actionable Insights Grid */}
+      <section className="space-y-6">
+        <div className="flex justify-between items-center px-2">
+          <div className="flex items-center gap-3">
+             <Activity className="text-indigo-600" size={18} />
+             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Painel de Riscos</h3>
           </div>
-        )}
-
-        <div className="p-10 border-t border-slate-50 bg-white">
-          <div className="max-w-5xl mx-auto flex gap-6 bg-slate-50 p-4 rounded-[3rem] border border-slate-200 focus-within:ring-8 focus-within:ring-indigo-500/5 focus-within:border-indigo-500 transition-all shadow-inner">
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-            <button onClick={() => fileInputRef.current?.click()} className="p-5 bg-white border border-slate-200 text-slate-400 hover:text-indigo-600 rounded-[1.5rem] transition-all shadow-sm">
-              <Camera size={24} />
-            </button>
-            <input
-              type="text"
-              placeholder={isEditingImage ? t('ai.placeholder_edit') : t('ai.placeholder_normal')}
-              className="flex-1 bg-transparent px-4 text-sm font-bold text-slate-800 outline-none placeholder:text-slate-400"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
+          <div className="flex gap-4">
+             <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                <span className="text-[9px] font-black text-slate-400 uppercase">Tempo Real</span>
+             </div>
+             <button className="text-[9px] font-black text-indigo-600 uppercase hover:underline">Ver Todos Histórico</button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {alerts.map((alert) => (
+            <InsightCard 
+              key={alert.assetId} 
+              alert={alert} 
+              onDetail={(id) => setSelectedAssetId(id)} 
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isTyping}
-              className="p-5 bg-slate-950 text-white rounded-[1.5rem] shadow-2xl hover:bg-black active:scale-95 transition-all disabled:opacity-30"
-            >
-              <Send size={24} />
+          ))}
+          
+          <motion.div 
+            whileHover={{ scale: 1.01 }}
+            className="bg-slate-50 border-4 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center opacity-40 hover:opacity-100 transition-all group"
+          >
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-indigo-600 mb-4 transition-colors">
+              <RefreshCw size={24} />
+            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aguardando mais dados de telemetria...</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Footer / Context */}
+      <footer className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-slate-950 rounded-[3rem] p-10 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative">
+          <TrendingUp size={120} className="absolute -right-10 -bottom-10 text-white/5 -rotate-12" />
+          <div className="shrink-0 w-24 h-24 bg-white/10 backdrop-blur rounded-[2rem] flex items-center justify-center text-white border border-white/20">
+            <Brain size={48} />
+          </div>
+          <div className="space-y-4 relative z-10">
+            <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Sugestão Preditiva do Ricardo</h4>
+            <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xl">
+              Baseado no histórico de faturamento e sazonalidade térmica de Março, sugiro antecipar a compra de compressores Industriais. 
+              Economia estimada de <span className="text-emerald-400 font-bold">12% nos custos diretos</span>.
+            </p>
+            <button className="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase tracking-widest hover:text-white transition-all">
+              Ver Análise Completa de Mercado <ChevronRight size={14} />
             </button>
           </div>
         </div>
-      </div>
+
+        <div className="bg-indigo-600 rounded-[3rem] p-10 text-white flex flex-col justify-between group cursor-pointer hover:bg-indigo-700 transition-all">
+           <div>
+              <Zap size={32} className="mb-6 opacity-50 group-hover:scale-110 transition-transform" />
+              <h4 className="text-xl font-black uppercase tracking-tighter italic mb-4">Automação Autônoma</h4>
+              <p className="text-indigo-100 text-xs font-medium leading-relaxed">
+                Configure regras para que o Ricardo IA agende manutenções sozinho assim que detectar risco crítico.
+              </p>
+           </div>
+           <div className="mt-8 flex items-center justify-between border-t border-white/20 pt-6">
+              <span className="text-[10px] font-black uppercase tracking-widest">Abrir Rule Builder</span>
+              <ArrowUpRight size={20} />
+           </div>
+        </div>
+      </footer>
+
+      {/* Explainable Panel */}
+      <ExplainSidePanel 
+        assetId={selectedAssetId} 
+        onClose={() => setSelectedAssetId(null)} 
+      />
     </div>
   );
 };

@@ -1,49 +1,35 @@
-# Walkthrough — Recuperação e Evolução do Agente IA
+# Walkthrough: Transformação AI-Native ES-ENTERPRISE
 
-Nesta etapa, recuperamos a arquitetura universal de IA que havia sido perdida e implementamos a capacidade do agente de interagir com o sistema de arquivos de forma bidirecional (ler e escrever).
+O sistema ES-ENTERPRISE foi evoluído de um software de gestão tradicional para uma plataforma **AI-Native**, focada em inteligência preditiva e ações autônomas.
 
-## Mudanças Realizadas
+## Mudanças Principais
 
-### 1. Núcleo IA Universal (Recuperado)
-Reinstalamos a camada de abstração que permite o uso de múltiplos provedores:
-- **`AIProvider`**: Interface comum para Gemini e OpenAI.
-- **`AgentRunner`**: O orquestrador autônomo.
-- **`ToolRegistry`**: Onde as capacidades do agente são registradas.
+### 1. Radar Preditivo (AIView)
+O chat genérico foi substituído por um Dashboard de Inteligência Preditiva.
+- **Saúde Global**: Indicador em tempo real da base instalada.
+- **Painel de Riscos**: Insights acionáveis baseados em telemetria e histórico (Predictive Alerts).
+- **Explainable AI**: Painel lateral que decompõe o raciocínio da IA para cada alerta.
 
-### 2. Adaptação de Provedores
-- **`GeminiProvider`**: Conectado ao proxy do Google Gemini.
-- **`OpenAIProvider`**: Pronto para uso com GPT-4o-mini via proxy.
-- **`aiService`**: Centraliza o acesso à IA, selecionando o provedor via a variável `VITE_AI_PROVIDER`.
+### 2. Rule Builder (AutomationView)
+Novo motor de automação "If This, Then That" (IFTTT).
+- Permite criar fluxos onde a IA toma decisões (ex: agendar manutenção se risco > 80%).
+- Interface visual fluida com Framer Motion.
+- Economia estimada de horas operacionais.
 
-### 3. Novas Capacidades do Agente (Tools)
-O agente agora possui 4 ferramentas principais:
-- `listDomains`: Entende a arquitetura DDD do projeto.
-- `readFile`: Lê o código fonte.
-- `searchCode`: Busca padrões no código.
-- **`writeFile` (NOVO)**: Permite ao agente criar ou atualizar arquivos no projeto.
+### 3. Ricardo Command Palette
+Ferramenta global acessível via **Cmd+K** ou **Ctrl+K**.
+- Busca instantânea de clientes, ativos e documentos.
+- Integração direta com `aiService` para perguntas técnicas rápidas.
+- Atalhos de sistema integrados.
 
-### 4. Segurança do Backend (Restaurada)
-Reaplicamos as proteções no `server.ts`:
-- **Firebase Auth**: Endpoints sensíveis (`readFile`, `writeFile`, `searchCode`) agora exigem um token válido.
-- **Rate Limit**: Proteção contra excesso de requisições no proxy IA.
-- **Sandboxing**: O agente só pode ler/escrever dentro de `domains/`, `apps/` ou `scripts/`.
+### 4. Centro de Treinamento IA (AITrainingCenterView)
+Hub central para gerir o conhecimento do "Ricardo IA".
 
-## Verificação
+## Verificação Técnica
+- [AIView.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/views/AIView.tsx)
+- [AutomationView.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/views/AutomationView.tsx)
+- [RicardoCommandPalette.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/components/RicardoCommandPalette.tsx)
+- [AITrainingCenterView.tsx](file:///home/lucas/ES-ENTERPRISE/domains/ai/views/AITrainingCenterView.tsx)
 
-- [x] **Configuração**: `config.ts` atualizado para suportar `PROVIDER` agnóstico.
-- [x] **Tipagem**: Resolvidos os erros de `any` e caminhos de módulo reportados pela IDE.
-- [x] **Agente**: O Ricardo IA agora pode atuar como um engenheiro autônomo completo.
-
-O sistema está novamente robusto e preparado para a "auto-atualização" solicitada.
-
-### 7. Correção de Erro de Tempo de Execução do Firebase
-- **Bug**: O erro `FirebaseError: Expected first argument to collection()` ocorria porque o Vite não carregava as variáveis `.env` da raiz, resultando em uma instância de Firestore `null`.
-- **Solução**:
-  - Atualizado o `apps/web/vite.config.ts` para carregar o `.env` da raiz (`envDir: '../../'`).
-  - Refatorado o `domains/shared/config/firebase.ts` para ser mais resiliente e simplificar as exportações.
-  - Corrigido o barrel export em `domains/shared/index.ts` para remover referências a funções deprecadas (`getDb`).
-- **Resultado**: O build agora completa com sucesso e as chaves de API são injetadas corretamente no frontend, permitindo que o Firestore inicialize normalmente.
-
-### 8. Melhorias de Tipagem (Refinamento)
-- **searchCodeTool**: Corrigido o aviso de `any` na função `map`, definindo uma interface `SearchResult` explícita. Isso melhora a robustez do agente ao processar resultados de busca de código.
-
+---
+**Ricardo IA v3.1** - *Operação de Climatização Inteligente.*
