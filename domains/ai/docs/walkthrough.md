@@ -43,3 +43,7 @@ O sistema está novamente robusto e preparado para a "auto-atualização" solici
   - Refatorado o `domains/shared/config/firebase.ts` para ser mais resiliente e simplificar as exportações.
   - Corrigido o barrel export em `domains/shared/index.ts` para remover referências a funções deprecadas (`getDb`).
 - **Resultado**: O build agora completa com sucesso e as chaves de API são injetadas corretamente no frontend, permitindo que o Firestore inicialize normalmente.
+
+### 8. Melhorias de Tipagem (Refinamento)
+- **searchCodeTool**: Corrigido o aviso de `any` na função `map`, definindo uma interface `SearchResult` explícita. Isso melhora a robustez do agente ao processar resultados de busca de código.
+

@@ -21,12 +21,18 @@ export const searchCodeTool: AITool = {
                 const err = await response.json();
                 return `Erro na busca: ${err.error || response.statusText}`;
             }
+            interface SearchResult {
+                file: string;
+                line: number;
+                content: string;
+            }
+
             const data = await response.json();
             if (data.results.length === 0) return 'Nenhum resultado encontrado.';
             
-            return data.results
+            return (data.results as SearchResult[])
                 .slice(0, 15)
-                .map((r: any) => `${r.file}:${r.line} → ${r.content.trim()}`)
+                .map((r) => `${r.file}:${r.line} → ${r.content.trim()}`)
                 .join('\n');
         } catch (err) {
             return `Erro de rede: ${err instanceof Error ? err.message : String(err)}`;
