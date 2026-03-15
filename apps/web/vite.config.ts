@@ -8,11 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
-  // Use __dirname instead of process.cwd() to resolve the environment path reliably and avoid TS error
-  const env = loadEnv(mode, __dirname, '');
+  // Solve environment variable loading from root
+  const rootDir = path.resolve(__dirname, '../../');
+  const env = loadEnv(mode, rootDir, '');
 
   return {
     base: '/',
+    envDir: '../../',
     server: {
       port: 8080,
       host: '0.0.0.0',

@@ -28,14 +28,9 @@ const getFirebaseApp = (): FirebaseApp | null => {
 
 /**
  * Inicialização do Firebase:
- * As chaves podem vir do backend (Secret Manager) via loadSecureConfig().
+ * Agora carregando diretamente via VITE_FIREBASE_* configurado via envDir no Vite.
  */
-export const getDb = (): Firestore | null => {
-    const app = getFirebaseApp();
-    return app ? getFirestore(app) : null;
-};
+const app = getFirebaseApp();
 
-// Referências exportadas para compatibilidade
-// Cuidado ao usá-las sincronicamente se as chaves forem providas via Backend depois do mount
-export const db = getDb();
-export const auth = getFirebaseApp() ? getAuth(getFirebaseApp()!) : null as unknown as Auth;
+export const db: Firestore = app ? getFirestore(app) : (null as unknown as Firestore);
+export const auth: Auth = app ? getAuth(app) : (null as unknown as Auth);

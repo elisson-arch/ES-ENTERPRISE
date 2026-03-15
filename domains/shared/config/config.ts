@@ -14,6 +14,7 @@ export interface AppConfig {
         SCOPES: string[];
     };
     AI: {
+        PROVIDER: string;
         MODELS: {
             PRIMARY: string;
             FAST: string;
@@ -41,7 +42,7 @@ export interface AppConfig {
 /**
  * Configurações Estáticas e Padronizadas
  */
-const BASE_CONFIG: any = {
+const BASE_CONFIG: AppConfig = {
     METADATA: {
         NAME: "ES Enterprise",
         DESCRIPTION: "CRM Inteligente para Climatização",
@@ -64,6 +65,7 @@ const BASE_CONFIG: any = {
         ]
     },
     AI: {
+        PROVIDER: import.meta.env.VITE_AI_PROVIDER || 'gemini',
         MODELS: {
             PRIMARY: 'gemini-3-pro-preview',
             FAST: 'gemini-3-flash-preview',
@@ -94,38 +96,4 @@ Ao responder:
     }
 };
 
-/**
- * Singleton da Configuração
- */
-export let APP_CONFIG: AppConfig = BASE_CONFIG;
-
-/**
- * Função de Bootstrap: Carrega as chaves seguras do backend
- */
-export async function loadSecureConfig(): Promise<AppConfig> {
-    try {
-        const response = await fetch('/api/config-secure');
-        if (!response.ok) throw new Error('Falha ao carregar configurações seguras');
-
-        const secureData = await response.json();
-
-        // Merge das configurações seguras
-        APP_CONFIG = {
-            ...BASE_CONFIG,
-            FIREBASE: {
-                ...BASE_CONFIG.FIREBASE,
-                ...secureData.firebase
-            },
-            GOOGLE: {
-                ...BASE_CONFIG.GOOGLE,
-                CLIENT_ID: secureData.googleClientId || BASE_CONFIG.GOOGLE.CLIENT_ID
-            }
-        };
-
-        console.log('[CONFIG] "O Cofre" foi aberto com sucesso via Backend. 🔐');
-        return APP_CONFIG;
-    } catch (error) {
-        console.warn('[CONFIG] Falha ao acessar "O Cofre". Usando chaves de ambiente fallback.', error);
-        return APP_CONFIG;
-    }
-}
+export const APP_CONFIG: AppConfig = BASE_CONFIG;

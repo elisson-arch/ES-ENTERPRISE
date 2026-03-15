@@ -16,7 +16,7 @@ import {
   Zap,
   Plus
 } from 'lucide-react';
-import { geminiService } from '@ai';
+import { aiService } from '@ai';
 
 const DocumentsView = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -43,16 +43,18 @@ const DocumentsView = () => {
       Retorne OBRIGATORIAMENTE no formato JSON: 
       { "summary": "...", "issues": ["...", "...", "..."], "recommendations": ["...", "...", "..."] }`;
       
-      const result = await geminiService.getChatResponse(prompt, "Análise de Documentos PMOC");
+      const text = await aiService.chat(prompt, {
+        systemPrompt: "Você é um sistema de análise documental PMOC e normas ABNT.",
+        responseFormat: "json"
+      });
       
       try {
-        const cleaned = result.replace(/```json|```/g, '').trim();
-        const parsed = JSON.parse(cleaned);
+        const parsed = JSON.parse(text);
         setAiAnalysis(parsed);
       } catch (err) {
         // Fallback robusto se a IA falhar na formatação JSON
         setAiAnalysis({ 
-          summary: result, 
+          summary: text, 
           issues: ["Ponto de oxidação em condensadora", "Ruído excessivo no motor ventilador", "Obstrução parcial de dreno"],
           recommendations: ["Substituição de filtros G4", "Limpeza química de serpentina", "Aferição de superaquecimento"] 
         });

@@ -8,7 +8,7 @@ import {
 import { SiteDNA, SiteElement } from '@shared/types/common.types';
 import { INITIAL_SITE_DATA } from '@whatsapp';
 import { WebsiteEngine, siteService } from '@site-builder';
-import { geminiService } from '@ai';
+import { aiService } from '@ai';
 
 const WebsiteBuilderView = () => {
   const [dna, setDna] = useState<SiteDNA>({
@@ -50,9 +50,12 @@ const WebsiteBuilderView = () => {
     if (!aiCommand) return;
     setIsAiProcessing(true);
     try {
-      const prompt = `Gere uma nova seção de site no formato JSON baseada no comando: "${aiCommand}". Retorne apenas o objeto SiteElement.`;
-      const jsonStr = await geminiService.generateSectionJSON(prompt);
-      const newSection = JSON.parse(jsonStr.replace(/```json|```/g, ''));
+      const prompt = `Gere uma nova seção de site no formato JSON baseada no comando: "${aiCommand}". Responda apenas com o objeto SiteElement.`;
+      const text = await aiService.chat(prompt, {
+        systemPrompt: "Você é um arquiteto de software especialista em React e UI/UX. Gere apenas o JSON bruto.",
+        responseFormat: "json"
+      });
+      const newSection = JSON.parse(text);
 
       setDna(prev => ({
         ...prev,

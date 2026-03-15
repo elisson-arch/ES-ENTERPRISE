@@ -5,7 +5,7 @@ import {
   Camera, Globe, Link as LinkIcon,
   Wand2, Languages
 } from 'lucide-react';
-import { geminiService } from '@ai';
+import { aiService, geminiService } from '@ai';
 import { Message } from '@shared/types/common.types';
 import { useTranslation } from '@shared/hooks/useTranslation';
 import { t } from '@shared/services/i18nService';
@@ -73,10 +73,19 @@ const AIView = () => {
         const res = await geminiService.searchWeb(userMsg);
         responseText = res.text;
         groundingSources = res.sources;
-      } else if (thinkingMode && selectedModel.id === 'gemini-3-pro-preview') {
-        responseText = await geminiService.getDeepResponse(userMsg, "Manutenção e CRM");
       } else {
-        responseText = await geminiService.getChatResponse(userMsg, "Consultoria Técnica", selectedModel.id);
+        // Chat Universal usando aiService
+        responseText = await aiService.chat(userMsg, {
+          model: selectedModel.id,
+          systemPrompt: thinkingMode && selectedModel.id === 'gemini-3-pro-preview' 
+            ? "Você é um sistema de raciocínio profundo. Analise cuidadosamente antes de responder."
+            : "Você é o assistente técnico da ES Enterprise. Seja ágil e preciso.",
+          // Passamos o histórico se necessário (limitado para performance)
+          history: messages.slice(-5).map(m => ({
+            role: m.sender === 'ai' ? 'assistant' : 'user',
+            content: m.text
+          }))
+        });
       }
 
       setMessages(prev => [...prev, {

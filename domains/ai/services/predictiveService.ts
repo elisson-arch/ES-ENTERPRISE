@@ -1,5 +1,5 @@
 import { Asset, PredictiveAlert } from '@shared/types/common.types';
-import { geminiService } from '@ai';
+import { aiService } from '@ai';
 import { APP_CONFIG } from '@shared/config/config';
 
 // Thresholds (em dias) entre manutenções por tipo de equipamento HVAC
@@ -58,12 +58,13 @@ export const predictiveService = {
     `;
 
     try {
-      const response = await geminiService.callProxy(APP_CONFIG.AI.MODELS.FAST, { parts: [{ text: prompt }] }, {
-        responseMimeType: "application/json",
-        systemInstruction: "Você é um sistema especialista em manutenção preditiva de HVAC. Analise dados de sensores e histórico para prever falhas."
+      const text = await aiService.chat(prompt, {
+        model: APP_CONFIG.AI.MODELS.FAST,
+        responseFormat: "json",
+        systemPrompt: "Você é um sistema especialista em manutenção preditiva de HVAC. Analise dados de sensores e histórico para prever falhas."
       });
 
-      return JSON.parse(response.text);
+      return JSON.parse(text);
     } catch (error) {
       console.error('[PredictiveService] AI Analysis failed:', error);
       return {
