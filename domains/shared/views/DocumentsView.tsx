@@ -18,10 +18,19 @@ import {
 } from 'lucide-react';
 import { aiService } from '@ai';
 
+interface Document {
+  id: string;
+  client: string;
+  date: string;
+  total: string;
+  status: string;
+  type: string;
+}
+
 const DocumentsView = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<{ summary: string; recommendations: string[]; issues: string[] } | null>(null);
-  const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
 
   const documents = [
     { id: '001', client: 'Condomínio Aurora', date: '22/05/2024', total: 'R$ 1.250,00', status: 'Enviado', type: 'Laudo Técnico PMOC' },
@@ -29,7 +38,7 @@ const DocumentsView = () => {
     { id: '003', client: 'Hospital São Luiz', date: '20/05/2024', total: 'R$ 8.900,00', status: 'Rascunho', type: 'Contrato de Manutenção' },
   ];
 
-  const handleAnalyze = async (doc: any) => {
+  const handleAnalyze = async (doc: Document) => {
     setSelectedDoc(doc);
     setIsAnalyzing(true);
     setAiAnalysis(null);
@@ -51,7 +60,7 @@ const DocumentsView = () => {
       try {
         const parsed = JSON.parse(text);
         setAiAnalysis(parsed);
-      } catch (err) {
+      } catch {
         // Fallback robusto se a IA falhar na formatação JSON
         setAiAnalysis({ 
           summary: text, 
