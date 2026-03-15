@@ -16,3 +16,11 @@
 
 ## 4. Monorepo Cleanup (Bazel)
 - [x] Removed all 13 Bazel files (`BUILD.bazel`, `MODULE.bazel` across root + all domains/apps)
+- [x] Corrigir erros de tipagem IDE (`config.ts`, `searchCodeTool.ts`)
+- [x] Corrigir erros de build no barrel export (`domains/ai/index.ts`)
+- [x] Refatorar chamadas de IA para `aiService` Universal (`AIView`, `DocumentsView`, `WebsiteBuilderView`, `predictiveService`)
+
+## 6. Correção de Erros de Runtime
+- [x] Corrigir Erro de Inicialização do Firebase (db is null)
+  - [x] Ajustar `vite.config.ts` para carregar `.env` da raiz
+  - [x] Validar inicialização no `firebase.ts`
