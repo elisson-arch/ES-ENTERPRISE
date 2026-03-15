@@ -159,9 +159,9 @@ const DashboardView = () => {
   const criticalCount = predictiveAlerts.filter(a => a.severity === 'critical').length;
 
   const healthData = [
-    { name: 'Saudáveis', value: healthyCount > 0 ? healthyCount : 0, color: '#10b981' },
-    { name: 'Alerta Preventivo', value: warningCount, color: '#f59e0b' },
-    { name: 'Falha Crítica', value: criticalCount, color: '#ef4444' },
+    { name: 'Saudáveis', value: healthyCount > 0 ? healthyCount : 0, color: '#10b981', bgClass: 'bg-emerald-500' },
+    { name: 'Alerta Preventivo', value: warningCount, color: '#f59e0b', bgClass: 'bg-amber-500' },
+    { name: 'Falha Crítica', value: criticalCount, color: '#ef4444', bgClass: 'bg-rose-500' },
   ];
 
   return (
@@ -288,7 +288,7 @@ const DashboardView = () => {
               {healthData.map((item, i) => (
                 <div key={i} className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <div className={`w-3 h-3 rounded-full ${item.bgClass}`} />
                     <span className="text-slate-600">{item.name}</span>
                   </div>
                   <span className="font-semibold text-slate-800">{item.value}</span>
