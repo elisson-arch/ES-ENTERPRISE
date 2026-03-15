@@ -8,6 +8,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { predictiveService } from '@ai';
 import { Asset, PredictiveAlert } from '@shared/types/common.types';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+// --- MOCK DATA FOR SPARKLINE ---
+const MOCK_TREND = [
+  { value: 40 }, { value: 35 }, { value: 55 }, { value: 45 }, { value: 70 }, { value: 65 }, { value: 85 }
+];
 
 // --- MOCK DATA FOR DEMO ---
 const MOCK_ASSETS: Asset[] = [
@@ -25,51 +31,81 @@ const InsightCard = ({ alert, onDetail }: { alert: PredictiveAlert, onDetail: (i
 
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.01 }}
-      className="bg-white/80 backdrop-blur-xl rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden"
+      whileHover={{ y: -8, scale: 1.02 }}
+      className={`relative overflow-hidden bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all group ${
+        isCritical ? 'hover:border-rose-200' : 'hover:border-indigo-200'
+      }`}
     >
-      {isCritical && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[50px] -mr-16 -mt-16 animate-pulse" />
-      )}
+      {/* Dynamic Gradient Background on Hover */}
+      <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${
+        isCritical ? 'from-rose-500 to-transparent' : 'from-indigo-500 to-transparent'
+      }`} />
 
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-3 rounded-2xl ${
-          isCritical ? 'bg-rose-50 text-rose-600' : isWarning ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
-        }`}>
-          <ShieldAlert size={20} />
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-6">
+          <div className={`p-4 rounded-2xl ${
+            isCritical ? 'bg-rose-50 text-rose-600' : isWarning ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+          }`}>
+            <ShieldAlert size={24} />
+          </div>
+          <div className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] border ${
+            isCritical ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+          }`}>
+            {isCritical ? 'Risco Crítico' : 'Atenção'}
+          </div>
         </div>
-        <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
-          isCritical ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'
-        }`}>
-          {isCritical ? 'Risco Crítico' : 'Atenção'}
+
+        <div className="space-y-1 mb-6">
+          <h4 className="text-md font-black text-slate-800 uppercase tracking-tighter truncate italic">{alert.brand} {alert.model}</h4>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{alert.assetType} • S/N: {alert.assetId}</p>
+        </div>
+
+        {/* Mini Sparkline Chart */}
+        <div className="h-12 w-full mb-8 opacity-60 group-hover:opacity-100 transition-opacity">
+          <p className="text-[7px] font-black text-slate-400 uppercase mb-2 tracking-widest">Tendência (7d)</p>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={MOCK_TREND}>
+              <Line 
+                type="monotone" 
+                dataKey="value" 
+                stroke={isCritical ? '#ef4444' : '#6366f1'} 
+                strokeWidth={3} 
+                dot={false}
+                animationDuration={2000}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="p-4 bg-slate-50/50 rounded-3xl group-hover:bg-white transition-colors">
+            <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Atraso</p>
+            <p className={`text-sm font-black italic tracking-tighter ${isCritical ? 'text-rose-600' : 'text-slate-800'}`}>
+              {alert.daysOverdue} dias
+            </p>
+          </div>
+          <div className="p-4 bg-slate-50/50 rounded-3xl group-hover:bg-white transition-colors">
+            <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Status</p>
+            <p className="text-sm font-black italic tracking-tighter text-slate-800">Urgente</p>
+          </div>
+        </div>
+
+        {/* Action Buttons visible only on hover */}
+        <div className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+          <div className="flex gap-2">
+            <button 
+              onClick={() => onDetail(alert.assetId)}
+              className="flex-1 flex items-center justify-center gap-2 p-4 bg-slate-950 text-white rounded-2xl hover:bg-slate-900 transition-all shadow-xl"
+            >
+              <span className="text-[9px] font-black uppercase tracking-widest">Inteligência</span>
+              <ArrowUpRight size={14} />
+            </button>
+            <button className="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-rose-500 hover:border-rose-100 transition-all">
+              <RefreshCw size={18} />
+            </button>
+          </div>
         </div>
       </div>
-
-      <div className="space-y-1 mb-6">
-        <h4 className="text-sm font-black text-slate-800 uppercase tracking-tighter truncate">{alert.brand} {alert.model}</h4>
-        <p className="text-[10px] text-slate-400 font-bold uppercase">{alert.assetType} • S/N: {alert.assetId}</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-3 bg-slate-50 rounded-2xl">
-          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Duração do Atraso</p>
-          <p className={`text-sm font-black italic ${isCritical ? 'text-rose-600' : 'text-slate-800'}`}>
-            {alert.daysOverdue} dias
-          </p>
-        </div>
-        <div className="p-3 bg-slate-50 rounded-2xl">
-          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Última Ref.</p>
-          <p className="text-sm font-black italic text-slate-800">{alert.daysSinceLastMaintenance}d atrás</p>
-        </div>
-      </div>
-
-      <button 
-        onClick={() => onDetail(alert.assetId)}
-        className="w-full flex items-center justify-between p-4 bg-slate-950 text-white rounded-2xl group-hover:bg-indigo-600 transition-all"
-      >
-        <span className="text-[9px] font-black uppercase tracking-widest">Ver Inteligência</span>
-        <ArrowUpRight size={16} />
-      </button>
     </motion.div>
   );
 };

@@ -64,6 +64,24 @@ const Card = ({ children, title, subtitle, icon: Icon }: { children: React.React
   </div>
 );
 
+const HealthBadge = ({ icon: Icon, label, value, color }: { icon: React.ElementType, label: string, value: string, color: 'emerald' | 'indigo' | 'amber' }) => {
+  const colors = {
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    indigo: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100'
+  };
+
+  return (
+    <div className={`px-4 py-2 ${colors[color]} rounded-xl border flex items-center gap-3 transition-transform hover:scale-105 cursor-default`}>
+      <Icon size={14} className="opacity-70" />
+      <div className="flex flex-col">
+        <span className="text-[7px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">{label}</span>
+        <span className="text-[10px] font-black uppercase tracking-tighter leading-none">{value}</span>
+      </div>
+    </div>
+  );
+};
+
 // --- VIEW ---
 
 const AITrainingCenterView = () => {
@@ -86,10 +104,11 @@ const AITrainingCenterView = () => {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 flex items-center gap-2">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-widest">IA Operacional</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-white/50 backdrop-blur-sm border border-slate-100 rounded-2xl p-2 gap-2 shadow-sm">
+            <HealthBadge icon={Database} label="Base" value="Atualizada" color="emerald" />
+            <HealthBadge icon={FileText} label="Documentos" value="14" color="indigo" />
+            <HealthBadge icon={Zap} label="Precisão" value="98%" color="amber" />
           </div>
           <button className="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
             <Settings2 size={20} />
@@ -131,16 +150,21 @@ const AITrainingCenterView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1 space-y-8">
                 <Card title="Instruir & Capacitar" subtitle="Upload de novos manuais e regras" icon={Upload}>
-                  <div className="border-4 border-dashed border-slate-50 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center group hover:border-indigo-100 transition-all cursor-pointer">
-                    <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <div className="relative group overflow-hidden bg-slate-50/50 rounded-[2rem] p-10 border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center hover:border-indigo-100 hover:bg-white transition-all cursor-pointer">
+                    <div className="w-16 h-16 bg-white text-indigo-500 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 shadow-sm transition-transform">
                       <Plus size={32} />
                     </div>
                     <p className="text-xs font-black text-slate-800 uppercase mb-2">Arraste Manuais PDF</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Ou clique para navegar</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">A curadoria do conhecimento começa aqui</p>
+                    
+                    {/* Shimmer overlay simulation during hover/interact */}
+                    <div className="absolute inset-x-0 bottom-0 h-1 bg-slate-100 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-full h-full animate-shimmer" />
+                    </div>
                   </div>
-                  <div className="mt-8 p-6 bg-amber-50 rounded-3xl border border-amber-100 flex gap-4">
-                    <Info size={20} className="text-amber-500 shrink-0" />
-                    <p className="text-[10px] text-amber-700 font-medium leading-relaxed uppercase italic">
+                  <div className="mt-8 p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100 flex gap-4">
+                    <Info size={20} className="text-indigo-500 shrink-0" />
+                    <p className="text-[10px] text-indigo-800 font-medium leading-relaxed uppercase italic">
                       Arquivos enviados aqui são processados via Embeddings e integrados ao cérebro do Ricardo IA.
                     </p>
                   </div>
@@ -150,23 +174,39 @@ const AITrainingCenterView = () => {
               <div className="lg:col-span-2">
                 <Card title="Documentos Aprendidos" subtitle="Base vetorial ativa no sistema" icon={FileText}>
                   <div className="space-y-4">
-                    {MOCK_DOCS.map(doc => (
-                      <div key={doc.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl transition-all">
-                        <div className="flex items-center gap-4">
-                          <div className={`p-3 rounded-xl ${doc.status === 'learned' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600 animate-pulse'}`}>
-                            <FileText size={18} />
+                    {MOCK_DOCS.length > 0 ? (
+                      MOCK_DOCS.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className={`p-3 rounded-xl ${doc.status === 'learned' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 animate-shimmer h-10 w-10 flex items-center justify-center'}`}>
+                              {doc.status === 'learned' ? <FileText size={18} /> : <div className="text-slate-400"><Database size={16} /></div>}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors uppercase italic tracking-tighter">{doc.name}</p>
+                              <p className="text-[9px] text-slate-400 font-bold uppercase">{doc.type} • {doc.size} • {doc.date}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors uppercase italic tracking-tighter">{doc.name}</p>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase">{doc.type} • {doc.size} • {doc.date}</p>
+                          <div className="flex items-center gap-3">
+                            {doc.status === 'learned' ? (
+                              <CheckCircle2 size={16} className="text-emerald-500" />
+                            ) : (
+                              <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest animate-pulse">Lendo PDF...</span>
+                            )}
+                            <button className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          {doc.status === 'learned' && <CheckCircle2 size={16} className="text-emerald-500" />}
-                          <button className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
+                      ))
+                    ) : (
+                      <div className="py-20 flex flex-col items-center justify-center text-center space-y-6">
+                        <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                          <Database size={48} />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-black text-slate-800 uppercase italic">A sua IA ainda não tem memória.</p>
+                          <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest max-w-xs">Carregue o primeiro manual para começar a treinar o Ricardo.</p>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </Card>
               </div>

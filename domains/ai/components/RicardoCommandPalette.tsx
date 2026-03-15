@@ -109,7 +109,9 @@ const RicardoCommandPalette = () => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden"
+            className={`relative w-full max-w-2xl bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ${
+              isLoading ? 'animate-pulse-glow border-indigo-500/30' : ''
+            }`}
           >
             {/* Input Area */}
             <div className="flex items-center gap-4 px-8 py-6 border-b border-white/5">
@@ -143,24 +145,33 @@ const RicardoCommandPalette = () => {
                       key={result.id}
                       onClick={() => handleAction(result)}
                       onMouseEnter={() => setSelectedIndex(idx)}
-                      className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
-                        selectedIndex === idx ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-900/20' : 'text-slate-400 hover:bg-white/5'
+                      className={`w-full flex items-center justify-between p-5 rounded-[2rem] transition-all duration-300 ${
+                        selectedIndex === idx 
+                          ? 'bg-indigo-600 text-white shadow-2xl shadow-indigo-900/40 -translate-y-1' 
+                          : 'text-slate-400 hover:bg-white/5'
                       }`}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2.5 rounded-xl ${selectedIndex === idx ? 'bg-white/20' : 'bg-slate-800 border border-white/5'}`}>
+                      <div className="flex items-center gap-5">
+                        <div className={`p-3 rounded-2xl transition-colors ${selectedIndex === idx ? 'bg-white/20' : 'bg-slate-800 border border-white/5'}`}>
                            {result.icon}
                         </div>
                         <div className="text-left">
                           <p className={`text-sm font-black italic uppercase tracking-tighter ${selectedIndex === idx ? 'text-white' : 'text-slate-200'}`}>
                             {result.title}
                           </p>
-                          <p className={`text-[10px] font-bold uppercase ${selectedIndex === idx ? 'text-indigo-100' : 'text-slate-500'}`}>
+                          <div className={`text-[10px] font-bold uppercase ${selectedIndex === idx ? 'text-indigo-100' : 'text-slate-500'}`}>
+                            {/* Handling potential markdown snippets in subtitle */}
                             {result.subtitle}
-                          </p>
+                          </div>
                         </div>
                       </div>
-                      {selectedIndex === idx && <ArrowRight size={18} className="animate-in slide-in-from-left-2" />}
+                      <div className="flex items-center gap-2">
+                        {selectedIndex === idx && (
+                          <motion.div layoutId="arrow">
+                            <ArrowRight size={18} />
+                          </motion.div>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
